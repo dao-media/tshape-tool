@@ -91,20 +91,24 @@
       <div class="card">
         <h2>Rate each selected skill</h2>
         <p class="muted">
-          Drag score chips from the bank to each item. One score chip can only be used once.
+          Use the sliders (1–10) for every selected item. Each score has a limit — the key on the
+          right updates as you go. Stopping on a full bar snaps to the nearest free rank
+          (higher is checked first, then lower).
         </p>
         <div class="rating-layout">
           <div>
             <h3>Your selected items</h3>
-            <div id="selected-items" class="drop-zone-list"></div>
+            <div id="selected-items" class="slider-zone-list"></div>
           </div>
           <div>
-            <h3>Ranking bank</h3>
-            <div id="ranking-bank" class="ranking-bank drop-target"></div>
+            <h3>Score availability</h3>
+            <p class="muted small">How many of each score you can still use.</p>
+            <div id="ranking-key-host" class="ranking-key-host"></div>
           </div>
         </div>
         <div class="actions">
           <button data-action="to-step-3" class="secondary">Back</button>
+          <button data-action="rate-start-over" class="secondary">Start over (clear scores)</button>
           <button data-action="to-step-5">Plot T-shape</button>
         </div>
       </div>

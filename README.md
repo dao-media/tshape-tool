@@ -16,8 +16,8 @@ Implemented flow:
 1. Start prompt (`Yes/No`)
 2. Profile type (`Generalist` or `Specialist`)
 3. Skill/specialty selection
-4. Drag-and-drop rating assignment
-5. T-shape plotting and export
+4. Constrained 1–10 sliders (score counts match generalist/specialist pools) + live availability key; Start over
+5. T-shape plotting, per-item color encoding, and export
 
 ## Project Structure
 
@@ -53,8 +53,17 @@ Then open:
 
 - **Generalist**: up to 12 selected items.
 - **Specialist**: up to 6 selected items.
-- Ratings are assigned via drag-and-drop score chips.
-- Visualization places highest scores toward the center, with remaining items distributed around the T-shape.
+- Ratings use sliders. Each `n/10` can only be used as many times as the pool allows; choosing a
+  “full” score snaps the handle to the nearest free rank.
+- A live key shows how many of each `n/10` are left. **Start over** clears all scores and restores
+  the key.
+- Design categories have distinct hues; each specialization tints a related hue to its “parent”
+  category. Rate rows and the final plot both use the same colors; rows show a fill bar at the
+  matching percentage; export cards add a small bar for quick comparison.
+- Visualization places highest scores toward the center, with remaining items distributed around
+  the T-shape.
+
+Optional: append `?selftest=1` to the URL to re-run a small in-browser self-check (see console).
 
 ## Exports
 
@@ -65,7 +74,7 @@ Then open:
 ## Next Suggested Enhancements
 
 - Save/load profile state (local storage or backend)
-- Improve mobile interaction for drag-and-drop
+- Improve mobile interaction for the sliders
 - Add share link / export metadata
-- Add accessibility refinements (keyboard DnD, ARIA feedback)
+- Add broader accessibility (keyboard and screen reader polish)
 - Add tests and CI checks

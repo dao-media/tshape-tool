@@ -43,31 +43,31 @@
               role="img"
               aria-label="Example T-shaped profile with five bars"
             >
-              <div class="demo-t-bar" style="--h-frac: 0.32; --d: 0.05s">
+              <div class="demo-t-bar" data-demo-rank="3" style="--h-frac: 0.32; --d: 0.05s">
                 <div class="demo-t-bar__track">
                   <span class="demo-t-col"></span>
                 </div>
                 <span class="demo-t-label">Strategy</span>
               </div>
-              <div class="demo-t-bar" style="--h-frac: 0.38; --d: 0.1s">
+              <div class="demo-t-bar" data-demo-rank="4" style="--h-frac: 0.38; --d: 0.1s">
                 <div class="demo-t-bar__track">
                   <span class="demo-t-col"></span>
                 </div>
                 <span class="demo-t-label">Systems</span>
               </div>
-              <div class="demo-t-bar demo-t-bar--stem" style="--h-frac: 1; --d: 0.15s">
+              <div class="demo-t-bar" data-demo-rank="10" style="--h-frac: 1; --d: 0.15s">
                 <div class="demo-t-bar__track">
                   <span class="demo-t-col"></span>
                 </div>
                 <span class="demo-t-label">Business ROI</span>
               </div>
-              <div class="demo-t-bar" style="--h-frac: 0.35; --d: 0.2s">
+              <div class="demo-t-bar" data-demo-rank="5" style="--h-frac: 0.35; --d: 0.2s">
                 <div class="demo-t-bar__track">
                   <span class="demo-t-col"></span>
                 </div>
                 <span class="demo-t-label">A11y + ethics</span>
               </div>
-              <div class="demo-t-bar" style="--h-frac: 0.3; --d: 0.25s">
+              <div class="demo-t-bar" data-demo-rank="2" style="--h-frac: 0.3; --d: 0.25s">
                 <div class="demo-t-bar__track">
                   <span class="demo-t-col"></span>
                 </div>
@@ -156,8 +156,9 @@
       <div class="card card--scrollable">
         <h2>Rate each selection</h2>
         <p class="muted">
-          Tap a ranking icon (1–10). Your row picks up that icon’s colors. Each rank has a limited
-          count — see the key. If a rank is full, you’ll snap to the nearest free value.
+          Use the horizontal thermometer (0–10). Ranks 1–7 are unlimited; only <strong>one</strong> skill
+          in your whole profile may be 8, one may be 9, and one may be 10. See the key for
+          8/9/10.
         </p>
         <div class="rating-layout">
           <div class="rating-col">
@@ -168,7 +169,7 @@
           </div>
           <div class="rating-col">
             <h3>Score availability</h3>
-            <p class="muted small">How many of each score you can still use.</p>
+            <p class="muted small">8, 9, and 10: at most one of each for your full profile. Other ranks: unlimited.</p>
             <div class="scroll-panel scroll-panel--side" id="rate-key-scroll">
               <div id="ranking-key-host" class="ranking-key-host"></div>
             </div>

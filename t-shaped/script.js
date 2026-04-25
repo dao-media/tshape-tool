@@ -94,8 +94,11 @@ const categorySet = new Set(DATA.categories);
 /** @type {Record<number, { r: number; g: number; b: number; hex: string }>} */
 let rankColors = {};
 
-/** Shown in bottom-left of exported SVG/PNG/JPEG. */
+/** Shown only on file exports, below the chart. */
 const EXPORT_ATTRIBUTION = "Dane O'Leary | /in/daneoleary";
+const VIZ_SVG_W = 900;
+const VIZ_SVG_H = 560;
+const EXPORT_FOOTER_H = 36;
 
 const FALLBACK_RANK_HEX = {
   1: "#5a6d8f",
@@ -225,6 +228,23 @@ function hexToRgb(hex) {
   return { r, g, b, hex: `#${m[1]}${m[2]}${m[3]}`.toLowerCase() };
 }
 
+function mixTowardWhite(hex, t) {
+  const o = hexToRgb(hex);
+  const f = (c) => Math.round(c + (255 - c) * t);
+  return `rgb(${f(o.r)},${f(o.g)},${f(o.b)})`;
+}
+
+function mixTowardBlack(hex, t) {
+  const o = hexToRgb(hex);
+  const f = (c) => Math.round(c * (1 - t));
+  return `rgb(${f(o.r)},${f(o.g)},${f(o.b)})`;
+}
+
+function barFillGradientStopsForRank(rank) {
+  const h = getRankTheme(rank).hex;
+  return { top: mixTowardWhite(h, 0.38), bottom: mixTowardBlack(h, 0.18) };
+}
+
 let globalPulseRaf = null;
 let globalPulseT0 = performance.now();
 const GLOBAL_PULSE_MS = 4200;
@@ -240,18 +260,23 @@ function ensureGlobalPulseLoop() {
   globalPulseRaf = requestAnimationFrame(frame);
 }
 
-function getMaxPerScore(profileType, n) {
-  const sequence =
-    profileType === "generalist"
-      ? [10, 9, 8, 7, 6, 5, 4, 3, 2, 2, 1, 1]
-      : [10, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1];
-  const used = sequence.slice(0, n);
+function getMaxPerScore(_profileType, _n) {
   const max = {};
-  for (let s = 1; s <= 10; s += 1) max[s] = 0;
-  used.forEach((v) => {
-    max[v] += 1;
-  });
+  for (let s = 1; s <= 7; s += 1) max[s] = 1_000_000;
+  max[8] = 1;
+  max[9] = 1;
+  max[10] = 1;
   return max;
+}
+
+/** How many *other* skills (not `skill`) currently have this rank. */
+function countRankUsedByOthers(assignments, rank, skill) {
+  let n = 0;
+  for (const [k, v] of Object.entries(assignments)) {
+    if (k === skill) continue;
+    if (v === rank) n += 1;
+  }
+  return n;
 }
 
 function getUsageCounts(assignments, excludeSkill) {
@@ -265,21 +290,27 @@ function getUsageCounts(assignments, excludeSkill) {
   return counts;
 }
 
-function resolveRankForSkill(requested, skill, assignments, maxPer) {
-  const r = Math.min(10, Math.max(1, Math.round(requested)));
-  const usage = getUsageCounts(assignments, skill);
-  if (maxPer[r] - usage[r] > 0) return r;
-
-  for (let d = 1; d <= 9; d += 1) {
-    const up = r + d;
-    const down = r - d;
-    if (up <= 10 && maxPer[up] - usage[up] > 0) return up;
-    if (down >= 1 && maxPer[down] - usage[down] > 0) return down;
-  }
-  return r;
-}
-
 const view = document.querySelector("#view");
+
+let rankLimitToastT = 0;
+function showRankLimitToast(rank) {
+  const label = { 8: "8/10", 9: "9/10", 10: "10/10" }[rank];
+  if (!label) return;
+  let el = document.getElementById("rank-limit-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "rank-limit-toast";
+    el.className = "rank-limit-toast";
+    el.setAttribute("role", "status");
+    document.body.appendChild(el);
+  }
+  el.textContent = `You can only rank one skill a ${label}`;
+  el.classList.add("is-visible");
+  if (rankLimitToastT) clearTimeout(rankLimitToastT);
+  rankLimitToastT = window.setTimeout(() => {
+    el.classList.remove("is-visible");
+  }, 2600);
+}
 
 function setStep(step) {
   state.step = step;
@@ -313,6 +344,16 @@ function render() {
 function mountDemoTChart() {
   const root = document.querySelector("#demo-t-chart");
   if (!root) return;
+  root.querySelectorAll(".demo-t-bar").forEach((bar) => {
+    const r = bar.dataset.demoRank;
+    if (r == null) return;
+    const col = bar.querySelector(".demo-t-col");
+    if (col) {
+      const n = Number(r);
+      const { top, bottom } = barFillGradientStopsForRank(n);
+      col.style.background = `linear-gradient(180deg, ${top}, ${bottom})`;
+    }
+  });
   const mqHover = window.matchMedia("(hover: hover) and (pointer: fine)");
   const setHoverMode = () => {
     root.dataset.mode = mqHover.matches ? "hover" : "tap";
@@ -476,7 +517,7 @@ function renderQuotaKeyEl(maxPer, assignments) {
   const usage = getUsageCounts(assignments, null);
   const rows = document.createElement("div");
   rows.className = "quota-key";
-  for (let score = 10; score >= 1; score -= 1) {
+  for (const score of [10, 9, 8]) {
     const max = maxPer[score] || 0;
     if (max === 0) continue;
     const used = usage[score] || 0;
@@ -514,8 +555,7 @@ function updateAllTickAvailability() {
   updateTickAvailability(state.assignments, state.maxPerCurrent);
 }
 
-function updateTickAvailability(assignments, maxPer) {
-  const usage = getUsageCounts(assignments, null);
+function updateTickAvailability(assignments, _maxPer) {
   document.querySelectorAll("[data-rank-btn]").forEach((btn) => {
     const rank = Number(btn.dataset.rank);
     const row = btn.closest(".skill-rate-row");
@@ -528,13 +568,18 @@ function updateTickAvailability(assignments, maxPer) {
       return;
     }
 
-    const max = maxPer[rank] || 0;
-    const used = usage[rank] || 0;
-    const rem = max - used;
-    const holds = skill != null && cur === rank;
-    const unavailable = rem <= 0 && !holds;
-    btn.classList.toggle("rank-btn--unavailable", unavailable);
-    btn.classList.toggle("rank-btn--selected", Boolean(holds));
+    if (rank >= 1 && rank <= 7) {
+      btn.classList.remove("rank-btn--unavailable");
+      btn.classList.toggle("rank-btn--selected", cur === rank);
+      return;
+    }
+
+    if (rank >= 8 && rank <= 10) {
+      const othersHave = countRankUsedByOthers(assignments, rank, skill) >= 1;
+      const holds = cur === rank;
+      btn.classList.toggle("rank-btn--unavailable", othersHave);
+      btn.classList.toggle("rank-btn--selected", Boolean(holds));
+    }
   });
 }
 
@@ -659,8 +704,7 @@ function updateRowUI(skill, opts = {}) {
 }
 
 function applyRank(skill, requestedRaw) {
-  const maxPer = state.maxPerCurrent;
-  if (!maxPer) return;
+  if (!state.maxPerCurrent) return;
 
   const desired = normalizeRankValue(requestedRaw);
   if (desired == null) {
@@ -670,14 +714,18 @@ function applyRank(skill, requestedRaw) {
     updateAllTickAvailability();
     return;
   }
-  const resolved = resolveRankForSkill(desired, skill, state.assignments, maxPer);
-  const snapped = resolved !== desired;
-  state.assignments[skill] = resolved;
+  if (desired >= 8 && desired <= 10) {
+    if (countRankUsedByOthers(state.assignments, desired, skill) >= 1) {
+      showRankLimitToast(desired);
+      return;
+    }
+  }
+  state.assignments[skill] = desired;
 
   const row = findRowBySkill(skill);
   if (row) {
-    applyRankThemeToRow(row, resolved);
-    setThermometerUI(row, resolved, { animate: true, snapFlash: snapped });
+    applyRankThemeToRow(row, desired);
+    setThermometerUI(row, desired, { animate: true, snapFlash: false });
   }
   updateRowUI(skill, { refreshTicks: true });
   refreshQuotaHost();
@@ -843,8 +891,8 @@ function renderVisualization() {
   }
 
   svg.innerHTML = "";
-  const W = 900;
-  const H = 560;
+  const W = VIZ_SVG_W;
+  const H = VIZ_SVG_H;
   const padL = 48;
   const padR = 48;
   const padT = 86;
@@ -854,9 +902,10 @@ function renderVisualization() {
   const n = mapped.length;
   const gap = 10;
   const slotW = n > 0 ? (W - padL - padR - gap * (n - 1)) / n : 40;
-  const barW = Math.max(6, Math.min(14, slotW * 0.22));
+  const barW = Math.max(4, Math.min(9, (slotW * 0.22 * 2) / 3));
 
-  const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  const ns = "http://www.w3.org/2000/svg";
+  const bg = document.createElementNS(ns, "rect");
   bg.setAttribute("width", String(W));
   bg.setAttribute("height", String(H));
   bg.setAttribute("fill", "transparent");
@@ -864,7 +913,29 @@ function renderVisualization() {
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.appendChild(bg);
 
-  const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  const defs = document.createElementNS(ns, "defs");
+  mapped.forEach((item, i) => {
+    const g = document.createElementNS(ns, "linearGradient");
+    g.setAttribute("id", `tbar-grad-${i}`);
+    g.setAttribute("gradientUnits", "objectBoundingBox");
+    g.setAttribute("x1", "0");
+    g.setAttribute("y1", "0");
+    g.setAttribute("x2", "0");
+    g.setAttribute("y2", "1");
+    const { top, bottom } = barFillGradientStopsForRank(item.value);
+    const s0 = document.createElementNS(ns, "stop");
+    s0.setAttribute("offset", "0%");
+    s0.setAttribute("stop-color", top);
+    const s1 = document.createElementNS(ns, "stop");
+    s1.setAttribute("offset", "100%");
+    s1.setAttribute("stop-color", bottom);
+    g.appendChild(s0);
+    g.appendChild(s1);
+    defs.appendChild(g);
+  });
+  svg.appendChild(defs);
+
+  const title = document.createElementNS(ns, "text");
   title.setAttribute("x", String(padL));
   title.setAttribute("y", "36");
   title.setAttribute("fill", "#e8ecff");
@@ -880,13 +951,14 @@ function renderVisualization() {
     const h = (item.value / 10) * chartH;
     const y = chartTop;
     const theme = getRankTheme(item.value);
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const rect = document.createElementNS(ns, "rect");
     rect.setAttribute("x", String(x));
     rect.setAttribute("y", String(y));
     rect.setAttribute("width", String(barW));
     rect.setAttribute("height", String(Math.max(2, h)));
     rect.setAttribute("rx", "6");
-    rect.setAttribute("fill", theme.fill);
+    rect.setAttribute("ry", "6");
+    rect.setAttribute("fill", `url(#tbar-grad-${i})`);
     rect.setAttribute("stroke", theme.stroke);
     rect.setAttribute("stroke-width", "1.5");
     rect.setAttribute("class", "tbar");
@@ -895,7 +967,7 @@ function renderVisualization() {
     rect.dataset.value = String(item.value);
     svg.appendChild(rect);
 
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const label = document.createElementNS(ns, "text");
     label.setAttribute("x", String(slotX + slotW / 2));
     label.setAttribute("y", String(H - 30));
     label.setAttribute("fill", "#b8c4e8");
@@ -905,16 +977,6 @@ function renderVisualization() {
     label.textContent = truncate(item.name, Math.max(8, Math.floor(slotW / 5)));
     svg.appendChild(label);
   });
-
-  const credit = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  credit.setAttribute("x", "20");
-  credit.setAttribute("y", "548");
-  credit.setAttribute("fill", "rgba(180, 191, 224, 0.72)");
-  credit.setAttribute("font-size", "12");
-  credit.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
-  credit.setAttribute("pointer-events", "none");
-  credit.textContent = EXPORT_ATTRIBUTION;
-  svg.appendChild(credit);
 
   // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
   const wrap = svg.closest(".viz-wrap");
@@ -980,27 +1042,43 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-function downloadSvg() {
+function buildExportSvgString() {
   const svg = document.querySelector("#t-shape-svg");
-  const content = svg.outerHTML;
-  const blob = new Blob([content], { type: "image/svg+xml;charset=utf-8" });
+  if (!svg) return "";
+  const totalH = VIZ_SVG_H + EXPORT_FOOTER_H;
+  const clone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
+  clone.setAttribute("viewBox", `0 0 ${VIZ_SVG_W} ${totalH}`);
+  clone.setAttribute("height", String(totalH));
+  const ns = "http://www.w3.org/2000/svg";
+  const t = document.createElementNS(ns, "text");
+  t.setAttribute("x", "20");
+  t.setAttribute("y", String(VIZ_SVG_H + 22));
+  t.setAttribute("fill", "rgba(160, 172, 210, 0.92)");
+  t.setAttribute("font-size", "12");
+  t.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+  t.setAttribute("pointer-events", "none");
+  t.textContent = EXPORT_ATTRIBUTION;
+  clone.appendChild(t);
+  return new XMLSerializer().serializeToString(clone);
+}
+
+function downloadSvg() {
+  const str = buildExportSvgString();
+  if (!str) return;
+  const blob = new Blob([str], { type: "image/svg+xml;charset=utf-8" });
   triggerDownload(URL.createObjectURL(blob), "designer-shape-profile.svg");
 }
 
 function downloadFromSvg(type) {
-  const svg = document.querySelector("#t-shape-svg");
-  const serializer = new XMLSerializer();
-  const svgBlob = new Blob([serializer.serializeToString(svg)], {
-    type: "image/svg+xml;charset=utf-8",
-  });
-  const url = URL.createObjectURL(svgBlob);
+  const str = buildExportSvgString();
+  if (!str) return;
+  const url = URL.createObjectURL(new Blob([str], { type: "image/svg+xml;charset=utf-8" }));
+  const totalH = VIZ_SVG_H + EXPORT_FOOTER_H;
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
-    const W = 900;
-    const H = 560;
-    canvas.width = W;
-    canvas.height = H;
+    canvas.width = VIZ_SVG_W;
+    canvas.height = totalH;
     const ctx = canvas.getContext("2d");
     if (type === "jpeg") {
       ctx.fillStyle = "white";
@@ -1019,6 +1097,7 @@ function downloadFromSvg(type) {
     );
     URL.revokeObjectURL(url);
   };
+  img.onerror = () => URL.revokeObjectURL(url);
   img.src = url;
 }
 
@@ -1033,15 +1112,11 @@ function triggerDownload(url, filename) {
 }
 
 function selfTestRankingLogic() {
-  const max12 = getMaxPerScore("generalist", 12);
-  let sum = 0;
-  for (let s = 1; s <= 10; s += 1) sum += max12[s] || 0;
-  if (sum !== 12) throw new Error("selfTest: generalist pool");
-  const spec1 = getMaxPerScore("specialist", 1);
-  if (resolveRankForSkill(3, "x", {}, spec1) !== 10) throw new Error("selfTest: spec1");
-  const max6 = getMaxPerScore("specialist", 6);
-  const full = { a: 10, b: 9, c: 8, d: 8, e: 7, f: 7 };
-  if (resolveRankForSkill(10, "g", full, max6) !== 6) throw new Error("selfTest: spec6");
+  const max = getMaxPerScore("generalist", 12);
+  if (max[10] !== 1 || max[9] !== 1 || max[8] !== 1) throw new Error("selfTest: unique 8–10");
+  if (max[1] < 2) throw new Error("selfTest: low ranks unbounded");
+  if (countRankUsedByOthers({ a: 10, b: 9 }, 10, "c") !== 1) throw new Error("selfTest: count 10");
+  if (countRankUsedByOthers({ a: 10 }, 10, "a") !== 0) throw new Error("selfTest: exclude self");
 }
 
 function runSelfTestIfQuery() {

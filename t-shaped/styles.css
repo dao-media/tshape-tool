@@ -606,6 +606,34 @@ button:hover {
   margin-top: 0.5rem;
 }
 
+.rank-limit-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  z-index: 2000;
+  max-width: min(92vw, 22rem);
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 80, 120, 0.45);
+  background: rgba(32, 12, 32, 0.94);
+  color: #ffe8f0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  text-align: center;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  transform: translate(-50%, 8px) scale(0.98);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+
+.rank-limit-toast.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0) scale(1);
+}
+
 .hidden {
   display: none;
 }
@@ -772,9 +800,7 @@ button:hover {
   transition-delay: var(--d, 0s);
 }
 
-.demo-t-bar--stem .demo-t-col {
-  background: linear-gradient(180deg, #9af0d2, #2a8f6f);
-}
+/* Demo bar fill colors are set in JS to match the result chart (per-rank gradients). */
 
 @media (hover: hover) and (pointer: fine) {
   .demo-t-chart .demo-t-bar__track:hover .demo-t-col {

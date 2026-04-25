@@ -1662,7 +1662,7 @@ function getExportLayout() {
     };
   }
   const n = mapped.length;
-  const keyW = Math.max(128, Math.round(chartW * 0.25));
+  const keyW = Math.max(225, Math.round(chartW * 0.25));
   const keyContentH = padT + n * rowH + (n - 1) * rowGap + padB;
   const bodyH = Math.max(VIZ_SVG_H, keyContentH);
   return {
@@ -1885,25 +1885,40 @@ async function emailShapeFiles() {
     alert("ZIP library didn't load. Refresh and try again.");
     return;
   }
+  const subjectAndBody = (() => {
+    const shapeKey = getDetectedShapeKey();
+    return { subject: buildEmailSubject(shapeKey), body: buildEmailBody(shapeKey) };
+  })();
+  const openMailDraft = (recipient, zipNameNote = "") => {
+    const extra = zipNameNote
+      ? `\n\n---\nIf your email client did not auto-attach files, attach the downloaded ZIP: ${zipNameNote}`
+      : "";
+    const mailto = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(
+      subjectAndBody.subject
+    )}&body=${encodeURIComponent(`${subjectAndBody.body}${extra}`)}`;
+    window.location.href = mailto;
+  };
   try {
     const { shapeKey, files } = await createExportFileBundle();
     const zip = new window.JSZip();
     files.forEach((file) => zip.file(file.name, file.blob));
     const zipBlob = await zip.generateAsync({ type: "blob" });
     const zipName = `${getExportBaseName(shapeKey)}-files.zip`;
-    const zipFile = new File([zipBlob], zipName, { type: "application/zip" });
-    const subject = buildEmailSubject(shapeKey);
-    const body = buildEmailBody(shapeKey);
+    const canConstructFile = typeof File === "function";
+    const zipFile = canConstructFile
+      ? new File([zipBlob], zipName, { type: "application/zip" })
+      : null;
 
     // Best path where supported: native share sheet allows attaching ZIP directly.
     if (
+      zipFile &&
       navigator.share &&
       navigator.canShare &&
       navigator.canShare({ files: [zipFile] })
     ) {
       await navigator.share({
-        title: subject,
-        text: body,
+        title: subjectAndBody.subject,
+        text: subjectAndBody.body,
         files: [zipFile],
       });
       return;
@@ -1911,15 +1926,15 @@ async function emailShapeFiles() {
 
     // Desktop/web fallback: download ZIP and open email draft prefilled.
     triggerDownload(URL.createObjectURL(zipBlob), zipName);
-    const mailto = `mailto:${encodeURIComponent(state.userEmail)}?subject=${encodeURIComponent(
-      subject
-    )}&body=${encodeURIComponent(
-      `${body}\n\n---\nIf your email client did not auto-attach files, attach the downloaded ZIP: ${zipName}`
-    )}`;
-    window.location.href = mailto;
+    openMailDraft(state.userEmail, zipName);
   } catch (err) {
     console.error(err);
-    alert("Could not prepare your email package. Please try again.");
+    // Last-resort fallback: still open a useful draft.
+    try {
+      openMailDraft(state.userEmail);
+    } catch {}
+    const detail = err instanceof Error ? err.message : String(err);
+    alert(`Could not prepare your email package. Please try again.\n\nDetails: ${detail}`);
   }
 }
 

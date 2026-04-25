@@ -1354,7 +1354,7 @@ button:disabled {
 
 .shape-viz-outer--key {
   display: grid;
-  grid-template-columns: minmax(0, 80fr) minmax(0, 20fr);
+  grid-template-columns: minmax(0, 1fr) minmax(225px, 20%);
   gap: 1rem;
   align-items: start;
 }
@@ -1420,6 +1420,7 @@ button:disabled {
 .shape-key-name {
   flex: 1 1 auto;
   min-width: 0;
+  font-size: 14px;
   color: var(--text);
   font-weight: 500;
   word-break: break-word;
@@ -1427,6 +1428,7 @@ button:disabled {
 
 .shape-key-val {
   flex-shrink: 0;
+  font-size: 14px;
   color: var(--text-main);
   font-weight: 700;
   font-variant-numeric: tabular-nums;

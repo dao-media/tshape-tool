@@ -1248,102 +1248,98 @@ button:disabled {
   margin: 0.8rem 0 0.55rem;
 }
 
+/* Labels / Key — minimal neutral switch (no bright accent fill) */
 .shape-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  border-radius: var(--btn-radius);
-  padding: 0.35rem 0.7rem 0.35rem 0.9rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  gap: 0.6rem 0.75rem;
+  padding: 0;
+  background: none;
+  border: none;
   font-family: var(--font-main);
-  transition: var(--btn-transition);
-}
-
-.shape-toggle:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .shape-toggle__label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--text-main);
-  opacity: 0.9;
-  transition: opacity 0.2s var(--ease-out);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  transition: color 0.2s var(--ease-out), font-weight 0.15s var(--ease-out);
 }
 
 .shape-toggle:has(input:not(:checked)) .shape-toggle__label:first-of-type,
 .shape-toggle:has(input:checked) .shape-toggle__label:last-of-type {
-  color: var(--text-main);
-  opacity: 1;
+  color: rgba(244, 246, 255, 0.95);
+  font-weight: 600;
 }
 
 .shape-toggle:has(input:not(:checked)) .shape-toggle__label:last-of-type,
 .shape-toggle:has(input:checked) .shape-toggle__label:first-of-type {
-  opacity: 0.5;
   color: var(--muted);
+  font-weight: 500;
+  opacity: 0.7;
 }
 
 .shape-toggle__track {
   position: relative;
-  inline-size: 50px;
-  block-size: 30px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
-  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out),
-    box-shadow 0.2s var(--ease-out);
   flex-shrink: 0;
+  inline-size: 48px;
+  block-size: 26px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+}
+
+.shape-toggle__track:has(input:checked) {
+  background: #2a3044;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .shape-toggle__track input {
   position: absolute;
   inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  margin: 0;
   z-index: 1;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.shape-toggle__track input:focus,
+.shape-toggle__track input:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .shape-toggle__thumb {
   position: absolute;
   top: 50%;
-  left: 4px;
-  width: 20px;
-  height: 20px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   transform: translateY(-50%);
-  background: #f4f6ff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: transform 0.2s var(--ease-out), left 0.2s var(--ease-out), background 0.2s var(--ease-out);
+  background: linear-gradient(180deg, #f6f7fb 0%, #e1e4ed 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: left 0.22s var(--ease-out), background 0.2s var(--ease-out);
   pointer-events: none;
 }
 
 .shape-toggle__track input:checked + .shape-toggle__thumb {
-  left: calc(100% - 24px);
-  background: #0a0a0f;
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 0 1px var(--accent), 0 2px 8px rgba(138, 125, 255, 0.4);
-}
-
-.shape-toggle__track:has(input:checked) {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 2px 10px rgba(138, 125, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  /* 3px padding + 18px thumb from right */
+  left: calc(100% - 21px);
+  background: linear-gradient(180deg, #fcfcff 0%, #eef0f7 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.65);
 }
 
 .shape-toggle__track:focus-within {
-  box-shadow: 0 0 0 2px #050608, 0 0 0 5px rgba(110, 231, 255, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.25);
-}
-
-.shape-toggle__track:has(input:checked):focus-within {
-  box-shadow: 0 0 0 2px #050608, 0 0 0 5px rgba(110, 231, 255, 0.5), 0 2px 10px rgba(138, 125, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  outline: 2px solid rgba(120, 140, 180, 0.45);
+  outline-offset: 2px;
+  border-radius: 999px;
 }
 
 .shape-viz-outer {
@@ -1384,8 +1380,7 @@ button:disabled {
   font-size: 0.9rem;
   line-height: 1.5;
   align-self: flex-start;
-  max-height: min(70vh, 480px);
-  overflow: auto;
+  overflow: visible;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 20px rgba(0, 0, 0, 0.18);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 42%),

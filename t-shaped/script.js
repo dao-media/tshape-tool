@@ -1551,25 +1551,169 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-function buildExportSvgString() {
-  const svg = document.querySelector("#t-shape-svg");
-  if (!svg) return "";
-  const exportW = getCurrentShapeSvgWidth();
-  const totalH = VIZ_SVG_H + EXPORT_FOOTER_H;
-  const clone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
-  clone.setAttribute("viewBox", `0 0 ${exportW} ${totalH}`);
-  clone.setAttribute("height", String(totalH));
-  const ns = "http://www.w3.org/2000/svg";
+const EXPORT_KEY_GAP = 20;
+
+function getShapeMappedForExport() {
+  return state.selectedItems
+    .map((name) => ({ name, value: state.assignments[name] }))
+    .filter((x) => x.value != null);
+}
+
+/**
+ * Layout for chart-only or chart+key export (key matches on-screen 80/20 width intent).
+ * @returns {{ totalW: number, totalH: number, bodyH: number, chartW: number, keyW: number, keyX: number, keyContentH: number, hasKey: boolean, padT: number, rowH: number, rowGap: number, padB: number, mapped: Array<{ name: string, value: number }> }}
+ */
+function getExportLayout() {
+  const chartW = getCurrentShapeSvgWidth();
+  const mapped = getShapeMappedForExport();
+  const keyMode = state.shapeVizMode === "key" && mapped.length > 0;
+  const padT = 12;
+  const padB = 12;
+  const rowH = 19;
+  const rowGap = 5;
+  if (!keyMode) {
+    return {
+      totalW: chartW,
+      totalH: VIZ_SVG_H + EXPORT_FOOTER_H,
+      bodyH: VIZ_SVG_H,
+      chartW,
+      keyW: 0,
+      keyX: 0,
+      keyContentH: 0,
+      hasKey: false,
+      padT,
+      rowH,
+      rowGap,
+      padB,
+      mapped,
+    };
+  }
+  const n = mapped.length;
+  const keyW = Math.max(128, Math.round(chartW * 0.25));
+  const keyContentH = padT + n * rowH + (n - 1) * rowGap + padB;
+  const bodyH = Math.max(VIZ_SVG_H, keyContentH);
+  return {
+    totalW: chartW + EXPORT_KEY_GAP + keyW,
+    totalH: bodyH + EXPORT_FOOTER_H,
+    bodyH,
+    chartW,
+    keyW,
+    keyX: chartW + EXPORT_KEY_GAP,
+    keyContentH,
+    hasKey: true,
+    padT,
+    rowH,
+    rowGap,
+    padB,
+    mapped,
+  };
+}
+
+/**
+ * @param {string} ns
+ * @param {SVGSVGElement} parent
+ * @param {ReturnType<typeof getExportLayout> & { hasKey: true }} layout
+ */
+function appendExportKeyGroup(ns, parent, layout) {
+  const g0 = document.createElementNS(ns, "g");
+  g0.setAttribute("transform", `translate(${layout.keyX},0)`);
+  g0.setAttribute("pointer-events", "none");
+
+  const panel = document.createElementNS(ns, "rect");
+  panel.setAttribute("x", "0");
+  panel.setAttribute("y", "0");
+  panel.setAttribute("width", String(layout.keyW));
+  panel.setAttribute("height", String(layout.keyContentH));
+  panel.setAttribute("rx", "8");
+  panel.setAttribute("fill", "#161616");
+  panel.setAttribute("stroke", "#2a3552");
+  panel.setAttribute("stroke-width", "1");
+  g0.appendChild(panel);
+
+  const padL = 10;
+  const nameMax = 26;
+  const valRight = layout.keyW - padL;
+  layout.mapped.forEach((item, i) => {
+    const rowTop = layout.padT + i * (layout.rowH + layout.rowGap);
+    const theme = getRankTheme(item.value);
+    const sw = document.createElementNS(ns, "rect");
+    sw.setAttribute("x", String(padL));
+    sw.setAttribute("y", String(rowTop));
+    sw.setAttribute("width", "8");
+    sw.setAttribute("height", "12");
+    sw.setAttribute("fill", `url(#tbar-grad-${i})`);
+    sw.setAttribute("stroke", theme.stroke);
+    sw.setAttribute("stroke-width", "1.1");
+    g0.appendChild(sw);
+    const tName = document.createElementNS(ns, "text");
+    tName.setAttribute("x", String(padL + 12));
+    tName.setAttribute("y", String(rowTop + 10));
+    tName.setAttribute("fill", "#b8c4e8");
+    tName.setAttribute("font-size", "9.5");
+    tName.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+    tName.textContent = truncate(item.name, nameMax);
+    g0.appendChild(tName);
+    const tVal = document.createElementNS(ns, "text");
+    tVal.setAttribute("x", String(valRight));
+    tVal.setAttribute("y", String(rowTop + 10));
+    tVal.setAttribute("text-anchor", "end");
+    tVal.setAttribute("fill", "#e8ecff");
+    tVal.setAttribute("font-size", "9.5");
+    tVal.setAttribute("font-weight", "600");
+    tVal.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+    tVal.textContent = `${item.value}/10`;
+    g0.appendChild(tVal);
+  });
+  parent.appendChild(g0);
+}
+
+function appendAttributionText(ns, parent, y) {
   const t = document.createElementNS(ns, "text");
   t.setAttribute("x", "20");
-  t.setAttribute("y", String(VIZ_SVG_H + 22));
+  t.setAttribute("y", String(y));
   t.setAttribute("fill", "rgba(160, 172, 210, 0.92)");
   t.setAttribute("font-size", "12");
   t.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
   t.setAttribute("pointer-events", "none");
   t.textContent = EXPORT_ATTRIBUTION;
-  clone.appendChild(t);
-  return new XMLSerializer().serializeToString(clone);
+  parent.appendChild(t);
+}
+
+function buildExportSvgString() {
+  const svg = document.querySelector("#t-shape-svg");
+  if (!svg) return "";
+  const layout = getExportLayout();
+  const ns = "http://www.w3.org/2000/svg";
+
+  if (!layout.hasKey) {
+    const clone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
+    clone.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
+    clone.setAttribute("height", String(layout.totalH));
+    appendAttributionText(ns, clone, layout.bodyH + 22);
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  const outer = document.createElementNS(ns, "svg");
+  outer.setAttribute("xmlns", ns);
+  outer.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
+  outer.setAttribute("width", String(layout.totalW));
+  outer.setAttribute("height", String(layout.totalH));
+  const chartClone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
+  chartClone.removeAttribute("id");
+  const defEl = chartClone.querySelector("defs");
+  if (defEl) {
+    outer.appendChild(defEl);
+  }
+  chartClone.setAttribute("x", "0");
+  chartClone.setAttribute("y", "0");
+  chartClone.setAttribute("width", String(layout.chartW));
+  chartClone.setAttribute("height", String(VIZ_SVG_H));
+  outer.appendChild(chartClone);
+  /** @type {any} */
+  const keyLayout = layout;
+  appendExportKeyGroup(ns, outer, keyLayout);
+  appendAttributionText(ns, outer, layout.bodyH + 22);
+  return new XMLSerializer().serializeToString(outer);
 }
 
 function downloadSvg() {
@@ -1583,12 +1727,11 @@ function downloadFromSvg(type) {
   const str = buildExportSvgString();
   if (!str) return;
   const url = URL.createObjectURL(new Blob([str], { type: "image/svg+xml;charset=utf-8" }));
-  const totalH = VIZ_SVG_H + EXPORT_FOOTER_H;
-  const exportW = getCurrentShapeSvgWidth();
+  const { totalW, totalH } = getExportLayout();
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
-    canvas.width = exportW;
+    canvas.width = totalW;
     canvas.height = totalH;
     const ctx = canvas.getContext("2d");
     if (type === "jpeg") {

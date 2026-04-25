@@ -4,7 +4,7 @@ Preliminary prototype for a web app called **T-Shaped** that helps designers:
 
 - choose skills/specialties
 - assign strength ratings
-- generate a visual "T-shaped" profile
+- generate a bar-chart **designer shape** (T, Pi, M, I, or X) from ratings
 - export results as PNG, JPEG, or SVG
 
 ## Current Status
@@ -13,17 +13,20 @@ This is a front-end prototype (HTML/CSS/JavaScript) with no backend required.
 
 Implemented flow:
 
-1. Start prompt (`Yes/No`)
+1. Start (`Yes/No`) + condensed **demo T-chart** (hover bars on desktop; tap to toggle labels on touch)
 2. Profile type (`Generalist` or `Specialist`)
 3. Skill/specialty selection
-4. One combined 0–10 scale per item (0 = unset); constrained scores + live availability key; scrollable lists; reset controls
-5. T-shape plotting, per-item color encoding, and export
+4. **Rank** with `icons/Rating icon_*-10.png`: tap a rank → hero icon **spin-zoom** (ease-out-back) then joins a **shared global pulse** (`requestAnimationFrame` → `--global-pulse-scale`). Row colors come from **sampled icon pixels** per rank (fallback palette if sampling fails).
+5. **Shape plot**: top-aligned bars (like the reference infographic), auto **T / Pi / M / I / X** classification from scores, export PNG/JPEG/SVG
 
 ## Project Structure
 
 ```text
 .
 ├── t-shaped/
+│   ├── icons/
+│   │   ├── Rating icon_1-10.png … Rating icon_10-10.png
+│   │   └── Rating icon.ai
 │   ├── index.html
 │   ├── script.js
 │   └── styles.css
@@ -51,19 +54,14 @@ Then open:
 
 ## Behavior Notes
 
-- **Generalist**: up to 12 selected items.
-- **Specialist**: up to 6 selected items.
-- Ratings use a single scale per row (fill + thumb share one track). **0** means unset until the
-  user sets a score. Each `n/10` can only be used as many times as the pool allows; choosing a full
-  score snaps the thumb to the nearest free rank.
-- A live key shows how many of each `n/10` are left. The reset control clears all scores.
-- Long lists scroll inside the card so the layout stays on-screen.
-- On the selection step, **⟲** clears all checked skills/specialties.
-- Design categories have distinct hues; each specialization tints a related hue to its “parent”
-  category. Rate rows and the final plot both use the same colors; rows show a fill bar at the
-  matching percentage; export cards add a small bar for quick comparison.
-- Visualization places highest scores toward the center, with remaining items distributed around
-  the T-shape.
+- **Generalist**: up to 12 selected items. **Specialist**: up to 6.
+- **Ranking**: tap a rank icon (1–10). Pool limits still apply; if a rank is exhausted, the choice
+  snaps to the nearest available value.
+- **Colors**: driven by the **rank** (sampled from the matching PNG), not by skill name.
+- **Pulse**: one global sine cycle updates `--global-pulse-scale` every frame; every hero icon
+  that has finished its entrance animation uses that same value so pulses stay in phase.
+- Scrollable selection/rank panels; **⟲** clears selections on step 3 or scores on step 4.
+- **Shape** step: bar chart (top baseline), heuristic best match among **I, T, Pi, M, X**.
 
 Optional: append `?selftest=1` to the URL to re-run a small in-browser self-check (see console).
 
@@ -76,7 +74,7 @@ Optional: append `?selftest=1` to the URL to re-run a small in-browser self-chec
 ## Next Suggested Enhancements
 
 - Save/load profile state (local storage or backend)
-- Improve mobile interaction for the sliders
+- Improve mobile interaction for the rank toggles
 - Add share link / export metadata
 - Add broader accessibility (keyboard and screen reader polish)
 - Add tests and CI checks

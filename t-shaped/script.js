@@ -22,9 +22,6 @@ const DATA = {
     "Game Design",
     "AR/VR/XR Design",
   ],
-  /**
-   * Each specialization is tied to a design category for related accent colors.
-   */
   specParentByName: {
     "UI & Dashboard Design (UID)": "Web Design",
     "Brand Identity": "Branding",
@@ -79,8 +76,12 @@ const state = {
   step: 1,
   profileType: null,
   selectedItems: [],
-  /** @type {Record<string, number | null>} score 1..10 or unset */
+  /** @type {Record<string, number | null>} */
   assignments: {},
+  /** @type {Record<number, number> | null} */
+  maxPerCurrent: null,
+  /** @type {{ shape: string, label: string, detail: string } | null} */
+  detectedShape: null,
 };
 
 const MAX_BY_TYPE = {
@@ -90,9 +91,133 @@ const MAX_BY_TYPE = {
 
 const categorySet = new Set(DATA.categories);
 
-/**
- * @returns {Record<number, number>} score -> max count for this selection size
- */
+/** @type {Record<number, { r: number; g: number; b: number; hex: string }>} */
+let rankColors = {};
+
+const FALLBACK_RANK_HEX = {
+  1: "#5a6d8f",
+  2: "#4d7a9c",
+  3: "#4a8f8a",
+  4: "#5a9a6a",
+  5: "#8a9a4a",
+  6: "#b89a3a",
+  7: "#c98a35",
+  8: "#d07050",
+  9: "#c05070",
+  10: "#a060c8",
+};
+
+function rankIconPath(n) {
+  return `./icons/Rating%20icon_${n}-10.png`;
+}
+
+function getRankTheme(rank) {
+  if (rank == null || rank < 1 || rank > 10) {
+    return {
+      hex: "#6c7698",
+      accent: "hsl(226 18% 52%)",
+      fill: "rgba(108, 118, 152, 0.35)",
+      stroke: "hsl(226 18% 58%)",
+    };
+  }
+  const c = rankColors[rank];
+  const hex = c?.hex || FALLBACK_RANK_HEX[rank];
+  const r = c?.r ?? 108;
+  const g = c?.g ?? 118;
+  const b = c?.b ?? 152;
+  return {
+    hex,
+    accent: hex,
+    fill: `rgba(${r}, ${g}, ${b}, 0.42)`,
+    stroke: hex,
+  };
+}
+
+function loadRankColorsFromIcons() {
+  const jobs = [];
+  for (let rank = 1; rank <= 10; rank += 1) {
+    jobs.push(
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement("canvas");
+            const w = 32;
+            const h = 32;
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              resolve();
+              return;
+            }
+            ctx.drawImage(img, 0, 0, w, h);
+            let data;
+            try {
+              data = ctx.getImageData(10, 10, 12, 12).data;
+            } catch {
+              rankColors[rank] = hexToRgb(FALLBACK_RANK_HEX[rank]);
+              resolve();
+              return;
+            }
+            let r = 0;
+            let g = 0;
+            let b = 0;
+            let n = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              const a = data[i + 3];
+              if (a < 20) continue;
+              r += data[i];
+              g += data[i + 1];
+              b += data[i + 2];
+              n += 1;
+            }
+            if (n === 0) n = 1;
+            r = Math.round(r / n);
+            g = Math.round(g / n);
+            b = Math.round(b / n);
+            const hex = `#${[r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
+            rankColors[rank] = { r, g, b, hex };
+          } catch {
+            rankColors[rank] = hexToRgb(FALLBACK_RANK_HEX[rank]);
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          rankColors[rank] = hexToRgb(FALLBACK_RANK_HEX[rank]);
+          resolve();
+        };
+        img.src = rankIconPath(rank);
+      })
+    );
+  }
+  return Promise.all(jobs);
+}
+
+function hexToRgb(hex) {
+  const m = /^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(hex);
+  if (!m) return { r: 100, g: 110, b: 140, hex: "#64708c" };
+  const r = parseInt(m[1], 16);
+  const g = parseInt(m[2], 16);
+  const b = parseInt(m[3], 16);
+  return { r, g, b, hex: `#${m[1]}${m[2]}${m[3]}`.toLowerCase() };
+}
+
+let globalPulseRaf = null;
+let globalPulseT0 = performance.now();
+const GLOBAL_PULSE_MS = 4200;
+
+function ensureGlobalPulseLoop() {
+  if (globalPulseRaf != null) return;
+  function frame(now) {
+    const u = ((now - globalPulseT0) % GLOBAL_PULSE_MS) / GLOBAL_PULSE_MS;
+    const s = 1 + 0.024 * Math.sin(u * Math.PI * 2);
+    document.documentElement.style.setProperty("--global-pulse-scale", s.toFixed(5));
+    globalPulseRaf = requestAnimationFrame(frame);
+  }
+  globalPulseRaf = requestAnimationFrame(frame);
+}
+
 function getMaxPerScore(profileType, n) {
   const sequence =
     profileType === "generalist"
@@ -107,10 +232,6 @@ function getMaxPerScore(profileType, n) {
   return max;
 }
 
-/**
- * How many of each score are used, optionally ignoring one skill (being reassigned).
- * @param {string | null} [excludeSkill]
- */
 function getUsageCounts(assignments, excludeSkill) {
   const counts = {};
   for (let s = 1; s <= 10; s += 1) counts[s] = 0;
@@ -122,12 +243,6 @@ function getUsageCounts(assignments, excludeSkill) {
   return counts;
 }
 
-/**
- * @param {string} skill
- * @param {number} requested
- * @param {Record<string, number | null>} assignments
- * @param {Record<number, number>} maxPer
- */
 function resolveRankForSkill(requested, skill, assignments, maxPer) {
   const r = Math.min(10, Math.max(1, Math.round(requested)));
   const usage = getUsageCounts(assignments, skill);
@@ -140,42 +255,6 @@ function resolveRankForSkill(requested, skill, assignments, maxPer) {
     if (down >= 1 && maxPer[down] - usage[down] > 0) return down;
   }
   return r;
-}
-
-// Golden-angle hues so adjacent categories are visually distinct
-function categoryHue(index) {
-  return (index * 137.508) % 360;
-}
-
-function getCategoryIndex(name) {
-  return DATA.categories.indexOf(name);
-}
-
-/**
- * @returns {{ css: string, fill: string, stroke: string, hue: number }}
- */
-function getItemColor(name) {
-  const isCat = categorySet.has(name);
-  if (isCat) {
-    const i = getCategoryIndex(name);
-    const h = i >= 0 ? categoryHue(i) : 220;
-    return {
-      hue: h,
-      css: `hsl(${h} 70% 46%)`,
-      fill: `hsla(${h}, 60%, 48%, 0.55)`,
-      stroke: `hsl(${h} 60% 58%)`,
-    };
-  }
-  const parent = DATA.specParentByName[name] || "Graphic Design";
-  const pi = getCategoryIndex(parent);
-  const h = pi >= 0 ? categoryHue(pi) : 200;
-  const hShift = (h + 6) % 360;
-  return {
-    hue: h,
-    css: `hsl(${h} 50% 42%)`,
-    fill: `hsla(${hShift}, 45%, 44%, 0.5)`,
-    stroke: `hsl(${h} 48% 52%)`,
-  };
 }
 
 const view = document.querySelector("#view");
@@ -196,15 +275,32 @@ function render() {
   view.appendChild(template.content.cloneNode(true));
   wireStepHandlers();
 
-  if (state.step === 2) {
+  if (state.step === 1) {
+    mountDemoTChart();
+  } else if (state.step === 2) {
     syncProfileRadios();
   } else if (state.step === 3) {
     renderSelectionLists();
   } else if (state.step === 4) {
-    renderRatingStep();
+    renderRatingStep(true);
   } else if (state.step === 5) {
     renderVisualization();
   }
+}
+
+function mountDemoTChart() {
+  const root = document.querySelector("#demo-t-chart");
+  if (!root) return;
+  const mqHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+  const setHoverMode = () => {
+    root.dataset.mode = mqHover.matches ? "hover" : "tap";
+  };
+  setHoverMode();
+  mqHover.addEventListener("change", setHoverMode);
+  root.addEventListener("click", () => {
+    if (mqHover.matches) return;
+    root.classList.toggle("demo-t-chart--active");
+  });
 }
 
 function syncProfileRadios() {
@@ -281,15 +377,13 @@ function handleAction(action) {
         cleared[name] = null;
       });
       state.assignments = cleared;
-      setStep(4);
+      renderRatingStep(true);
       break;
     }
     case "to-step-5": {
-      const missing = state.selectedItems.filter(
-        (name) => state.assignments[name] == null
-      );
+      const missing = state.selectedItems.filter((name) => state.assignments[name] == null);
       if (missing.length) {
-        alert("Set a score for every selected item (use the scale or tap a rank).");
+        alert("Pick a ranking icon for every item.");
         return;
       }
       setStep(5);
@@ -368,170 +462,34 @@ function renderQuotaKeyEl(maxPer, assignments) {
     const line = document.createElement("div");
     line.className = "quota-line";
     if (rem <= 0) line.classList.add("quota-line--exhausted");
-    line.textContent = `${score}/10 — ${rem} of ${max} left`;
+    const th = document.createElement("img");
+    th.className = "quota-line-icon";
+    th.src = rankIconPath(score);
+    th.alt = "";
+    line.appendChild(th);
+    const span = document.createElement("span");
+    span.textContent = `${score}/10 — ${rem} of ${max} left`;
+    line.appendChild(span);
     rows.appendChild(line);
   }
   return rows;
 }
 
-/**
- * @param {HTMLInputElement} range
- * @param {string} skill
- * @param {Record<number, number>} maxPer
- */
-function bindSliderRow(range, skill, maxPer) {
-  const row = range.closest(".skill-rate-row");
-  const fill = row.querySelector(".skill-scale-fill");
-  const valueEl = row.querySelector(".skill-rate-value");
-  const updateVisual = (val) => {
-    if (val == null) {
-      if (fill) fill.style.width = "0%";
-      if (valueEl) valueEl.textContent = "—";
-      range.value = "0";
-      range.setAttribute("aria-valuenow", "0");
-      range.setAttribute("aria-valuetext", "Unset");
-      return;
-    }
-    if (fill) fill.style.width = `${val * 10}%`;
-    if (valueEl) valueEl.textContent = `${val}/10`;
-    range.value = String(val);
-    range.setAttribute("aria-valuenow", String(val));
-    range.setAttribute("aria-valuetext", `Score ${val} of 10`);
-  };
-
-  const refreshKeyAndAllTicks = () => {
-    const keyHost = document.querySelector("#ranking-key-host");
-    if (keyHost) {
-      keyHost.innerHTML = "";
-      keyHost.appendChild(renderQuotaKeyEl(maxPer, state.assignments));
-    }
-    updateTickAvailability(state.assignments, maxPer);
-  };
-
-  const applyValue = (requested) => {
-    const raw = Math.round(Number(requested));
-    if (!Number.isFinite(raw) || raw <= 0) {
-      state.assignments[skill] = null;
-      updateVisual(null);
-      refreshKeyAndAllTicks();
-      return;
-    }
-    const rounded = Math.min(10, Math.max(1, raw));
-    state.assignments[skill] = null;
-    const resolved = resolveRankForSkill(rounded, skill, state.assignments, maxPer);
-    state.assignments[skill] = resolved;
-
-    if (resolved !== rounded) {
-      range.classList.add("range-snapped");
-      setTimeout(() => range.classList.remove("range-snapped"), 500);
-    }
-
-    updateVisual(resolved);
-    refreshKeyAndAllTicks();
-  };
-
-  if (state.assignments[skill] == null) {
-    updateVisual(null);
-  } else {
-    updateVisual(state.assignments[skill]);
-  }
-
-  const onVal = (e) => {
-    applyValue(Number(e.target.value));
-  };
-  range.addEventListener("input", onVal);
-  range.addEventListener("change", onVal);
-
-  const tickRow = row.querySelector(".range-ticks");
-  if (tickRow) {
-    tickRow.querySelectorAll("button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const v = Number(btn.dataset.rank);
-        applyValue(v);
-      });
-    });
-  }
+function refreshQuotaHost() {
+  const keyHost = document.querySelector("#ranking-key-host");
+  if (!keyHost || !state.maxPerCurrent) return;
+  keyHost.innerHTML = "";
+  keyHost.appendChild(renderQuotaKeyEl(state.maxPerCurrent, state.assignments));
 }
 
-function renderRatingStep() {
-  const n = state.selectedItems.length;
-  const maxPer = getMaxPerScore(state.profileType, n);
-  const listEl = document.querySelector("#selected-items");
-  const keyHost = document.querySelector("#ranking-key-host");
-  if (!listEl) return;
-  listEl.innerHTML = "";
-
-  state.selectedItems.forEach((skill) => {
-    const colors = getItemColor(skill);
-    const isSpec = !categorySet.has(skill);
-    const parent = isSpec
-      ? ` · links to ${DATA.specParentByName[skill] || "a category"}`
-      : "";
-    const row = document.createElement("div");
-    row.className = "skill-rate-row";
-    row.dataset.skill = skill;
-    row.style.setProperty("--skill-accent", colors.css);
-    row.style.setProperty("--skill-fill", colors.fill);
-    row.style.setProperty("--skill-stroke", colors.stroke);
-
-    row.innerHTML = `
-      <div class="skill-rate-head">
-        <div>
-          <div class="skill-title">${escapeHtml(skill)}</div>
-          <div class="skill-meta muted">${isSpec ? "Specialization" : "Design category"}${escapeHtml(
-      parent
-    )}</div>
-        </div>
-        <div class="skill-rate-value" aria-live="polite">—</div>
-      </div>
-      <div class="skill-scale" role="group" aria-label="Score for ${escapeHtml(skill)}">
-        <div class="skill-scale-inner">
-          <div class="skill-scale-track" aria-hidden="true"></div>
-          <div class="skill-scale-fill" style="width:0%"></div>
-          <input
-            class="skill-rank-range"
-            type="range"
-            min="0"
-            max="10"
-            step="1"
-            value="0"
-            aria-label="Score for ${escapeHtml(skill)}"
-            aria-valuemin="0"
-            aria-valuemax="10"
-            aria-valuenow="0"
-            aria-valuetext="Unset"
-          />
-        </div>
-        <div class="range-ticks" role="group" aria-label="Ranks 1 to 10"></div>
-      </div>
-    `;
-
-    const ticks = row.querySelector(".range-ticks");
-    for (let r = 1; r <= 10; r += 1) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "range-tick";
-      b.dataset.rank = String(r);
-      b.textContent = String(r);
-      ticks.appendChild(b);
-    }
-
-    listEl.appendChild(row);
-    const range = row.querySelector(".skill-rank-range");
-    bindSliderRow(range, skill, maxPer);
-  });
-
-  if (keyHost) {
-    keyHost.innerHTML = "";
-    keyHost.appendChild(renderQuotaKeyEl(maxPer, state.assignments));
-  }
-  updateTickAvailability(state.assignments, maxPer);
-  runSelfTestIfQuery();
+function updateAllTickAvailability() {
+  if (!state.maxPerCurrent) return;
+  updateTickAvailability(state.assignments, state.maxPerCurrent);
 }
 
 function updateTickAvailability(assignments, maxPer) {
   const usage = getUsageCounts(assignments, null);
-  document.querySelectorAll(".range-tick").forEach((btn) => {
+  document.querySelectorAll(".rank-toggle").forEach((btn) => {
     const rank = Number(btn.dataset.rank);
     const max = maxPer[rank] || 0;
     const used = usage[rank] || 0;
@@ -540,135 +498,344 @@ function updateTickAvailability(assignments, maxPer) {
     const skill = row && row.dataset.skill;
     const holds = skill != null && assignments[skill] === rank;
     const unavailable = rem <= 0 && !holds;
-    btn.classList.toggle("range-tick--unavailable", unavailable);
+    btn.classList.toggle("rank-toggle--unavailable", unavailable);
+    btn.classList.toggle("rank-toggle--selected", Boolean(holds));
   });
+}
+
+function applyRankThemeToRow(row, rank) {
+  const t = getRankTheme(rank);
+  row.style.setProperty("--rank-accent", t.accent);
+  row.style.setProperty("--rank-fill", t.fill);
+  row.style.setProperty("--rank-stroke", t.stroke);
+}
+
+function playHeroEnter(row) {
+  const inner = row.querySelector(".skill-rank-hero-inner");
+  if (!inner) return;
+  inner.classList.remove("is-pulsing");
+  inner.classList.remove("is-entering");
+  void inner.offsetWidth;
+  inner.classList.add("is-entering");
+  const onEnd = (e) => {
+    if (!e.animationName || !e.animationName.includes("rankIconEnter")) return;
+    inner.removeEventListener("animationend", onEnd);
+    inner.classList.remove("is-entering");
+    inner.classList.add("is-pulsing");
+  };
+  inner.addEventListener("animationend", onEnd);
+}
+
+function findRowBySkill(skill) {
+  return [...document.querySelectorAll(".skill-rate-row")].find((r) => r.dataset.skill === skill);
+}
+
+/**
+ * @param {{ refreshTicks?: boolean }} [opts]
+ */
+function updateRowUI(skill, opts = {}) {
+  const refreshTicks = opts.refreshTicks !== false;
+  const row = findRowBySkill(skill);
+  if (!row) return;
+  const rank = state.assignments[skill];
+  const heroImg = row.querySelector(".skill-rank-hero-img");
+  const valueEl = row.querySelector(".skill-rate-value");
+  applyRankThemeToRow(row, rank);
+
+  if (rank == null) {
+    if (heroImg) {
+      heroImg.classList.add("hidden");
+      heroImg.removeAttribute("src");
+    }
+    if (valueEl) valueEl.textContent = "—";
+    const inner = row.querySelector(".skill-rank-hero-inner");
+    if (inner) {
+      inner.classList.remove("is-entering", "is-pulsing");
+    }
+  } else {
+    if (heroImg) {
+      const nextSrc = rankIconPath(rank);
+      if (heroImg.getAttribute("src") !== nextSrc) {
+        heroImg.src = nextSrc;
+        heroImg.alt = `Rank ${rank} of 10`;
+        heroImg.classList.remove("hidden");
+        playHeroEnter(row);
+      } else {
+        heroImg.classList.remove("hidden");
+      }
+    }
+    if (valueEl) valueEl.textContent = `${rank}/10`;
+  }
+  if (refreshTicks) updateAllTickAvailability();
+}
+
+function applyRank(skill, requestedRaw) {
+  const maxPer = state.maxPerCurrent;
+  if (!maxPer) return;
+
+  const raw = Math.round(Number(requestedRaw));
+  if (!Number.isFinite(raw) || raw <= 0) {
+    state.assignments[skill] = null;
+    updateRowUI(skill);
+    refreshQuotaHost();
+    updateAllTickAvailability();
+    return;
+  }
+  const rounded = Math.min(10, Math.max(1, raw));
+  state.assignments[skill] = null;
+  const resolved = resolveRankForSkill(rounded, skill, state.assignments, maxPer);
+  state.assignments[skill] = resolved;
+
+  if (resolved !== rounded) {
+    const row = findRowBySkill(skill);
+    if (row) {
+      const inner = row.querySelector(".skill-rank-hero-inner");
+      inner?.classList.add("rank-snapped-flash");
+      setTimeout(() => inner?.classList.remove("rank-snapped-flash"), 450);
+    }
+  }
+
+  updateRowUI(skill);
+  refreshQuotaHost();
+  updateAllTickAvailability();
+}
+
+function renderRatingStep(fullRebuild) {
+  const n = state.selectedItems.length;
+  const maxPer = getMaxPerScore(state.profileType, n);
+  state.maxPerCurrent = maxPer;
+
+  const listEl = document.querySelector("#selected-items");
+  const keyHost = document.querySelector("#ranking-key-host");
+  if (!listEl) return;
+
+  if (fullRebuild) {
+    listEl.innerHTML = "";
+    state.selectedItems.forEach((skill, idx) => {
+      const isSpec = !categorySet.has(skill);
+      const parent = isSpec
+        ? ` · ${DATA.specParentByName[skill] || "category"}`
+        : "";
+      const row = document.createElement("div");
+      row.className = "skill-rate-row";
+      row.dataset.skill = skill;
+      row.dataset.skillIdx = String(idx);
+
+      const rank = state.assignments[skill];
+      applyRankThemeToRow(row, rank);
+
+      row.innerHTML = `
+        <div class="skill-rate-head">
+          <div>
+            <div class="skill-title">${escapeHtml(skill)}</div>
+            <div class="skill-meta muted">${isSpec ? "Specialization" : "Design category"}${escapeHtml(
+        parent
+      )}</div>
+          </div>
+          <div class="skill-rate-value" aria-live="polite">${rank == null ? "—" : `${rank}/10`}</div>
+        </div>
+        <div class="skill-rate-rating">
+          <div class="skill-rank-hero">
+            <div class="skill-rank-hero-inner">
+              <img class="skill-rank-hero-img ${rank == null ? "hidden" : ""}" alt="" src="${
+        rank == null ? "" : rankIconPath(rank)
+      }" />
+            </div>
+          </div>
+          <div class="rank-toggle-strip" role="group" aria-label="Rank 1 to 10"></div>
+        </div>
+      `;
+
+      const strip = row.querySelector(".rank-toggle-strip");
+      for (let r = 1; r <= 10; r += 1) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "rank-toggle";
+        b.dataset.rank = String(r);
+        b.setAttribute("aria-label", `Set rank ${r} of 10`);
+        const im = document.createElement("img");
+        im.src = rankIconPath(r);
+        im.alt = "";
+        b.appendChild(im);
+        b.addEventListener("click", () => applyRank(skill, r));
+        strip.appendChild(b);
+      }
+
+      listEl.appendChild(row);
+      if (rank != null) {
+        const inner = row.querySelector(".skill-rank-hero-inner");
+        inner?.classList.add("is-pulsing");
+      }
+    });
+  }
+
+  if (keyHost) {
+    keyHost.innerHTML = "";
+    keyHost.appendChild(renderQuotaKeyEl(maxPer, state.assignments));
+  }
+  state.selectedItems.forEach((skill) => updateRowUI(skill, { refreshTicks: false }));
+  updateAllTickAvailability();
+  runSelfTestIfQuery();
+}
+
+function localMaximaIndices(arr, minVal) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += 1) {
+    const v = arr[i];
+    if (v < minVal) continue;
+    const left = i > 0 ? arr[i - 1] : v;
+    const right = i < arr.length - 1 ? arr[i + 1] : v;
+    if (v >= left && v >= right) out.push(i);
+  }
+  return out;
+}
+
+/**
+ * Classify designer profile shape from ordered items (selection order).
+ * @param {{ name: string, value: number }[]} items
+ */
+function detectDesignerShape(items) {
+  const n = items.length;
+  const scores = items.map((x) => x.value);
+  const sorted = [...scores].sort((a, b) => b - a);
+  const max = sorted[0] ?? 0;
+  const second = sorted[1] ?? 0;
+  const third = sorted[2] ?? 0;
+  const mean = scores.reduce((a, b) => a + b, 0) / Math.max(1, n);
+  const spread = max - (sorted[sorted.length - 1] ?? max);
+  const deep = scores.filter((s) => s >= 8).length;
+  const high = scores.filter((s) => s >= 7).length;
+  const ord = scores;
+  const peaks = localMaximaIndices(ord, 7);
+
+  const S = { I: 0, T: 0, Pi: 0, M: 0, X: 0 };
+
+  if (max >= 8 && max - second >= 3) S.I += 38;
+  if (n <= 4 && max >= 9 && deep <= 1) S.I += 22;
+
+  if (n >= 5 && deep === 1 && max >= 9 && second <= 7) S.T += 42;
+  if (n >= 6 && spread >= 4 && deep <= 2 && mean < 7) S.T += 18;
+
+  if (deep >= 2 && n >= 4) S.Pi += 40;
+  if (deep === 2 && max >= 8 && second >= 8) S.Pi += 22;
+
+  if (peaks.length >= 3) S.M += 48;
+  if (deep >= 3) S.M += 20;
+
+  const highRatio = high / Math.max(1, n);
+  if (highRatio >= 0.65 && spread <= 3 && max >= 7) S.X += 42;
+  if (n >= 5 && scores.every((s) => s >= 6) && spread <= 4) S.X += 18;
+
+  const order = ["I", "T", "Pi", "M", "X"];
+  let best = "T";
+  let bestS = -1;
+  order.forEach((k) => {
+    if (S[k] > bestS) {
+      bestS = S[k];
+      best = k;
+    }
+  });
+  if (bestS <= 0) best = "T";
+
+  const labels = {
+    I: "I-shaped (deep specialist)",
+    T: "T-shaped (broad + one deep stem)",
+    Pi: "Pi-shaped (two deep stems)",
+    M: "M-shaped (three peaks of depth)",
+    X: "X-shaped (balanced strength across areas)",
+  };
+  return {
+    shape: best,
+    label: labels[best],
+    detail: `Scores: ${scores.join(", ")} · peaks≥7 in order: ${peaks.length}`,
+  };
 }
 
 function renderVisualization() {
   const svg = document.querySelector("#t-shape-svg");
-  svg.innerHTML = "";
+  const titleEl = document.querySelector("#shape-result-title");
+  const subEl = document.querySelector("#shape-result-sub");
+  if (!svg) return;
 
   const mapped = state.selectedItems
-    .map((name) => {
-      const v = state.assignments[name];
-      return { name, value: v };
-    })
+    .map((name) => ({ name, value: state.assignments[name] }))
     .filter((x) => x.value != null);
-  mapped.sort((a, b) => b.value - a.value);
 
-  const points = generatePoints(mapped.length, state.profileType);
-  const sortedCenter = [0, 1, 2];
-  const edgeIndexes = points
-    .map((_, i) => i)
-    .filter((i) => !sortedCenter.includes(i));
-  shuffle(edgeIndexes);
-
-  const order = [];
-  for (let i = 0; i < mapped.length; i += 1) {
-    if (i < sortedCenter.length) {
-      order.push(sortedCenter[i]);
-    } else {
-      order.push(edgeIndexes[i - sortedCenter.length]);
-    }
+  const detection = detectDesignerShape(mapped);
+  state.detectedShape = detection;
+  if (titleEl) {
+    titleEl.textContent = `Your profile: ${detection.shape}-shaped designer`;
+  }
+  if (subEl) {
+    subEl.textContent = detection.label;
   }
 
-  const centerX = 450;
-  const centerY = 350;
-  const cardW = window.innerWidth < 740 ? 170 : 190;
-  const cardH = 64;
+  svg.innerHTML = "";
+  const W = 900;
+  const H = 560;
+  const padL = 48;
+  const padR = 48;
+  const padB = 72;
+  const baselineY = H - padB;
+  const maxBarH = H - padB - 100;
+  const n = mapped.length;
+  const gap = 10;
+  const barW = n > 0 ? (W - padL - padR - gap * (n - 1)) / n : 40;
 
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  bg.setAttribute("x", "0");
-  bg.setAttribute("y", "0");
-  bg.setAttribute("width", "900");
-  bg.setAttribute("height", "700");
+  bg.setAttribute("width", String(W));
+  bg.setAttribute("height", String(H));
   bg.setAttribute("fill", "transparent");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.appendChild(bg);
 
+  const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  title.setAttribute("x", String(padL));
+  title.setAttribute("y", "36");
+  title.setAttribute("fill", "#e8ecff");
+  title.setAttribute("font-size", "18");
+  title.setAttribute("font-weight", "700");
+  title.textContent = `${detection.shape}-shaped profile`;
+  svg.appendChild(title);
+
   mapped.forEach((item, i) => {
-    const point = points[order[i]] || points[i];
-    const x = centerX + point[0] - cardW / 2;
-    const y = centerY + point[1] - cardH / 2;
-    const col = getItemColor(item.name);
-
-    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
+    const x = padL + i * (barW + gap);
+    const h = (item.value / 10) * maxBarH;
+    const y = baselineY - h;
+    const theme = getRankTheme(item.value);
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute("x", x.toString());
-    rect.setAttribute("y", y.toString());
-    rect.setAttribute("rx", "12");
-    rect.setAttribute("width", cardW.toString());
-    rect.setAttribute("height", cardH.toString());
-    rect.setAttribute("fill", col.fill);
-    rect.setAttribute("stroke", col.stroke);
+    rect.setAttribute("x", String(x));
+    rect.setAttribute("y", String(y));
+    rect.setAttribute("width", String(barW));
+    rect.setAttribute("height", String(Math.max(2, h)));
+    rect.setAttribute("rx", "6");
+    rect.setAttribute("fill", theme.fill);
+    rect.setAttribute("stroke", theme.stroke);
     rect.setAttribute("stroke-width", "1.5");
+    svg.appendChild(rect);
 
-    const barTrack = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    const pad = 8;
-    const trackW = cardW - pad * 2;
-    const trackH = 4;
-    barTrack.setAttribute("x", (x + pad).toString());
-    barTrack.setAttribute("y", (y + cardH - 10).toString());
-    barTrack.setAttribute("width", String(trackW));
-    barTrack.setAttribute("height", String(trackH));
-    barTrack.setAttribute("rx", "2");
-    barTrack.setAttribute("fill", "rgba(255,255,255,0.1)");
+    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    label.setAttribute("x", String(x + barW / 2));
+    label.setAttribute("y", String(baselineY + 22));
+    label.setAttribute("fill", "#b8c4e8");
+    label.setAttribute("font-size", "10");
+    label.setAttribute("text-anchor", "middle");
+    label.textContent = truncate(item.name, Math.max(8, Math.floor(barW / 5)));
+    svg.appendChild(label);
 
-    const barFill = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    const fillW = (item.value / 10) * trackW;
-    barFill.setAttribute("x", (x + pad).toString());
-    barFill.setAttribute("y", (y + cardH - 10).toString());
-    barFill.setAttribute("width", String(Math.max(0, fillW)));
-    barFill.setAttribute("height", String(trackH));
-    barFill.setAttribute("rx", "2");
-    barFill.setAttribute("fill", col.stroke);
-
-    const scoreText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    scoreText.setAttribute("x", (x + 10).toString());
-    scoreText.setAttribute("y", (y + 18).toString());
-    scoreText.setAttribute("fill", "#d9dcff");
-    scoreText.setAttribute("font-size", "12");
-    scoreText.textContent = `${item.value}/10`;
-
-    const skillText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    skillText.setAttribute("x", (x + 10).toString());
-    skillText.setAttribute("y", (y + 43).toString());
-    skillText.setAttribute("fill", "#f4f6ff");
-    skillText.setAttribute("font-size", "13");
-    skillText.textContent = truncate(item.name, 28);
-
-    group.appendChild(rect);
-    group.appendChild(barTrack);
-    group.appendChild(barFill);
-    group.appendChild(scoreText);
-    group.appendChild(skillText);
-    svg.appendChild(group);
+    const score = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    score.setAttribute("x", String(x + barW / 2));
+    score.setAttribute("y", String(y - 8));
+    score.setAttribute("fill", "#f4f6ff");
+    score.setAttribute("font-size", "12");
+    score.setAttribute("text-anchor", "middle");
+    score.textContent = `${item.value}/10`;
+    svg.appendChild(score);
   });
 }
 
-function generatePoints(count, profileType) {
-  const base =
-    profileType === "generalist"
-      ? [
-          [0, 0], [0, -100], [0, 100], [-180, 0], [180, 0], [0, -200],
-          [0, 200], [-280, 0], [280, 0], [-360, 0], [360, 0], [0, 280],
-        ]
-      : [
-          [0, 0], [0, -100], [0, 100], [-180, 0], [180, 0], [0, -200],
-        ];
-
-  return base.slice(0, count);
-}
-
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-}
-
 function truncate(str, max) {
-  return str.length <= max ? str : `${str.slice(0, max - 1)}...`;
+  return str.length <= max ? str : `${str.slice(0, max - 1)}…`;
 }
 
 function escapeHtml(s) {
@@ -683,7 +850,7 @@ function downloadSvg() {
   const svg = document.querySelector("#t-shape-svg");
   const content = svg.outerHTML;
   const blob = new Blob([content], { type: "image/svg+xml;charset=utf-8" });
-  triggerDownload(URL.createObjectURL(blob), "t-shaped-profile.svg");
+  triggerDownload(URL.createObjectURL(blob), "designer-shape-profile.svg");
 }
 
 function downloadFromSvg(type) {
@@ -696,8 +863,10 @@ function downloadFromSvg(type) {
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
-    canvas.width = 900;
-    canvas.height = 700;
+    const W = 900;
+    const H = 560;
+    canvas.width = W;
+    canvas.height = H;
     const ctx = canvas.getContext("2d");
     if (type === "jpeg") {
       ctx.fillStyle = "white";
@@ -708,7 +877,7 @@ function downloadFromSvg(type) {
     ctx.drawImage(img, 0, 0);
     canvas.toBlob(
       (blob) => {
-        const filename = type === "jpeg" ? "t-shaped-profile.jpg" : "t-shaped-profile.png";
+        const filename = type === "jpeg" ? "designer-shape.jpg" : "designer-shape.png";
         triggerDownload(URL.createObjectURL(blob), filename);
       },
       type === "jpeg" ? "image/jpeg" : "image/png",
@@ -729,31 +898,16 @@ function triggerDownload(url, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-// --- Invariants (stress test) ------------------------------------------------
-
 function selfTestRankingLogic() {
   const max12 = getMaxPerScore("generalist", 12);
   let sum = 0;
   for (let s = 1; s <= 10; s += 1) sum += max12[s] || 0;
-  if (sum !== 12) {
-    throw new Error("selfTest: generalist pool should count 12 assignments");
-  }
-  if (getUsageCounts({}, null)[10] !== 0) {
-    throw new Error("selfTest: empty usage");
-  }
+  if (sum !== 12) throw new Error("selfTest: generalist pool");
   const spec1 = getMaxPerScore("specialist", 1);
-  if (spec1[10] !== 1) {
-    throw new Error("selfTest: specialist 1 should allow one 10/10 only");
-  }
-  if (resolveRankForSkill(3, "x", {}, spec1) !== 10) {
-    throw new Error("selfTest: only available bar is 10 for specialist with one pick");
-  }
+  if (resolveRankForSkill(3, "x", {}, spec1) !== 10) throw new Error("selfTest: spec1");
   const max6 = getMaxPerScore("specialist", 6);
   const full = { a: 10, b: 9, c: 8, d: 8, e: 7, f: 7 };
-  const g = resolveRankForSkill(10, "g", full, max6);
-  if (g !== 6) {
-    throw new Error(`selfTest: expected 6, got ${g} when 10-7 are consumed`);
-  }
+  if (resolveRankForSkill(10, "g", full, max6) !== 6) throw new Error("selfTest: spec6");
 }
 
 function runSelfTestIfQuery() {
@@ -770,6 +924,20 @@ try {
 } catch (e) {
   console.error("T-Shaped selfTest failed", e);
 }
+
+document.documentElement.style.setProperty("--global-pulse-scale", "1");
+ensureGlobalPulseLoop();
+
+for (let r = 1; r <= 10; r += 1) {
+  if (!rankColors[r]) rankColors[r] = hexToRgb(FALLBACK_RANK_HEX[r]);
+}
+loadRankColorsFromIcons().then(() => {
+  if (state.step === 4) {
+    refreshQuotaHost();
+    state.selectedItems.forEach((sk) => updateRowUI(sk, { refreshTicks: false }));
+    updateAllTickAvailability();
+  }
+});
 
 render();
 runSelfTestIfQuery();

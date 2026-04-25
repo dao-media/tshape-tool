@@ -17,8 +17,8 @@
         <div class="step-pill active" data-step="1">1. Start</div>
         <div class="step-pill" data-step="2">2. Profile</div>
         <div class="step-pill" data-step="3">3. Select</div>
-        <div class="step-pill" data-step="4">4. Rate</div>
-        <div class="step-pill" data-step="5">5. Visualize</div>
+        <div class="step-pill" data-step="4">4. Rank</div>
+        <div class="step-pill" data-step="5">5. Shape</div>
       </section>
 
       <section id="view" class="view" aria-live="polite"></section>
@@ -26,8 +26,45 @@
 
     <template id="step1-template">
       <div class="card">
-        <h2>Would you like to map your T-shape?</h2>
-        <p class="muted">A quick 5-step flow to define your T-shaped designer profile.</p>
+        <h2>Would you like to map your designer shape?</h2>
+        <p class="muted">
+          A short flow: profile → pick skills → rank with icons → see whether you read as T, Pi,
+          M, I, or X-shaped.
+        </p>
+        <div class="demo-t-wrap">
+          <p class="demo-t-caption muted small">Preview · top-aligned bars like your final plot</p>
+          <div
+            class="demo-t-chart"
+            id="demo-t-chart"
+            role="img"
+            aria-label="Example T-shaped profile with five bars"
+          >
+            <div class="demo-t-bar" style="--h: 28%; --d: 0.05s">
+              <span class="demo-t-label">Strategy</span>
+              <span class="demo-t-col"></span>
+            </div>
+            <div class="demo-t-bar" style="--h: 34%; --d: 0.1s">
+              <span class="demo-t-label">Systems</span>
+              <span class="demo-t-col"></span>
+            </div>
+            <div class="demo-t-bar demo-t-bar--stem" style="--h: 92%; --d: 0.15s">
+              <span class="demo-t-label">Business ROI</span>
+              <span class="demo-t-col"></span>
+            </div>
+            <div class="demo-t-bar" style="--h: 30%; --d: 0.2s">
+              <span class="demo-t-label">A11y + ethics</span>
+              <span class="demo-t-col"></span>
+            </div>
+            <div class="demo-t-bar" style="--h: 26%; --d: 0.25s">
+              <span class="demo-t-label">Cross-func.</span>
+              <span class="demo-t-col"></span>
+            </div>
+          </div>
+          <p class="demo-t-hint muted small">
+            <span class="demo-t-hint-desktop">Desktop: hover a bar.</span>
+            <span class="demo-t-hint-mobile">Mobile: tap the chart to expand labels.</span>
+          </p>
+        </div>
         <div class="actions">
           <button data-action="start-yes">Yes</button>
           <button data-action="start-no" class="secondary">No</button>
@@ -102,11 +139,10 @@
 
     <template id="step4-template">
       <div class="card card--scrollable">
-        <h2>Rate each selected skill</h2>
+        <h2>Rate each selection</h2>
         <p class="muted">
-          Each row has one scale (0 = unset). Drag the thumb or tap a number. Each score has a
-          limit — the key updates as you go. If a rank is full, the thumb snaps to the nearest free
-          value (higher first, then lower).
+          Tap a ranking icon (1–10). Your row picks up that icon’s colors. Each rank has a limited
+          count — see the key. If a rank is full, you’ll snap to the nearest free value.
         </p>
         <div class="rating-layout">
           <div class="rating-col">
@@ -134,17 +170,17 @@
           >
             ⟲
           </button>
-          <button data-action="to-step-5">Plot T-shape</button>
+          <button data-action="to-step-5">See your shape</button>
         </div>
       </div>
     </template>
 
     <template id="step5-template">
       <div class="card">
-        <h2>Your T-shaped profile</h2>
-        <p class="muted">Highest scores are centered and the edges are varied automatically.</p>
+        <h2 id="shape-result-title">Your designer shape</h2>
+        <p class="muted" id="shape-result-sub">Bars use your ranking colors (top-aligned).</p>
         <div class="viz-wrap">
-          <svg id="t-shape-svg" viewBox="0 0 900 700" role="img" aria-label="T-shaped skill map"></svg>
+          <svg id="t-shape-svg" viewBox="0 0 900 560" role="img" aria-label="Designer shape profile"></svg>
         </div>
         <div class="actions">
           <button data-action="to-step-4" class="secondary">Back</button>

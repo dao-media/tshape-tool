@@ -69,6 +69,81 @@ body {
   padding: 1rem;
 }
 
+.card--scrollable {
+  display: flex;
+  flex-direction: column;
+  max-height: min(92vh, 880px);
+}
+
+.card--scrollable > .card-title-row,
+.card--scrollable > h2,
+.card--scrollable > p,
+.card--scrollable > .selected-summary,
+.card--scrollable > .actions {
+  flex-shrink: 0;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.card-title-row h2 {
+  margin: 0;
+}
+
+.icon-btn {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 10px;
+  background: #2b3550;
+  color: #e8ecff;
+  font-size: 1.35rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  filter: brightness(1.12);
+}
+
+.scroll-panel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+
+.scroll-panel--main {
+  max-height: min(52vh, 520px);
+}
+
+.scroll-panel--side {
+  max-height: min(48vh, 420px);
+}
+
+.card--scrollable #selection-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.card--scrollable > .rating-layout {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rating-col .scroll-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 h2 {
   margin: 0 0 0.5rem;
 }
@@ -134,8 +209,6 @@ button:hover {
 .option-list {
   display: grid;
   gap: 0.45rem;
-  max-height: 360px;
-  overflow: auto;
   padding-right: 0.25rem;
 }
 
@@ -158,6 +231,17 @@ button:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  align-items: stretch;
+}
+
+.rating-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.rating-col h3 {
+  flex-shrink: 0;
 }
 
 .small {
@@ -168,6 +252,7 @@ button:hover {
 .slider-zone-list {
   display: grid;
   gap: 1rem;
+  padding-bottom: 0.25rem;
 }
 
 .skill-rate-row {
@@ -204,35 +289,89 @@ button:hover {
   margin-top: 0.12rem;
 }
 
-.skill-bar-wrap {
+.skill-scale {
+  margin-top: 0.35rem;
+}
+
+.skill-scale-inner {
   position: relative;
-  width: 100%;
+  height: 32px;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.skill-scale-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   height: 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-  margin: 0.4rem 0 0.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  z-index: 0;
 }
 
-.skill-rate-fill {
-  height: 100%;
+.skill-scale-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 10px;
   width: 0;
-  background: linear-gradient(90deg, var(--skill-fill, #8a7dff), var(--skill-accent, #8a7dff));
   border-radius: 999px;
-  box-shadow: 0 0 12px rgba(138, 125, 255, 0.3);
-  transition: width 0.15s ease;
-}
-
-.range-wrap {
-  position: relative;
-  padding: 0 0 1.4rem 0;
+  background: linear-gradient(90deg, var(--skill-fill, #8a7dff), var(--skill-accent, #8a7dff));
+  box-shadow: 0 0 12px rgba(138, 125, 255, 0.28);
+  pointer-events: none;
+  z-index: 1;
+  transition: width 0.12s ease, opacity 0.15s ease;
 }
 
 .skill-rank-range {
+  position: relative;
+  z-index: 2;
   width: 100%;
-  accent-color: #a89cff;
-  margin: 0.25rem 0 0.35rem;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
   transition: filter 0.2s;
+}
+
+.skill-rank-range::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.skill-rank-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f4f6ff, #c8cfff);
+  border: 2px solid var(--skill-accent, #8a7dff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.skill-rank-range::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.skill-rank-range::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f4f6ff, #c8cfff);
+  border: 2px solid var(--skill-accent, #8a7dff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
 .range-snapped {
@@ -243,8 +382,8 @@ button:hover {
   position: relative;
   display: flex;
   justify-content: space-between;
-  margin-top: 0.1rem;
-  padding: 0 0.1rem 0.6rem 0.1rem;
+  margin-top: 0.05rem;
+  padding: 0 0.1rem 0.35rem 0.1rem;
   gap: 0.1rem;
 }
 
@@ -281,7 +420,6 @@ button:hover {
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.12);
   padding: 0.65rem 0.75rem;
-  min-height: 180px;
 }
 
 .quota-key {
@@ -322,6 +460,11 @@ button:hover {
   .selection-grid,
   .rating-layout {
     grid-template-columns: 1fr;
+  }
+
+  .scroll-panel--main,
+  .scroll-panel--side {
+    max-height: min(46vh, 420px);
   }
 
   .app-shell {

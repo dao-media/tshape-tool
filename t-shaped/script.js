@@ -196,13 +196,23 @@ function render() {
   view.appendChild(template.content.cloneNode(true));
   wireStepHandlers();
 
-  if (state.step === 3) {
+  if (state.step === 2) {
+    syncProfileRadios();
+  } else if (state.step === 3) {
     renderSelectionLists();
   } else if (state.step === 4) {
     renderRatingStep();
   } else if (state.step === 5) {
     renderVisualization();
   }
+}
+
+function syncProfileRadios() {
+  if (!state.profileType) return;
+  const input = document.querySelector(
+    `input[name="profileType"][value="${state.profileType}"]`
+  );
+  if (input) input.checked = true;
 }
 
 function wireStepHandlers() {
@@ -217,6 +227,7 @@ function wireStepHandlers() {
 function handleAction(action) {
   switch (action) {
     case "start-yes":
+      state.profileType = null;
       setStep(2);
       break;
     case "start-no": {
@@ -229,6 +240,10 @@ function handleAction(action) {
       break;
     case "to-step-2":
       setStep(2);
+      break;
+    case "selection-reset":
+      state.selectedItems = [];
+      setStep(3);
       break;
     case "to-step-3": {
       const selected = document.querySelector('input[name="profileType"]:checked');
@@ -274,7 +289,7 @@ function handleAction(action) {
         (name) => state.assignments[name] == null
       );
       if (missing.length) {
-        alert("Set a score for every selected item (use the sliders or tap a rank on the track).");
+        alert("Set a score for every selected item (use the scale or tap a rank).");
         return;
       }
       setStep(5);
@@ -366,27 +381,22 @@ function renderQuotaKeyEl(maxPer, assignments) {
  */
 function bindSliderRow(range, skill, maxPer) {
   const row = range.closest(".skill-rate-row");
-  const fill = row.querySelector(".skill-rate-fill");
+  const fill = row.querySelector(".skill-scale-fill");
   const valueEl = row.querySelector(".skill-rate-value");
-  const barWrap = row.querySelector(".skill-bar-wrap");
-
   const updateVisual = (val) => {
     if (val == null) {
       if (fill) fill.style.width = "0%";
       if (valueEl) valueEl.textContent = "—";
-      if (barWrap) {
-        barWrap.setAttribute("aria-valuenow", "0");
-        barWrap.removeAttribute("aria-valuetext");
-      }
-      range.value = "5";
+      range.value = "0";
+      range.setAttribute("aria-valuenow", "0");
+      range.setAttribute("aria-valuetext", "Unset");
       return;
     }
     if (fill) fill.style.width = `${val * 10}%`;
     if (valueEl) valueEl.textContent = `${val}/10`;
-    if (barWrap) {
-      barWrap.setAttribute("aria-valuenow", String(val));
-      barWrap.setAttribute("aria-valuetext", `Score ${val} of 10`);
-    }
+    range.value = String(val);
+    range.setAttribute("aria-valuenow", String(val));
+    range.setAttribute("aria-valuetext", `Score ${val} of 10`);
   };
 
   const refreshKeyAndAllTicks = () => {
@@ -399,7 +409,14 @@ function bindSliderRow(range, skill, maxPer) {
   };
 
   const applyValue = (requested) => {
-    const rounded = Math.min(10, Math.max(1, Math.round(requested)));
+    const raw = Math.round(Number(requested));
+    if (!Number.isFinite(raw) || raw <= 0) {
+      state.assignments[skill] = null;
+      updateVisual(null);
+      refreshKeyAndAllTicks();
+      return;
+    }
+    const rounded = Math.min(10, Math.max(1, raw));
     state.assignments[skill] = null;
     const resolved = resolveRankForSkill(rounded, skill, state.assignments, maxPer);
     state.assignments[skill] = resolved;
@@ -409,29 +426,25 @@ function bindSliderRow(range, skill, maxPer) {
       setTimeout(() => range.classList.remove("range-snapped"), 500);
     }
 
-    range.value = String(resolved);
     updateVisual(resolved);
     refreshKeyAndAllTicks();
   };
 
   if (state.assignments[skill] == null) {
-    range.value = "5";
     updateVisual(null);
   } else {
-    range.value = String(state.assignments[skill]);
     updateVisual(state.assignments[skill]);
   }
 
   const onVal = (e) => {
-    const req = Number(e.target.value);
-    applyValue(req);
+    applyValue(Number(e.target.value));
   };
   range.addEventListener("input", onVal);
   range.addEventListener("change", onVal);
 
-  const track = row.querySelector(".range-ticks");
-  if (track) {
-    track.querySelectorAll("button").forEach((btn) => {
+  const tickRow = row.querySelector(".range-ticks");
+  if (tickRow) {
+    tickRow.querySelectorAll("button").forEach((btn) => {
       btn.addEventListener("click", () => {
         const v = Number(btn.dataset.rank);
         applyValue(v);
@@ -471,14 +484,25 @@ function renderRatingStep() {
         </div>
         <div class="skill-rate-value" aria-live="polite">—</div>
       </div>
-      <div class="skill-bar-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
-        <div class="skill-rate-fill" style="width:0%"></div>
-      </div>
-      <div class="range-wrap">
-        <input class="skill-rank-range" type="range" min="1" max="10" step="1" value="5" aria-label="Score for ${escapeHtml(
-      skill
-    )}" />
-        <div class="range-ticks" role="group" aria-label="Select rank 1 to 10"></div>
+      <div class="skill-scale" role="group" aria-label="Score for ${escapeHtml(skill)}">
+        <div class="skill-scale-inner">
+          <div class="skill-scale-track" aria-hidden="true"></div>
+          <div class="skill-scale-fill" style="width:0%"></div>
+          <input
+            class="skill-rank-range"
+            type="range"
+            min="0"
+            max="10"
+            step="1"
+            value="0"
+            aria-label="Score for ${escapeHtml(skill)}"
+            aria-valuemin="0"
+            aria-valuemax="10"
+            aria-valuenow="0"
+            aria-valuetext="Unset"
+          />
+        </div>
+        <div class="range-ticks" role="group" aria-label="Ranks 1 to 10"></div>
       </div>
     `;
 

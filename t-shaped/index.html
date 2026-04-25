@@ -66,17 +66,30 @@
     </template>
 
     <template id="step3-template">
-      <div class="card">
-        <h2>Select skills & specialties</h2>
+      <div class="card card--scrollable">
+        <div class="card-title-row">
+          <h2>Select skills & specialties</h2>
+          <button
+            type="button"
+            class="icon-btn"
+            data-action="selection-reset"
+            title="Clear all selections"
+            aria-label="Clear all selections"
+          >
+            ⟲
+          </button>
+        </div>
         <p class="muted" id="selection-cap"></p>
-        <div class="selection-grid">
-          <div>
-            <h3>Design Categories</h3>
-            <div id="categories-list" class="option-list"></div>
-          </div>
-          <div>
-            <h3>Specializations</h3>
-            <div id="specializations-list" class="option-list"></div>
+        <div class="scroll-panel scroll-panel--main" id="selection-scroll">
+          <div class="selection-grid">
+            <div>
+              <h3>Design Categories</h3>
+              <div id="categories-list" class="option-list"></div>
+            </div>
+            <div>
+              <h3>Specializations</h3>
+              <div id="specializations-list" class="option-list"></div>
+            </div>
           </div>
         </div>
         <div class="selected-summary" id="selected-summary"></div>
@@ -88,27 +101,39 @@
     </template>
 
     <template id="step4-template">
-      <div class="card">
+      <div class="card card--scrollable">
         <h2>Rate each selected skill</h2>
         <p class="muted">
-          Use the sliders (1–10) for every selected item. Each score has a limit — the key on the
-          right updates as you go. Stopping on a full bar snaps to the nearest free rank
-          (higher is checked first, then lower).
+          Each row has one scale (0 = unset). Drag the thumb or tap a number. Each score has a
+          limit — the key updates as you go. If a rank is full, the thumb snaps to the nearest free
+          value (higher first, then lower).
         </p>
         <div class="rating-layout">
-          <div>
+          <div class="rating-col">
             <h3>Your selected items</h3>
-            <div id="selected-items" class="slider-zone-list"></div>
+            <div class="scroll-panel scroll-panel--main" id="rate-items-scroll">
+              <div id="selected-items" class="slider-zone-list"></div>
+            </div>
           </div>
-          <div>
+          <div class="rating-col">
             <h3>Score availability</h3>
             <p class="muted small">How many of each score you can still use.</p>
-            <div id="ranking-key-host" class="ranking-key-host"></div>
+            <div class="scroll-panel scroll-panel--side" id="rate-key-scroll">
+              <div id="ranking-key-host" class="ranking-key-host"></div>
+            </div>
           </div>
         </div>
         <div class="actions">
           <button data-action="to-step-3" class="secondary">Back</button>
-          <button data-action="rate-start-over" class="secondary">Start over (clear scores)</button>
+          <button
+            type="button"
+            class="icon-btn"
+            data-action="rate-start-over"
+            title="Clear all scores"
+            aria-label="Clear all scores"
+          >
+            ⟲
+          </button>
           <button data-action="to-step-5">Plot T-shape</button>
         </div>
       </div>

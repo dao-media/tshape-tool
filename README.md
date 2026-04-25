@@ -16,7 +16,7 @@ Implemented flow:
 1. Start prompt (`Yes/No`)
 2. Profile type (`Generalist` or `Specialist`)
 3. Skill/specialty selection
-4. Constrained 1–10 sliders (score counts match generalist/specialist pools) + live availability key; Start over
+4. One combined 0–10 scale per item (0 = unset); constrained scores + live availability key; scrollable lists; reset controls
 5. T-shape plotting, per-item color encoding, and export
 
 ## Project Structure
@@ -53,10 +53,12 @@ Then open:
 
 - **Generalist**: up to 12 selected items.
 - **Specialist**: up to 6 selected items.
-- Ratings use sliders. Each `n/10` can only be used as many times as the pool allows; choosing a
-  “full” score snaps the handle to the nearest free rank.
-- A live key shows how many of each `n/10` are left. **Start over** clears all scores and restores
-  the key.
+- Ratings use a single scale per row (fill + thumb share one track). **0** means unset until the
+  user sets a score. Each `n/10` can only be used as many times as the pool allows; choosing a full
+  score snaps the thumb to the nearest free rank.
+- A live key shows how many of each `n/10` are left. The reset control clears all scores.
+- Long lists scroll inside the card so the layout stays on-screen.
+- On the selection step, **⟲** clears all checked skills/specialties.
 - Design categories have distinct hues; each specialization tints a related hue to its “parent”
   category. Rate rows and the final plot both use the same colors; rows show a fill bar at the
   matching percentage; export cards add a small bar for quick comparison.

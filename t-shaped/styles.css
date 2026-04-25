@@ -1449,6 +1449,13 @@ button:disabled {
 .shape-results-stack {
   display: grid;
   gap: 1.2rem;
+  width: 100%;
+}
+
+.shape-results-stack > .card,
+.shape-results-stack > .shape-insights-card {
+  width: 100%;
+  max-width: 100%;
 }
 
 h2.shape-insights-heading {

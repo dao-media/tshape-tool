@@ -503,7 +503,7 @@ function updateAllTickAvailability() {
 
 function updateTickAvailability(assignments, maxPer) {
   const usage = getUsageCounts(assignments, null);
-  document.querySelectorAll(".rank-toggle").forEach((btn) => {
+  document.querySelectorAll("[data-rank-btn]").forEach((btn) => {
     const rank = Number(btn.dataset.rank);
     const max = maxPer[rank] || 0;
     const used = usage[rank] || 0;
@@ -512,8 +512,8 @@ function updateTickAvailability(assignments, maxPer) {
     const skill = row && row.dataset.skill;
     const holds = skill != null && assignments[skill] === rank;
     const unavailable = rem <= 0 && !holds;
-    btn.classList.toggle("rank-toggle--unavailable", unavailable);
-    btn.classList.toggle("rank-toggle--selected", Boolean(holds));
+    btn.classList.toggle("rank-btn--unavailable", unavailable);
+    btn.classList.toggle("rank-btn--selected", Boolean(holds));
   });
 }
 
@@ -551,6 +551,72 @@ function findRowBySkill(skill) {
   return [...document.querySelectorAll(".skill-rate-row")].find((r) => r.dataset.skill === skill);
 }
 
+function normalizeRankValue(v) {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return null;
+  if (n === 0) return null;
+  if (n < 1 || n > 10) return null;
+  return n;
+}
+
+function ensureThermometerIcon(row) {
+  const t = row.querySelector(".thermo");
+  if (!t) return null;
+  let icon = t.querySelector(".thermo-icon");
+  if (icon) return icon;
+  icon = document.createElement("img");
+  icon.className = "thermo-icon hidden";
+  icon.alt = "";
+  icon.draggable = false;
+  t.appendChild(icon);
+  return icon;
+}
+
+function setThermometerUI(row, rank, opts = {}) {
+  const animate = opts.animate !== false;
+  const snapFlash = Boolean(opts.snapFlash);
+  const t = row.querySelector(".thermo");
+  if (!t) return;
+
+  const slots = [...t.querySelectorAll(".thermo-slot")];
+  slots.forEach((s) => s.classList.remove("rank-btn--selected"));
+  const selectedRank = rank == null ? 0 : rank;
+  const selectedSlot = slots.find((s) => Number(s.dataset.rank) === selectedRank);
+  selectedSlot?.classList.add("rank-btn--selected");
+
+  t.style.setProperty("--thermo-fill-frac", String(selectedRank / 10));
+
+  const icon = ensureThermometerIcon(row);
+  if (!icon) return;
+
+  if (rank == null) {
+    icon.classList.add("hidden");
+    icon.classList.remove("thermo-icon--pulsing");
+    icon.removeAttribute("src");
+    icon.style.removeProperty("--slot-idx");
+    return;
+  }
+
+  icon.src = rankIconPath(rank);
+  icon.alt = `Rank ${rank} of 10`;
+  icon.classList.remove("hidden");
+  icon.classList.add("thermo-icon--pulsing");
+  icon.style.setProperty("--slot-idx", String(rank));
+
+  if (animate) {
+    icon.classList.remove("thermo-icon--animate");
+    void icon.offsetWidth;
+    icon.classList.add("thermo-icon--animate");
+  }
+
+  if (snapFlash) {
+    icon.classList.remove("thermo-icon--snapflash");
+    void icon.offsetWidth;
+    icon.classList.add("thermo-icon--snapflash");
+    setTimeout(() => icon.classList.remove("thermo-icon--snapflash"), 450);
+  }
+}
+
 /**
  * @param {{ refreshTicks?: boolean }} [opts]
  */
@@ -559,32 +625,13 @@ function updateRowUI(skill, opts = {}) {
   const row = findRowBySkill(skill);
   if (!row) return;
   const rank = state.assignments[skill];
-  const heroImg = row.querySelector(".skill-rank-hero-img");
   const valueEl = row.querySelector(".skill-rate-value");
   applyRankThemeToRow(row, rank);
+  setThermometerUI(row, rank, { animate: false });
 
   if (rank == null) {
-    if (heroImg) {
-      heroImg.classList.add("hidden");
-      heroImg.removeAttribute("src");
-    }
     if (valueEl) valueEl.textContent = "—";
-    const inner = row.querySelector(".skill-rank-hero-inner");
-    if (inner) {
-      inner.classList.remove("is-entering", "is-pulsing");
-    }
   } else {
-    if (heroImg) {
-      const nextSrc = rankIconPath(rank);
-      if (heroImg.getAttribute("src") !== nextSrc) {
-        heroImg.src = nextSrc;
-        heroImg.alt = `Rank ${rank} of 10`;
-        heroImg.classList.remove("hidden");
-        playHeroEnter(row);
-      } else {
-        heroImg.classList.remove("hidden");
-      }
-    }
     if (valueEl) valueEl.textContent = `${rank}/10`;
   }
   if (refreshTicks) updateAllTickAvailability();
@@ -594,29 +641,24 @@ function applyRank(skill, requestedRaw) {
   const maxPer = state.maxPerCurrent;
   if (!maxPer) return;
 
-  const raw = Math.round(Number(requestedRaw));
-  if (!Number.isFinite(raw) || raw <= 0) {
+  const desired = normalizeRankValue(requestedRaw);
+  if (desired == null) {
     state.assignments[skill] = null;
     updateRowUI(skill);
     refreshQuotaHost();
     updateAllTickAvailability();
     return;
   }
-  const rounded = Math.min(10, Math.max(1, raw));
-  state.assignments[skill] = null;
-  const resolved = resolveRankForSkill(rounded, skill, state.assignments, maxPer);
+  const resolved = resolveRankForSkill(desired, skill, state.assignments, maxPer);
+  const snapped = resolved !== desired;
   state.assignments[skill] = resolved;
 
-  if (resolved !== rounded) {
-    const row = findRowBySkill(skill);
-    if (row) {
-      const inner = row.querySelector(".skill-rank-hero-inner");
-      inner?.classList.add("rank-snapped-flash");
-      setTimeout(() => inner?.classList.remove("rank-snapped-flash"), 450);
-    }
+  const row = findRowBySkill(skill);
+  if (row) {
+    applyRankThemeToRow(row, resolved);
+    setThermometerUI(row, resolved, { animate: true, snapFlash: snapped });
   }
-
-  updateRowUI(skill);
+  updateRowUI(skill, { refreshTicks: true });
   refreshQuotaHost();
   updateAllTickAvailability();
 }
@@ -656,37 +698,25 @@ function renderRatingStep(fullRebuild) {
           <div class="skill-rate-value" aria-live="polite">${rank == null ? "—" : `${rank}/10`}</div>
         </div>
         <div class="skill-rate-rating">
-          <div class="skill-rank-hero">
-            <div class="skill-rank-hero-inner">
-              <img class="skill-rank-hero-img ${rank == null ? "hidden" : ""}" alt="" src="${
-        rank == null ? "" : rankIconPath(rank)
-      }" />
-            </div>
-          </div>
-          <div class="rank-toggle-strip" role="group" aria-label="Rank 1 to 10"></div>
+          <div class="thermo" role="group" aria-label="Thermometer rank 0 to 10"></div>
         </div>
       `;
 
-      const strip = row.querySelector(".rank-toggle-strip");
-      for (let r = 1; r <= 10; r += 1) {
+      const thermo = row.querySelector(".thermo");
+      for (let r = 10; r >= 0; r -= 1) {
         const b = document.createElement("button");
         b.type = "button";
-        b.className = "rank-toggle";
+        b.className = "thermo-slot";
         b.dataset.rank = String(r);
-        b.setAttribute("aria-label", `Set rank ${r} of 10`);
-        const im = document.createElement("img");
-        im.src = rankIconPath(r);
-        im.alt = "";
-        b.appendChild(im);
+        b.dataset.rankBtn = "1";
+        b.setAttribute("aria-label", r === 0 ? "Clear rating" : `Set rank ${r} of 10`);
         b.addEventListener("click", () => applyRank(skill, r));
-        strip.appendChild(b);
+        thermo.appendChild(b);
       }
+      ensureThermometerIcon(row);
+      setThermometerUI(row, rank, { animate: false });
 
       listEl.appendChild(row);
-      if (rank != null) {
-        const inner = row.querySelector(".skill-rank-hero-inner");
-        inner?.classList.add("is-pulsing");
-      }
     });
   }
 
@@ -796,12 +826,14 @@ function renderVisualization() {
   const H = 560;
   const padL = 48;
   const padR = 48;
-  const padB = 72;
-  const baselineY = H - padB;
-  const maxBarH = H - padB - 100;
+  const padT = 86;
+  const padB = 86;
+  const chartTop = padT;
+  const chartH = H - padT - padB;
   const n = mapped.length;
   const gap = 10;
-  const barW = n > 0 ? (W - padL - padR - gap * (n - 1)) / n : 40;
+  const slotW = n > 0 ? (W - padL - padR - gap * (n - 1)) / n : 40;
+  const barW = Math.max(6, Math.min(14, slotW * 0.22));
 
   const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   bg.setAttribute("width", String(W));
@@ -820,9 +852,10 @@ function renderVisualization() {
   svg.appendChild(title);
 
   mapped.forEach((item, i) => {
-    const x = padL + i * (barW + gap);
-    const h = (item.value / 10) * maxBarH;
-    const y = baselineY - h;
+    const slotX = padL + i * (slotW + gap);
+    const x = slotX + (slotW - barW) / 2;
+    const h = (item.value / 10) * chartH;
+    const y = chartTop;
     const theme = getRankTheme(item.value);
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("x", String(x));
@@ -833,26 +866,68 @@ function renderVisualization() {
     rect.setAttribute("fill", theme.fill);
     rect.setAttribute("stroke", theme.stroke);
     rect.setAttribute("stroke-width", "1.5");
+    rect.setAttribute("class", "tbar");
+    rect.dataset.name = item.name;
+    rect.dataset.value = String(item.value);
     svg.appendChild(rect);
 
     const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", String(x + barW / 2));
-    label.setAttribute("y", String(baselineY + 22));
+    label.setAttribute("x", String(slotX + slotW / 2));
+    label.setAttribute("y", String(H - 30));
     label.setAttribute("fill", "#b8c4e8");
     label.setAttribute("font-size", "10");
     label.setAttribute("text-anchor", "middle");
-    label.textContent = truncate(item.name, Math.max(8, Math.floor(barW / 5)));
+    label.textContent = truncate(item.name, Math.max(8, Math.floor(slotW / 5)));
     svg.appendChild(label);
-
-    const score = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    score.setAttribute("x", String(x + barW / 2));
-    score.setAttribute("y", String(y - 8));
-    score.setAttribute("fill", "#f4f6ff");
-    score.setAttribute("font-size", "12");
-    score.setAttribute("text-anchor", "middle");
-    score.textContent = `${item.value}/10`;
-    svg.appendChild(score);
   });
+
+  // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
+  const wrap = svg.closest(".viz-wrap");
+  if (!wrap) return;
+  wrap.style.position = "relative";
+  let tip = wrap.querySelector(".viz-pill");
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.className = "viz-pill hidden";
+    tip.setAttribute("role", "status");
+    wrap.appendChild(tip);
+  }
+
+  const isCoarse = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
+  let mobileOn = false;
+  const setTip = (text, clientX, clientY) => {
+    tip.textContent = text;
+    tip.classList.remove("hidden");
+    const r = wrap.getBoundingClientRect();
+    const x = clientX - r.left;
+    const y = clientY - r.top;
+    tip.style.left = `${x}px`;
+    tip.style.top = `${y}px`;
+  };
+
+  svg.onpointermove = (e) => {
+    if (isCoarse) return;
+    const t = e.target;
+    if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) return;
+    setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
+  };
+  svg.onpointerleave = () => {
+    if (isCoarse) return;
+    mobileOn = false;
+    tip.classList.add("hidden");
+  };
+  svg.onclick = (e) => {
+    if (!isCoarse) return;
+    const t = e.target;
+    if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) {
+      mobileOn = false;
+      tip.classList.add("hidden");
+      return;
+    }
+    mobileOn = !mobileOn;
+    if (mobileOn) setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
+    else tip.classList.add("hidden");
+  };
 }
 
 function truncate(str, max) {

@@ -129,6 +129,7 @@ h6 {
 
 .app-layout--shape-mode {
   grid-template-columns: 1fr;
+  gap: 0;
 }
 
 .tool-card {
@@ -140,6 +141,11 @@ h6 {
 .tool-card > .view {
   width: 100%;
   min-width: 0;
+}
+
+.app-layout--shape-mode .tool-card > .view {
+  margin: 0;
+  padding: 0;
 }
 
 .tool-card::before,
@@ -1458,6 +1464,7 @@ button:disabled {
   width: 100%;
   margin: 0;
   justify-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .shape-results-stack > .card,

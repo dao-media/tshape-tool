@@ -45,7 +45,7 @@
 
       <section class="app-layout" id="app-layout">
         <aside class="card side-info-card" id="side-info-card">
-          <h2 class="side-info-title">T-Shaped Designer Mapper</h2>
+          <h2 class="side-info-title">What's Your Designer Shape?</h2>
           <p class="muted side-info-desc">
             Map your strongest design capabilities, visualize your profile shape, and export the
             result.
@@ -65,15 +65,27 @@
             </div>
           </div>
 
-          <details class="tips-disclosure">
-            <summary>How to use this tool</summary>
-            <ol class="tips-list">
-              <li>Choose your profile type (generalist or specialist).</li>
-              <li>Select the skills/specialties that represent your work.</li>
-              <li>Rate each selection from 1 to 10.</li>
-              <li>Review your shape, switch Labels/Key view, and export.</li>
-            </ol>
-          </details>
+          <section class="tips-disclosure" aria-label="How to use this tool">
+            <h3 class="tips-title">How to use this tool</h3>
+            <details class="tips-step" open>
+              <summary><span>1. Choose a designer type</span></summary>
+              <p class="tips-step-body">Do you consider yourself more of a generalist or specialist?</p>
+            </details>
+            <details class="tips-step">
+              <summary><span>2. Select your skills/competencies</span></summary>
+              <p class="tips-step-body">Which best represent you as a designer?</p>
+            </details>
+            <details class="tips-step">
+              <summary><span>3. Rate each of your skills</span></summary>
+              <p class="tips-step-body">Using a 1-to-10 scale, assess the strength of each skill.</p>
+            </details>
+            <details class="tips-step">
+              <summary><span>4. Review and export your shape</span></summary>
+              <p class="tips-step-body">
+                Toggle between labeled and label-key views and save to your device.
+              </p>
+            </details>
+          </section>
 
           <div class="actions side-actions">
             <button data-action="start-over" class="secondary">Start Over</button>

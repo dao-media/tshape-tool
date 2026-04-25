@@ -94,6 +94,9 @@ const categorySet = new Set(DATA.categories);
 /** @type {Record<number, { r: number; g: number; b: number; hex: string }>} */
 let rankColors = {};
 
+/** Shown in bottom-left of exported SVG/PNG/JPEG. */
+const EXPORT_ATTRIBUTION = "Dane O'Leary | /in/daneoleary";
+
 const FALLBACK_RANK_HEX = {
   1: "#5a6d8f",
   2: "#4d7a9c",
@@ -152,6 +155,11 @@ function loadRankColorsFromIcons() {
   for (let rank = 1; rank <= 10; rank += 1) {
     jobs.push(
       new Promise((resolve) => {
+        if (rank === 10) {
+          rankColors[10] = hexToRgb(FALLBACK_RANK_HEX[10]);
+          resolve();
+          return;
+        }
         const img = new Image();
         img.onload = () => {
           try {
@@ -893,6 +901,15 @@ function renderVisualization() {
     label.textContent = truncate(item.name, Math.max(8, Math.floor(slotW / 5)));
     svg.appendChild(label);
   });
+
+  const credit = document.createElementNS("http://www.w3.org/2000/svg", "text");
+  credit.setAttribute("x", "20");
+  credit.setAttribute("y", "548");
+  credit.setAttribute("fill", "rgba(180, 191, 224, 0.72)");
+  credit.setAttribute("font-size", "12");
+  credit.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+  credit.textContent = EXPORT_ATTRIBUTION;
+  svg.appendChild(credit);
 
   // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
   const wrap = svg.closest(".viz-wrap");

@@ -18,9 +18,18 @@
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
-  background: radial-gradient(circle at top right, #1f2047, var(--bg) 35%);
+  min-height: 100%;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse 110% 85% at 100% 0%, #1f2047 0%, var(--bg) 52%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  background-attachment: fixed;
   color: var(--text);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
@@ -614,6 +623,12 @@ button:hover {
   min-height: 320px;
 }
 
+.card--start {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 .card--start .actions {
   margin-top: 1.25rem;
 }
@@ -624,6 +639,8 @@ button:hover {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.25rem 1.5rem;
   align-items: start;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .start-hero__text h2 {
@@ -632,19 +649,45 @@ button:hover {
 
 .start-hero__viz {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (min-width: 721px) {
+  .card--start {
+    min-height: min(78vh, 640px);
+  }
+
+  .start-hero {
+    align-items: stretch;
+    min-height: min(68vh, 520px);
+  }
+
+  .start-hero__viz {
+    flex: 1 1 auto;
+  }
+
+  .demo-t-chart {
+    --demo-t-track: clamp(220px, 64vh, 500px);
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+  }
 }
 
 .demo-t-caption {
   margin: 0 0 0.35rem;
+  flex-shrink: 0;
 }
 
 .demo-t-chart {
   --demo-t-track: 120px;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   gap: 0.45rem;
-  min-height: calc(var(--demo-t-track) + 2.4rem);
+  min-height: calc(var(--demo-t-track) + 1rem);
   padding: 0.5rem 0.5rem 0.65rem;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -654,26 +697,45 @@ button:hover {
 .demo-t-bar {
   position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.15rem;
   width: 14%;
   max-width: 72px;
   min-width: 44px;
-  min-height: calc(var(--demo-t-track) + 1.5rem);
-  flex-shrink: 0;
+  min-height: 0;
+  flex: 1 1 0;
+  align-self: stretch;
+}
+
+.demo-t-bar__track {
+  width: 66.7%;
+  max-width: 100%;
+  min-width: 0;
+  height: var(--demo-t-track);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .demo-t-label {
-  margin-top: 0.3rem;
+  flex: 0 0 auto;
+  max-height: var(--demo-t-track);
+  margin: 0;
+  padding: 0 0.05rem 0 0;
   position: static;
-  font-size: 0.62rem;
-  line-height: 1.15;
-  text-align: center;
+  font-size: 0.58rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-align: start;
   color: #dfe6ff;
+  writing-mode: vertical-lr;
+  text-orientation: mixed;
   white-space: nowrap;
-  max-width: 96px;
-  width: 100%;
+  max-width: 2.1rem;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
@@ -738,6 +800,17 @@ button:hover {
 
   .start-hero__text {
     order: 2;
+  }
+
+  .demo-t-chart {
+    --demo-t-track: min(255px, calc(325px - 2.5rem));
+    max-height: 325px;
+    flex: 0 1 auto;
+    height: auto;
+  }
+
+  .demo-t-bar {
+    max-height: 100%;
   }
 }
 

@@ -1,0 +1,4 @@
+# App source is t-shaped/ (hyphen) — not "tshaped"
+[build]
+  base = "t-shaped"
+  publish = "."

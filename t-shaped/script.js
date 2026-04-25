@@ -306,7 +306,7 @@ function mixTowardBlack(hex, t) {
 
 function barFillGradientStopsForRank(rank) {
   const h = getRankTheme(rank).hex;
-  return { top: mixTowardWhite(h, 0.38), bottom: mixTowardBlack(h, 0.18) };
+  return { top: mixTowardWhite(h, 0.18), bottom: mixTowardBlack(h, 0.26) };
 }
 
 let globalPulseRaf = null;
@@ -440,6 +440,21 @@ function resetAllToStart() {
   render();
 }
 
+function bindCardInteractionEffects() {
+  const cards = document.querySelectorAll(".card");
+  cards.forEach((card) => {
+    if (card.dataset.cardFxBound === "1") return;
+    card.dataset.cardFxBound = "1";
+    card.addEventListener("click", () => {
+      if (!window.matchMedia("(pointer: coarse)").matches) return;
+      cards.forEach((c) => {
+        if (c !== card) c.classList.remove("active");
+      });
+      card.classList.toggle("active");
+    });
+  });
+}
+
 function render() {
   document.querySelectorAll(".step-pill").forEach((pill) => {
     const isActive = Number(pill.dataset.step) === state.step;
@@ -449,6 +464,7 @@ function render() {
   const template = document.querySelector(`#step${state.step}-template`);
   view.innerHTML = "";
   view.appendChild(template.content.cloneNode(true));
+  bindCardInteractionEffects();
   wireStepHandlers();
 
   if (state.step === 1) {
@@ -1118,7 +1134,7 @@ function renderShapeInsights(shape) {
   const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
   host.innerHTML = `
     <h3 class="shape-insights-title">${shape}-shaped designer guide</h3>
-    <div class="shape-insights-grid">
+    <div class="shape-insights-grid stagger-group">
       <article class="shape-insight-card">
         <h4>What is this shape?</h4>
         <p>${escapeHtml(guide.meaning)}</p>
@@ -1211,8 +1227,7 @@ function renderVisualization() {
   const padR = keyMode ? 44 : 56;
   const titleY = 40;
   const titleH = 26;
-  const maxLabelLen = mapped.reduce((m, item) => Math.max(m, item.name.length), 0);
-  const labelBand = keyMode ? 0 : clamp(Math.round(maxLabelLen * 5.8 + 28), 86, 186);
+  const labelBand = keyMode ? 0 : isMobileViz ? 34 : 38;
   let padT = titleY + titleH + labelBand;
   let padB = keyMode ? 30 : 42;
   if (isMobileViz) {
@@ -1309,31 +1324,20 @@ function renderVisualization() {
     if (!keyMode) {
       const label = document.createElementNS(ns, "text");
       const lx = slotX + barW / 2;
-      const labelGap = isMobileViz ? 16 : 20;
-      let ly = chartTop - labelGap;
+      const labelGap = isMobileViz ? 10 : 12;
+      const ly = chartTop - labelGap;
       label.setAttribute("x", String(lx));
       label.setAttribute("y", String(ly));
       label.setAttribute("fill", "#b8c4e8");
-      label.setAttribute("font-size", String(isMobileViz ? 9.5 : 10.5));
-      label.setAttribute("text-anchor", "end");
+      label.setAttribute("font-size", String(isMobileViz ? 9 : 10));
+      label.setAttribute("font-weight", "600");
+      label.setAttribute("text-anchor", "middle");
       label.setAttribute("class", "tbar-label-vertical");
-      label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
       label.setAttribute("pointer-events", "none");
-      label.setAttribute("dominant-baseline", "auto");
+      label.setAttribute("dominant-baseline", "text-after-edge");
       label.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
-      label.textContent = item.name;
+      label.textContent = truncate(item.name, Math.max(8, Math.floor(barW / 5.7)));
       svg.appendChild(label);
-
-      // Keep every vertical label bottom-aligned above the bar zone.
-      // This prevents long labels from drifting into the bars.
-      const box = label.getBBox();
-      const maxBottom = chartTop - labelGap;
-      const overlap = box.y + box.height - maxBottom;
-      if (overlap > 0) {
-        ly -= overlap;
-        label.setAttribute("y", String(ly));
-        label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
-      }
     }
   });
 

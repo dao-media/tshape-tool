@@ -1577,11 +1577,8 @@ function renderVisualization() {
   const setTip = (text, clientX, clientY) => {
     tip.textContent = text;
     tip.classList.remove("hidden");
-    const r = wrap.getBoundingClientRect();
-    const x = clientX - r.left;
-    const y = clientY - r.top;
-    tip.style.left = `${x}px`;
-    tip.style.top = `${y}px`;
+    tip.style.left = `${clientX}px`;
+    tip.style.top = `${clientY}px`;
   };
 
   svg.onpointermove = (e) => {

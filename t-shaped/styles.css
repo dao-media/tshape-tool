@@ -137,6 +137,11 @@ h6 {
   border: 0;
 }
 
+.tool-card > .view {
+  width: 100%;
+  min-width: 0;
+}
+
 .tool-card::before,
 .tool-card::after {
   display: none;
@@ -1139,7 +1144,7 @@ button:disabled {
 }
 
 .viz-pill {
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   transform: translate(10px, -44px);
@@ -1153,6 +1158,7 @@ button:disabled {
   pointer-events: none;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(10px);
+  z-index: 2500;
 }
 
 .ranking-key-host {
@@ -1450,6 +1456,8 @@ button:disabled {
   display: grid;
   gap: 1.2rem;
   width: 100%;
+  margin: 0;
+  justify-items: stretch;
 }
 
 .shape-results-stack > .card,

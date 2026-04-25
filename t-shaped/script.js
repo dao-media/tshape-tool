@@ -580,6 +580,14 @@ function wireStepHandlers() {
   });
 }
 
+function syncSelectionInputsFromState() {
+  view.querySelectorAll('#categories-list input[type="checkbox"], #specializations-list input[type="checkbox"]').forEach((input) => {
+    const labelText = input.closest("label")?.querySelector("span")?.textContent?.trim();
+    if (!labelText) return;
+    input.checked = state.selectedItems.includes(labelText);
+  });
+}
+
 function shuffleArray(input) {
   const arr = [...input];
   for (let i = arr.length - 1; i > 0; i -= 1) {
@@ -651,7 +659,8 @@ function handleAction(action) {
         [pool[i], pool[j]] = [pool[j], pool[i]];
       }
       state.selectedItems = pool.slice(0, capR);
-      setStep(3);
+      syncSelectionInputsFromState();
+      renderSelectedSummary();
       break;
     }
     case "to-step-3": {

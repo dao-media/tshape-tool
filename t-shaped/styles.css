@@ -174,7 +174,7 @@ h6 {
   border-radius: 10px;
   background: rgba(13, 18, 35, 0.58);
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
   gap: 4px;
   padding: 8px 7px;
@@ -185,9 +185,9 @@ h6 {
   width: 16px;
   height: var(--h);
   min-height: 7px;
-  border-radius: 2px 2px 0 0;
+  border-radius: 0 0 2px 2px;
   opacity: 0;
-  transform-origin: bottom center;
+  transform-origin: top center;
   transform: scaleY(0.9);
   animation: miniBarIn 0.35s var(--ease-out-back) forwards;
   animation-delay: var(--d, 0s);
@@ -388,15 +388,12 @@ h6 {
 @keyframes rainbowRotate {
   0% {
     background-position: 0% 50%;
-    transform: rotate(0deg);
   }
   50% {
     background-position: 100% 50%;
-    transform: rotate(180deg);
   }
   100% {
     background-position: 0% 50%;
-    transform: rotate(360deg);
   }
 }
 

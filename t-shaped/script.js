@@ -101,6 +101,58 @@ const EXPORT_ATTRIBUTION = "Dane O'Leary | /in/daneoleary";
 const VIZ_SVG_W = 900;
 const VIZ_SVG_H = 560;
 const EXPORT_FOOTER_H = 36;
+const SHAPE_GUIDE = {
+  I: {
+    meaning:
+      "An I-shaped designer goes very deep in one domain. This shape usually forms when someone has expert-level capability in one specialty and only light coverage in adjacent skills.",
+    roles:
+      "Senior Specialist, Lead Product Designer (domain-heavy), Motion Specialist, Design Systems Specialist, Accessibility Specialist, or Visual Design Specialist on larger teams.",
+    strengths:
+      "Highest depth and craft quality in one lane, faster complex execution in that lane, strong pattern recognition, and high credibility for specialist reviews.",
+    weaknesses:
+      "Can get bottlenecked outside core expertise, lower flexibility in smaller teams, and may need stronger collaboration rituals with cross-functional partners.",
+  },
+  T: {
+    meaning:
+      "A T-shaped designer combines one strong depth area with broad working knowledge across neighboring disciplines. It is the most common high-performing shape in product teams.",
+    roles:
+      "Product Designer, UX Designer, End-to-End Designer, Design Lead in cross-functional squads, and startup teams where one designer covers discovery through delivery.",
+    strengths:
+      "Strong balance of quality and adaptability, can translate across functions, makes better trade-offs, and keeps delivery moving when context shifts.",
+    weaknesses:
+      "Depth can plateau if spread too thin, broad responsibilities can create overload, and specialist-level craft may lag in highly technical edge cases.",
+  },
+  Pi: {
+    meaning:
+      "A Pi-shaped designer has two deep strengths supported by broader capability. This shape is powerful when work requires fluency across two heavy domains.",
+    roles:
+      "Staff Product Designer, UX + Research Hybrid, UI + Design Systems Lead, Product + Brand Crossover, or Design Manager supporting multi-track execution.",
+    strengths:
+      "Can bridge disciplines with fewer handoffs, high leverage across multiple problem types, and strong systems thinking between strategy and execution.",
+    weaknesses:
+      "Prioritization can get difficult, context switching cost is higher, and sustained growth requires intentional focus to avoid being spread across too many tracks.",
+  },
+  M: {
+    meaning:
+      "An M-shaped designer develops three or more deep peaks with strong breadth. This shape often appears in experienced designers who have built multiple expert chapters.",
+    roles:
+      "Principal Designer, Design Director in hands-on environments, Cross-Product Design Lead, Innovation/Concept Lead, or consultancy-style problem solvers.",
+    strengths:
+      "Excellent for complex ambiguous programs, can mentor across disciplines, strong pattern transfer between domains, and resilient during organizational change.",
+    weaknesses:
+      "Can be overutilized, hard to maintain depth in every peak simultaneously, and role clarity may blur without clear ownership boundaries.",
+  },
+  X: {
+    meaning:
+      "An X-shaped designer shows balanced high capability across many areas, often with leadership and integration ability across product, brand, and delivery.",
+    roles:
+      "Design Lead, Head of Design in lean orgs, Product Design Manager, Fractional Design Partner, or strategic IC roles connecting business and user outcomes.",
+    strengths:
+      "Strong cross-functional leadership, broad decision quality, high adaptability, and reliable execution across the full product lifecycle.",
+    weaknesses:
+      "May lack signature specialist differentiation, broad accountability can create fatigue, and impact depends on clear prioritization and delegation.",
+  },
+};
 
 function getCurrentShapeSvgWidth() {
   const svg = document.querySelector("#t-shape-svg");
@@ -454,6 +506,44 @@ function wireStepHandlers() {
   });
 }
 
+function shuffleArray(input) {
+  const arr = [...input];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function buildAutoRatings(items, preset = "balanced") {
+  const out = {};
+  const ordered = preset === "random-valid" ? shuffleArray(items) : [...items];
+  const seededByPreset = {
+    balanced: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+    "top-heavy": [10, 9, 8, 7, 7, 6, 6, 5, 5, 4],
+    "random-valid": [10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+  };
+  const seeded = seededByPreset[preset] || seededByPreset.balanced;
+  ordered.forEach((name, i) => {
+    if (i < seeded.length) {
+      out[name] = seeded[i];
+      return;
+    }
+    if (preset === "top-heavy") {
+      const cycleTopHeavy = [7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 1];
+      out[name] = cycleTopHeavy[(i - seeded.length) % cycleTopHeavy.length];
+      return;
+    }
+    if (preset === "random-valid") {
+      out[name] = 1 + Math.floor(Math.random() * 7);
+      return;
+    }
+    const cycleBalanced = [7, 6, 5, 4, 3, 2, 1];
+    out[name] = cycleBalanced[(i - seeded.length) % cycleBalanced.length];
+  });
+  return out;
+}
+
 function handleAction(action) {
   switch (action) {
     case "start-yes":
@@ -529,6 +619,13 @@ function handleAction(action) {
       renderRatingStep(true);
       break;
     }
+    case "rate-all":
+      state.assignments = buildAutoRatings(
+        state.selectedItems,
+        document.getElementById("rate-all-preset")?.value || "balanced"
+      );
+      renderRatingStep(true);
+      break;
     case "to-step-5": {
       const missing = state.selectedItems.filter((name) => state.assignments[name] == null);
       if (missing.length) {
@@ -968,6 +1065,33 @@ function detectDesignerShape(items) {
   };
 }
 
+function renderShapeInsights(shape) {
+  const host = document.getElementById("shape-insights");
+  if (!host) return;
+  const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
+  host.innerHTML = `
+    <h3 class="shape-insights-title">${shape}-shaped designer guide</h3>
+    <div class="shape-insights-grid">
+      <article class="shape-insight-card">
+        <h4>What is this shape?</h4>
+        <p>${escapeHtml(guide.meaning)}</p>
+      </article>
+      <article class="shape-insight-card">
+        <h4>Where this shape thrives</h4>
+        <p>${escapeHtml(guide.roles)}</p>
+      </article>
+      <article class="shape-insight-card">
+        <h4>Strengths</h4>
+        <p>${escapeHtml(guide.strengths)}</p>
+      </article>
+      <article class="shape-insight-card">
+        <h4>Watchouts</h4>
+        <p>${escapeHtml(guide.weaknesses)}</p>
+      </article>
+    </div>
+  `;
+}
+
 function fillShapeKeyCard(mapped, keyMode) {
   const card = document.getElementById("shape-key-card");
   const outer = document.getElementById("shape-viz-outer");
@@ -981,10 +1105,10 @@ function fillShapeKeyCard(mapped, keyMode) {
   card.hidden = false;
   if (outer) outer.classList.add("shape-viz-outer--key");
   card.innerHTML = mapped
-    .map((item) => {
+    .map((item, i) => {
       const theme = getRankTheme(item.value);
       const { top, bottom } = barFillGradientStopsForRank(item.value);
-      return `<div class="shape-key-row">
+      return `<div class="shape-key-row" style="--shape-key-d:${(i * 0.04).toFixed(2)}s">
       <span class="shape-key-swatch" style="background:linear-gradient(180deg,${top},${bottom});box-shadow:inset 0 0 0 1.5px ${theme.stroke}"></span>
       <span class="shape-key-name">${escapeHtml(item.name)}</span>
       <span class="shape-key-val">${item.value}/10</span>
@@ -1031,14 +1155,15 @@ function renderVisualization() {
   if (subEl) {
     subEl.textContent = detection.label;
   }
+  renderShapeInsights(detection.shape);
 
   svg.innerHTML = "";
-  const plotW = keyMode ? Math.round(VIZ_SVG_W * 0.88) : VIZ_SVG_W;
+  const plotW = keyMode ? Math.round(VIZ_SVG_W * 0.8) : VIZ_SVG_W;
   const H = VIZ_SVG_H;
-  const padL = 48;
-  const padR = 48;
-  const padT = 86;
-  const padB = 86;
+  const padL = 56;
+  const padR = 56;
+  const padT = 154;
+  const padB = 50;
   const chartTop = padT;
   const chartH = H - padT - padB;
   const n = mapped.length;
@@ -1090,9 +1215,9 @@ function renderVisualization() {
 
   const title = document.createElementNS(ns, "text");
   title.setAttribute("x", String(padL));
-  title.setAttribute("y", "36");
+  title.setAttribute("y", "42");
   title.setAttribute("fill", "#e8ecff");
-  title.setAttribute("font-size", "18");
+  title.setAttribute("font-size", "19");
   title.setAttribute("font-weight", "700");
   title.setAttribute("pointer-events", "none");
   title.textContent = `${detection.shape}-shaped profile`;
@@ -1122,19 +1247,25 @@ function renderVisualization() {
 
     if (!keyMode) {
       const label = document.createElementNS(ns, "text");
-      label.setAttribute("x", String(slotX + barW / 2));
-      label.setAttribute("y", String(H - 30));
+      const lx = slotX + barW / 2;
+      const ly = chartTop - 16;
+      label.setAttribute("x", String(lx));
+      label.setAttribute("y", String(ly));
       label.setAttribute("fill", "#b8c4e8");
-      label.setAttribute("font-size", "10");
-      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-size", "11");
+      label.setAttribute("text-anchor", "start");
+      label.setAttribute("class", "tbar-label-vertical");
+      label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
       label.setAttribute("pointer-events", "none");
-      label.textContent = truncate(item.name, Math.max(8, Math.floor(barW / 5)));
+      label.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
+      label.textContent = item.name;
       svg.appendChild(label);
     }
   });
 
   fillShapeKeyCard(mapped, keyMode);
   syncShapeVizToggle();
+  svg.classList.toggle("is-key-mode", keyMode);
 
   // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
   const wrap = svg.closest(".viz-wrap");

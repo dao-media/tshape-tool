@@ -187,6 +187,15 @@
         </div>
         <div class="actions">
           <button data-action="start-over" class="secondary">Start Over</button>
+          <button type="button" class="secondary" data-action="rate-all">Rate All</button>
+          <label class="rate-all-preset-wrap" for="rate-all-preset">
+            <span class="rate-all-preset-label">Preset</span>
+            <select id="rate-all-preset" class="rate-all-preset" aria-label="Rate all preset">
+              <option value="balanced">Balanced</option>
+              <option value="top-heavy">Top-heavy</option>
+              <option value="random-valid">Random valid</option>
+            </select>
+          </label>
           <button
             type="button"
             class="icon-btn"
@@ -224,6 +233,7 @@
           </div>
           <aside class="shape-key-card" id="shape-key-card" hidden></aside>
         </div>
+        <section class="shape-insights" id="shape-insights" aria-live="polite"></section>
         <div class="actions">
           <button data-action="start-over" class="secondary">Start Over</button>
           <button data-action="download-png">Download PNG</button>

@@ -364,6 +364,147 @@ body:not(.dark) .darkmode .dark {
   }
 }
 
+/* Light mode accessibility overrides (AA contrast targets) */
+body:not(.dark) .step-pill {
+  background: #f5f7ff;
+  border-color: #c3cee8;
+  color: #1e2a45;
+}
+
+body:not(.dark) .step-pill:hover {
+  background: #eef2ff;
+  border-color: #9faed4;
+}
+
+body:not(.dark) .step-pill.active,
+body:not(.dark) .step-pill.active:hover {
+  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 4px 16px rgba(82, 72, 204, 0.32);
+}
+
+body:not(.dark) .btn-primary,
+body:not(.dark) button:not(.secondary):not(.icon-btn) {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+body:not(.dark) .btn-primary:hover,
+body:not(.dark) button:not(.secondary):not(.icon-btn):hover {
+  background: var(--accent-soft);
+  box-shadow: 0 4px 15px rgba(82, 72, 204, 0.32);
+}
+
+body:not(.dark) .btn-secondary,
+body:not(.dark) button.secondary {
+  background: #eef2fb;
+  border-color: #c0cbe4;
+  color: #1f2a44;
+}
+
+body:not(.dark) .btn-secondary:hover,
+body:not(.dark) button.secondary:hover {
+  background: #e7ecfa;
+  border-color: #95a6cf;
+}
+
+body:not(.dark) .icon-btn {
+  background: #e8eefc;
+  border: 1px solid #becae6;
+  color: #1f2a44;
+}
+
+body:not(.dark) .rate-all-preset-wrap {
+  background: #eaf0ff;
+  color: #1f2a44;
+  border-color: #b7c5e4;
+}
+
+body:not(.dark) .rate-all-preset {
+  background: #ffffff;
+  color: #1f2a44;
+  border-color: #b7c5e4;
+}
+
+body:not(.dark) .shape-toggle__track {
+  background: #dce4f6;
+  border-color: #a9b8d8;
+  box-shadow: inset 0 1px 2px rgba(20, 27, 45, 0.15);
+}
+
+body:not(.dark) .shape-toggle__track:has(input:checked) {
+  background: #c8d4f2;
+  border-color: #8ea1cb;
+}
+
+body:not(.dark) .shape-toggle__thumb {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f5fb 100%);
+  border-color: #aebad8;
+}
+
+body:not(.dark) .start-name-input {
+  background: #ffffff;
+  border-color: #b8c5e2;
+  color: #1a243d;
+}
+
+body:not(.dark) .start-name-input::placeholder {
+  color: #5e6e95;
+}
+
+body:not(.dark) .start-name-input:focus {
+  border-color: #6d63e8;
+  box-shadow: 0 0 0 3px rgba(109, 99, 232, 0.22);
+}
+
+body:not(.dark) .app-corner-badge {
+  color: #1f2a44;
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(152, 168, 206, 0.75);
+}
+
+body:not(.dark) .app-corner-badge a {
+  color: #2f3f68;
+  border-bottom-color: rgba(47, 63, 104, 0.45);
+}
+
+body:not(.dark) .app-corner-badge a:hover {
+  color: #1d2a49;
+  border-bottom-color: rgba(29, 42, 73, 0.75);
+}
+
+body:not(.dark) .viz-pill {
+  border-color: #c0cbe4;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2a44;
+  box-shadow: 0 10px 20px rgba(17, 29, 53, 0.16);
+}
+
+body:not(.dark) .rank-limit-toast {
+  border-color: #d94272;
+  background: #fff3f7;
+  color: #7b1838;
+  box-shadow: 0 10px 28px rgba(104, 23, 49, 0.18);
+}
+
+body:not(.dark) .mini-graph-label {
+  color: #304062;
+}
+
+body:not(.dark) .mini-graph {
+  border-color: #b7c5e4;
+  background: #f7f9ff;
+}
+
+body:not(.dark) .mini-bar {
+  filter: saturate(1.3) brightness(0.92) contrast(1.15);
+}
+
+body:not(.dark) .mini-bar:hover {
+  filter: saturate(1.38) brightness(0.86) contrast(1.2);
+}
+
 .stepper {
   display: flex;
   flex-wrap: wrap;

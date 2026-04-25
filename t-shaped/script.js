@@ -1310,7 +1310,7 @@ function renderVisualization() {
       const label = document.createElementNS(ns, "text");
       const lx = slotX + barW / 2;
       const labelGap = isMobileViz ? 16 : 20;
-      const ly = chartTop - labelGap;
+      let ly = chartTop - labelGap;
       label.setAttribute("x", String(lx));
       label.setAttribute("y", String(ly));
       label.setAttribute("fill", "#b8c4e8");
@@ -1319,10 +1319,21 @@ function renderVisualization() {
       label.setAttribute("class", "tbar-label-vertical");
       label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
       label.setAttribute("pointer-events", "none");
-      label.setAttribute("dominant-baseline", "middle");
+      label.setAttribute("dominant-baseline", "auto");
       label.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
       label.textContent = item.name;
       svg.appendChild(label);
+
+      // Keep every vertical label bottom-aligned above the bar zone.
+      // This prevents long labels from drifting into the bars.
+      const box = label.getBBox();
+      const maxBottom = chartTop - labelGap;
+      const overlap = box.y + box.height - maxBottom;
+      if (overlap > 0) {
+        ly -= overlap;
+        label.setAttribute("y", String(ly));
+        label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
+      }
     }
   });
 

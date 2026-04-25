@@ -1264,19 +1264,19 @@ function renderShapeInsights(shape) {
     <p class="body-normal shape-insights-subtitle">Insight into what the shape of your skills means.</p>
     <div class="shape-insights-grid stagger-group">
       <article class="shape-insight-card">
-        <h4>What is this shape?</h4>
+        <h3>What is this shape?</h3>
         <p class="body-normal">${escapeHtml(guide.meaning)}</p>
       </article>
       <article class="shape-insight-card">
-        <h4>Where this shape thrives</h4>
+        <h3>Where this shape thrives</h3>
         <p class="body-normal">${escapeHtml(guide.roles)}</p>
       </article>
       <article class="shape-insight-card">
-        <h4>Strengths</h4>
+        <h3>Strengths</h3>
         <p class="body-normal">${escapeHtml(guide.strengths)}</p>
       </article>
       <article class="shape-insight-card">
-        <h4>Watchouts</h4>
+        <h3>Watchouts</h3>
         <p class="body-normal">${escapeHtml(guide.weaknesses)}</p>
       </article>
     </div>

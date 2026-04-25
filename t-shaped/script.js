@@ -361,6 +361,7 @@ function getUsageCounts(assignments, excludeSkill) {
 const view = document.querySelector("#view");
 const appLayout = document.querySelector("#app-layout");
 const sideInfoCard = document.querySelector("#side-info-card");
+const THEME_STORAGE_KEY = "tshaped-theme";
 
 const SHAPE_ANALYZE_MS = 2000;
 const SHAPE_ANALYZE_LINES = [
@@ -1985,6 +1986,32 @@ function runSelfTestIfQuery() {
   }
 }
 
+function applyTheme(mode) {
+  const isDark = mode !== "light";
+  document.body.classList.toggle("dark", isDark);
+  document.body.classList.toggle("light", !isDark);
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+  } catch {}
+}
+
+function initThemeToggle() {
+  const toggle = document.getElementById("theme-toggle");
+  if (!toggle) return;
+  let stored = "dark";
+  try {
+    stored = localStorage.getItem(THEME_STORAGE_KEY) || "dark";
+  } catch {}
+  if (stored !== "dark" && stored !== "light") stored = "dark";
+  applyTheme(stored);
+  if (toggle.dataset.bound === "1") return;
+  toggle.dataset.bound = "1";
+  toggle.addEventListener("click", () => {
+    const next = document.body.classList.contains("dark") ? "light" : "dark";
+    applyTheme(next);
+  });
+}
+
 try {
   selfTestRankingLogic();
 } catch (e) {
@@ -1993,6 +2020,7 @@ try {
 
 document.documentElement.style.setProperty("--global-pulse-scale", "1");
 ensureGlobalPulseLoop();
+initThemeToggle();
 wireStaticPanelHandlers();
 renderMiniDemoGraphs();
 

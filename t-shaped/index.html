@@ -12,11 +12,27 @@
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
+  <body class="dark">
     <main class="app-shell">
       <header class="app-header">
-        <h1>T-Shaped</h1>
-        <p>Map your strengths, plot your design profile, and export it.</p>
+        <div class="app-header-inner">
+          <div class="app-header-copy">
+            <h1>T-Shaped</h1>
+            <p>Map your strengths, plot your design profile, and export it.</p>
+          </div>
+          <div class="app-header-theme">
+            <button
+              type="button"
+              class="darkmode"
+              id="theme-toggle"
+              aria-label="Toggle dark and light mode"
+              title="Toggle dark and light mode"
+            >
+              <span class="light" aria-hidden="true">☀️</span>
+              <span class="dark" aria-hidden="true">🌙</span>
+            </button>
+          </div>
+        </div>
       </header>
 
       <section class="stepper" aria-label="Progress">

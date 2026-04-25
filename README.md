@@ -52,12 +52,19 @@ Then open:
 
 - [http://localhost:8080](http://localhost:8080)
 
+Build CSS first (Tailwind):
+
+```bash
+npm run build:css
+```
+
 ### Option 3: Full stack (native email send on localhost)
 
 From the repository root:
 
 ```bash
 npm install
+npm run build:css
 npx netlify dev
 ```
 

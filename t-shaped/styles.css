@@ -944,6 +944,8 @@ button:hover {
   opacity: 0;
   animation: tbarLabelIn 0.32s ease-out forwards;
   animation-delay: var(--tbar-d, 0s);
+  font-weight: 620;
+  letter-spacing: 0.01em;
 }
 
 .shape-viz-outer .viz-wrap {

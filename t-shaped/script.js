@@ -1004,6 +1004,25 @@ function localMaximaIndices(arr, minVal) {
   return out;
 }
 
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function peakSummary(scores, threshold = 6) {
+  const peaks = [];
+  for (let i = 0; i < scores.length; i += 1) {
+    const v = scores[i];
+    if (v < threshold) continue;
+    const l = i > 0 ? scores[i - 1] : v - 0.25;
+    const r = i < scores.length - 1 ? scores[i + 1] : v - 0.25;
+    if (v < l || v < r) continue;
+    const prom = v - Math.max(l, r);
+    if (prom < 0.5) continue;
+    peaks.push({ idx: i, value: v, prominence: prom });
+  }
+  return peaks;
+}
+
 /**
  * Classify designer profile shape from ordered items (selection order).
  * @param {{ name: string, value: number }[]} items
@@ -1015,30 +1034,49 @@ function detectDesignerShape(items) {
   const max = sorted[0] ?? 0;
   const second = sorted[1] ?? 0;
   const third = sorted[2] ?? 0;
+  const fourth = sorted[3] ?? 0;
   const mean = scores.reduce((a, b) => a + b, 0) / Math.max(1, n);
   const spread = max - (sorted[sorted.length - 1] ?? max);
   const deep = scores.filter((s) => s >= 8).length;
   const high = scores.filter((s) => s >= 7).length;
-  const ord = scores;
-  const peaks = localMaximaIndices(ord, 7);
+  const peaks7 = peakSummary(scores, 7);
+  const peaks6 = peakSummary(scores, 6);
+  const strongPeakCount = peaks7.filter((p) => p.prominence >= 1).length;
+  const mediumPeakCount = peaks6.filter((p) => p.prominence >= 1).length;
+  const top3Avg = (max + second + third) / 3;
+  const top4Avg = (max + second + third + fourth) / 4;
+  const nearFlat = spread <= 2 && mean >= 6.6;
 
   const S = { I: 0, T: 0, Pi: 0, M: 0, X: 0 };
 
-  if (max >= 8 && max - second >= 3) S.I += 38;
-  if (n <= 4 && max >= 9 && deep <= 1) S.I += 22;
+  if (max >= 9 && max - second >= 2.5) S.I += 48;
+  if (max >= 8 && max - second >= 3) S.I += 24;
+  if (n <= 4 && deep <= 1) S.I += 12;
 
-  if (n >= 5 && deep === 1 && max >= 9 && second <= 7) S.T += 42;
-  if (n >= 6 && spread >= 4 && deep <= 2 && mean < 7) S.T += 18;
+  if (n >= 5 && deep <= 2 && max >= 8.5 && second <= 8 && spread >= 3.2) S.T += 34;
+  if (deep === 1 && high >= 3) S.T += 14;
+  if (strongPeakCount <= 2) S.T += 8;
 
-  if (deep >= 2 && n >= 4) S.Pi += 40;
-  if (deep === 2 && max >= 8 && second >= 8) S.Pi += 22;
+  if (deep >= 2 && n >= 4) S.Pi += 24;
+  if (top2AreSeparated(scores) && second >= 8) S.Pi += 26;
+  if (strongPeakCount === 2) S.Pi += 18;
+  if (strongPeakCount >= 3) S.Pi -= 10;
 
-  if (peaks.length >= 3) S.M += 48;
-  if (deep >= 3) S.M += 20;
+  if (strongPeakCount >= 3) S.M += 52;
+  if (mediumPeakCount >= 3 && top3Avg >= 7.1) S.M += 24;
+  if (deep >= 3) S.M += 12;
+  if (strongPeakCount <= 2) S.M -= 14;
 
   const highRatio = high / Math.max(1, n);
-  if (highRatio >= 0.65 && spread <= 3 && max >= 7) S.X += 42;
-  if (n >= 5 && scores.every((s) => s >= 6) && spread <= 4) S.X += 18;
+  if (highRatio >= 0.65 && nearFlat) S.X += 38;
+  if (n >= 5 && scores.every((s) => s >= 6) && top4Avg >= 6.9) S.X += 20;
+  if (strongPeakCount >= 3) S.X -= 6;
+
+  // Deterministic tie-break nudges so M isn't mislabeled as Pi when triple peaks exist.
+  if (strongPeakCount >= 3) {
+    S.M += 8;
+    S.Pi -= 4;
+  }
 
   const order = ["I", "T", "Pi", "M", "X"];
   let best = "T";
@@ -1061,8 +1099,17 @@ function detectDesignerShape(items) {
   return {
     shape: best,
     label: labels[best],
-    detail: `Scores: ${scores.join(", ")} · peaks≥7 in order: ${peaks.length}`,
+    detail: `Scores: ${scores.join(", ")} · strong peaks≥7: ${strongPeakCount} · peaks≥6: ${mediumPeakCount}`,
   };
+}
+
+function top2AreSeparated(scores) {
+  if (scores.length < 2) return false;
+  const pairs = scores.map((v, i) => ({ i, v })).sort((a, b) => b.v - a.v);
+  const a = pairs[0];
+  const b = pairs[1];
+  if (!a || !b) return false;
+  return Math.abs(a.i - b.i) >= 2;
 }
 
 function renderShapeInsights(shape) {
@@ -1160,12 +1207,26 @@ function renderVisualization() {
   svg.innerHTML = "";
   const plotW = keyMode ? Math.round(VIZ_SVG_W * 0.8) : VIZ_SVG_W;
   const H = VIZ_SVG_H;
-  const padL = 56;
-  const padR = 56;
-  const padT = 154;
-  const padB = 50;
+  const padL = keyMode ? 44 : 56;
+  const padR = keyMode ? 44 : 56;
+  const titleY = 40;
+  const titleH = 26;
+  const maxLabelLen = mapped.reduce((m, item) => Math.max(m, item.name.length), 0);
+  const labelBand = keyMode ? 0 : clamp(Math.round(maxLabelLen * 5.8 + 12), 70, 170);
+  let padT = titleY + titleH + labelBand;
+  let padB = keyMode ? 30 : 42;
+  if (isMobileViz) {
+    padT -= keyMode ? 8 : 10;
+    padB = keyMode ? 24 : 34;
+  }
   const chartTop = padT;
-  const chartH = H - padT - padB;
+  let chartH = H - padT - padB;
+  if (chartH < 190) {
+    const need = 190 - chartH;
+    const trimmedLabelBand = keyMode ? 0 : Math.min(need, Math.max(0, labelBand - 52));
+    padT -= trimmedLabelBand;
+    chartH = H - padT - padB;
+  }
   const n = mapped.length;
   const gap = 10;
   const innerW = plotW - padL - padR;
@@ -1215,7 +1276,7 @@ function renderVisualization() {
 
   const title = document.createElementNS(ns, "text");
   title.setAttribute("x", String(padL));
-  title.setAttribute("y", "42");
+  title.setAttribute("y", String(titleY));
   title.setAttribute("fill", "#e8ecff");
   title.setAttribute("font-size", "19");
   title.setAttribute("font-weight", "700");
@@ -1248,12 +1309,12 @@ function renderVisualization() {
     if (!keyMode) {
       const label = document.createElementNS(ns, "text");
       const lx = slotX + barW / 2;
-      const ly = chartTop - 16;
+      const ly = chartTop - 8;
       label.setAttribute("x", String(lx));
       label.setAttribute("y", String(ly));
       label.setAttribute("fill", "#b8c4e8");
-      label.setAttribute("font-size", "11");
-      label.setAttribute("text-anchor", "start");
+      label.setAttribute("font-size", String(isMobileViz ? 9.5 : 10.5));
+      label.setAttribute("text-anchor", "end");
       label.setAttribute("class", "tbar-label-vertical");
       label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
       label.setAttribute("pointer-events", "none");

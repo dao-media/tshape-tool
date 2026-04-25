@@ -1886,6 +1886,16 @@ async function sendEmailViaBackend({ toEmail, userName, shapeKey, svgString, bas
   });
   if (!resp.ok) {
     const raw = await resp.text();
+    const unsupportedLocalServer =
+      (resp.status === 404 || resp.status === 501) &&
+      (raw.includes("Unsupported method ('POST')") ||
+        raw.includes("Error response") ||
+        raw.includes("<!DOCTYPE HTML>"));
+    if (unsupportedLocalServer) {
+      throw new Error(
+        "Email backend endpoint is unavailable on this server. Run the app with `npx netlify dev` and open http://localhost:8888 to use native email sending."
+      );
+    }
     let detail = raw;
     try {
       const data = JSON.parse(raw);

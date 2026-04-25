@@ -23,13 +23,15 @@
           <div class="app-header-theme">
             <button
               type="button"
-              class="darkmode"
+              class="darkmode tdnn relative inline-block m-0 cursor-pointer rounded-full p-0 text-[2px] h-[16em] w-[30em] transition-[background,border-color,box-shadow] duration-300 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-[3px]"
               id="theme-toggle"
               aria-label="Toggle dark and light mode"
               title="Toggle dark and light mode"
             >
-              <span class="light" aria-hidden="true">☀️</span>
-              <span class="dark" aria-hidden="true">🌙</span>
+              <span
+                class="moon absolute block rounded-full top-[3em] left-[3em] h-[10em] w-[10em] transition-all duration-[400ms] ease-in-out"
+                aria-hidden="true"
+              ></span>
             </button>
           </div>
         </div>

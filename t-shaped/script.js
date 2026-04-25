@@ -1392,6 +1392,9 @@ function renderVisualization() {
     .filter((x) => x.value != null);
 
   const keyMode = state.shapeVizMode === "key";
+  const darkMode = document.body.classList.contains("dark");
+  const chartTitleColor = darkMode ? "#e8ecff" : "#22314f";
+  const chartLabelColor = darkMode ? "#b8c4e8" : "#33456b";
   const isMobileViz =
     typeof window.matchMedia === "function" && window.matchMedia("(max-width: 720px)").matches;
   const targetBarW = isMobileViz ? 65 : 80;
@@ -1496,7 +1499,7 @@ function renderVisualization() {
   const title = document.createElementNS(ns, "text");
   title.setAttribute("x", String(padL));
   title.setAttribute("y", String(titleY));
-  title.setAttribute("fill", "#e8ecff");
+  title.setAttribute("fill", chartTitleColor);
   title.setAttribute("font-size", "19");
   title.setAttribute("font-weight", "700");
   title.setAttribute("pointer-events", "none");
@@ -1532,8 +1535,8 @@ function renderVisualization() {
       let ly = chartTop - labelGap;
       label.setAttribute("x", String(lx));
       label.setAttribute("y", String(ly));
-      label.setAttribute("fill", "#b8c4e8");
-      label.setAttribute("font-size", String(isMobileViz ? 8.5 : 9.5));
+      label.setAttribute("fill", chartLabelColor);
+      label.setAttribute("font-size", String(isMobileViz ? 11 : 12));
       label.setAttribute("font-weight", "600");
       // Anchor at the bar axis and run text away/up from the bar.
       label.setAttribute("text-anchor", "start");
@@ -1988,8 +1991,19 @@ function runSelfTestIfQuery() {
 
 function applyTheme(mode) {
   const isDark = mode !== "light";
+  const toggle = document.getElementById("theme-toggle");
+  const moon = toggle ? toggle.querySelector(".moon") : null;
   document.body.classList.toggle("dark", isDark);
   document.body.classList.toggle("light", !isDark);
+  if (toggle) {
+    toggle.classList.toggle("day", !isDark);
+    toggle.setAttribute("aria-pressed", String(!isDark));
+    toggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+    toggle.setAttribute("title", isDark ? "Switch to light mode" : "Switch to dark mode");
+  }
+  if (moon) {
+    moon.classList.toggle("sun", !isDark);
+  }
   try {
     localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
   } catch {}

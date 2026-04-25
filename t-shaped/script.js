@@ -860,6 +860,7 @@ function renderVisualization() {
   bg.setAttribute("width", String(W));
   bg.setAttribute("height", String(H));
   bg.setAttribute("fill", "transparent");
+  bg.setAttribute("pointer-events", "none");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.appendChild(bg);
 
@@ -869,6 +870,7 @@ function renderVisualization() {
   title.setAttribute("fill", "#e8ecff");
   title.setAttribute("font-size", "18");
   title.setAttribute("font-weight", "700");
+  title.setAttribute("pointer-events", "none");
   title.textContent = `${detection.shape}-shaped profile`;
   svg.appendChild(title);
 
@@ -888,6 +890,7 @@ function renderVisualization() {
     rect.setAttribute("stroke", theme.stroke);
     rect.setAttribute("stroke-width", "1.5");
     rect.setAttribute("class", "tbar");
+    rect.style.setProperty("--tbar-d", `${i * 0.04}s`);
     rect.dataset.name = item.name;
     rect.dataset.value = String(item.value);
     svg.appendChild(rect);
@@ -898,6 +901,7 @@ function renderVisualization() {
     label.setAttribute("fill", "#b8c4e8");
     label.setAttribute("font-size", "10");
     label.setAttribute("text-anchor", "middle");
+    label.setAttribute("pointer-events", "none");
     label.textContent = truncate(item.name, Math.max(8, Math.floor(slotW / 5)));
     svg.appendChild(label);
   });
@@ -908,6 +912,7 @@ function renderVisualization() {
   credit.setAttribute("fill", "rgba(180, 191, 224, 0.72)");
   credit.setAttribute("font-size", "12");
   credit.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+  credit.setAttribute("pointer-events", "none");
   credit.textContent = EXPORT_ATTRIBUTION;
   svg.appendChild(credit);
 
@@ -938,7 +943,10 @@ function renderVisualization() {
   svg.onpointermove = (e) => {
     if (isCoarse) return;
     const t = e.target;
-    if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) return;
+    if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) {
+      tip.classList.add("hidden");
+      return;
+    }
     setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
   };
   svg.onpointerleave = () => {

@@ -623,6 +623,25 @@ button:hover {
   min-height: 320px;
 }
 
+#t-shape-svg .tbar {
+  transform-box: fill-box;
+  transform-origin: top center;
+  opacity: 0;
+  animation: tbarPlotIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: var(--tbar-d, 0s);
+}
+
+@keyframes tbarPlotIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .card--start {
   display: flex;
   flex-direction: column;
@@ -684,7 +703,7 @@ button:hover {
 .demo-t-chart {
   --demo-t-track: 120px;
   display: flex;
-  align-items: stretch;
+  align-items: flex-start;
   justify-content: center;
   gap: 0.45rem;
   min-height: calc(var(--demo-t-track) + 1rem);
@@ -706,7 +725,7 @@ button:hover {
   min-width: 44px;
   min-height: 0;
   flex: 1 1 0;
-  align-self: stretch;
+  align-self: auto;
 }
 
 .demo-t-bar__track {
@@ -758,11 +777,11 @@ button:hover {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .demo-t-chart .demo-t-bar:hover .demo-t-col {
+  .demo-t-chart .demo-t-bar__track:hover .demo-t-col {
     transform: scaleY(1.08);
   }
 
-  .demo-t-chart .demo-t-bar:hover .demo-t-label {
+  .demo-t-chart .demo-t-bar__track:hover ~ .demo-t-label {
     opacity: 1;
   }
 

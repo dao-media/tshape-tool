@@ -1861,12 +1861,39 @@ async function createExportFileBundle() {
   ]);
   return {
     shapeKey,
+    svgStr,
     files: [
       { name: buildExportFilename("png", shapeKey), blob: pngBlob },
       { name: buildExportFilename("jpeg", shapeKey), blob: jpegBlob },
       { name: buildExportFilename("svg", shapeKey), blob: svgStringToBlob(svgStr) },
     ],
   };
+}
+
+async function sendEmailViaBackend({ toEmail, userName, shapeKey, svgString, baseName }) {
+  const resp = await fetch("/.netlify/functions/send-shape-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      toEmail,
+      userName,
+      shapeKey,
+      svgString,
+      baseName,
+    }),
+  });
+  if (!resp.ok) {
+    let detail = "";
+    try {
+      const data = await resp.json();
+      detail = data?.error || "";
+    } catch {
+      detail = await resp.text();
+    }
+    throw new Error(detail || `Email request failed (${resp.status}).`);
+  }
 }
 
 async function emailShapeFiles() {
@@ -1878,58 +1905,18 @@ async function emailShapeFiles() {
     alert("Add a valid email in Step 1 or Step 5 to send files.");
     return;
   }
-  if (!window.JSZip) {
-    alert("ZIP library didn't load. Refresh and try again.");
-    return;
-  }
-  const subjectAndBody = (() => {
-    const shapeKey = getDetectedShapeKey();
-    return { subject: buildEmailSubject(shapeKey), body: buildEmailBody(shapeKey) };
-  })();
-  const openMailDraft = (recipient, zipNameNote = "") => {
-    const extra = zipNameNote
-      ? `\n\n---\nIf your email client did not auto-attach files, attach the downloaded ZIP: ${zipNameNote}`
-      : "";
-    const mailto = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(
-      subjectAndBody.subject
-    )}&body=${encodeURIComponent(`${subjectAndBody.body}${extra}`)}`;
-    window.location.href = mailto;
-  };
   try {
-    const { shapeKey, files } = await createExportFileBundle();
-    const zip = new window.JSZip();
-    files.forEach((file) => zip.file(file.name, file.blob));
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    const zipName = `${getExportBaseName(shapeKey)}-files.zip`;
-    const canConstructFile = typeof File === "function";
-    const zipFile = canConstructFile
-      ? new File([zipBlob], zipName, { type: "application/zip" })
-      : null;
-
-    // Best path where supported: native share sheet allows attaching ZIP directly.
-    if (
-      zipFile &&
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({ files: [zipFile] })
-    ) {
-      await navigator.share({
-        title: subjectAndBody.subject,
-        text: subjectAndBody.body,
-        files: [zipFile],
-      });
-      return;
-    }
-
-    // Desktop/web fallback: download ZIP and open email draft prefilled.
-    triggerDownload(URL.createObjectURL(zipBlob), zipName);
-    openMailDraft(state.userEmail, zipName);
+    const { shapeKey, svgStr } = await createExportFileBundle();
+    await sendEmailViaBackend({
+      toEmail: state.userEmail,
+      userName: state.userName,
+      shapeKey,
+      svgString: svgStr,
+      baseName: getExportBaseName(shapeKey),
+    });
+    alert("Email sent. Check your inbox in a moment.");
   } catch (err) {
     console.error(err);
-    // Last-resort fallback: still open a useful draft.
-    try {
-      openMailDraft(state.userEmail);
-    } catch {}
     const detail = err instanceof Error ? err.message : String(err);
     alert(`Could not prepare your email package. Please try again.\n\nDetails: ${detail}`);
   }

@@ -292,6 +292,54 @@ function getUsageCounts(assignments, excludeSkill) {
 
 const view = document.querySelector("#view");
 
+const SHAPE_ANALYZE_MS = 2000;
+const SHAPE_ANALYZE_LINES = [
+  "Analyzing your skillset…",
+  "Comparing depth and breadth…",
+  "Locking in your bar chart…",
+];
+
+function runShapeAnalysisInterstitial(onDone) {
+  if (!view) {
+    onDone();
+    return;
+  }
+  view.innerHTML = "";
+  const card = document.createElement("div");
+  card.className = "card card--analyzing";
+  card.setAttribute("role", "status");
+  card.setAttribute("aria-live", "polite");
+  card.innerHTML = `
+    <h2>🧩 Almost there</h2>
+    <p class="analyzing-lead" id="analyzing-line">${SHAPE_ANALYZE_LINES[0]}</p>
+    <div class="analyze-progress" id="analyzing-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Analysis progress">
+      <div class="analyze-progress__fill" id="analyzing-fill"></div>
+    </div>
+    <p class="muted small">This only takes a moment.</p>
+  `;
+  view.appendChild(card);
+  const fill = card.querySelector("#analyzing-fill");
+  const bar = card.querySelector("#analyzing-bar");
+  const line = card.querySelector("#analyzing-line");
+  const t0 = performance.now();
+  const tick = (now) => {
+    const t = Math.min(1, (now - t0) / SHAPE_ANALYZE_MS);
+    const pct = Math.min(100, Math.round(t * 100));
+    if (fill) fill.style.width = `${pct}%`;
+    if (bar) bar.setAttribute("aria-valuenow", String(pct));
+    if (line) {
+      const i = t < 0.34 ? 0 : t < 0.68 ? 1 : 2;
+      line.textContent = SHAPE_ANALYZE_LINES[i];
+    }
+    if (t < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      setTimeout(onDone, 160);
+    }
+  };
+  requestAnimationFrame(tick);
+}
+
 let rankLimitToastT = 0;
 function showRankLimitToast(rank) {
   const label = { 8: "8/10", 9: "9/10", 10: "10/10" }[rank];
@@ -404,6 +452,21 @@ function handleAction(action) {
       state.selectedItems = [];
       setStep(3);
       break;
+    case "selection-random": {
+      if (!state.profileType) {
+        alert("Profile type is missing. Go back and choose generalist or specialist.");
+        return;
+      }
+      const capR = MAX_BY_TYPE[state.profileType];
+      const pool = [...DATA.categories, ...DATA.specializations];
+      for (let i = pool.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      state.selectedItems = pool.slice(0, capR);
+      setStep(3);
+      break;
+    }
     case "to-step-3": {
       const selected = document.querySelector('input[name="profileType"]:checked');
       if (!selected) {
@@ -449,7 +512,7 @@ function handleAction(action) {
         alert("Pick a ranking icon for every item.");
         return;
       }
-      setStep(5);
+      runShapeAnalysisInterstitial(() => setStep(5));
       break;
     }
     case "download-png":
@@ -956,8 +1019,8 @@ function renderVisualization() {
     rect.setAttribute("y", String(y));
     rect.setAttribute("width", String(barW));
     rect.setAttribute("height", String(Math.max(2, h)));
-    rect.setAttribute("rx", "6");
-    rect.setAttribute("ry", "6");
+    rect.setAttribute("rx", "0");
+    rect.setAttribute("ry", "0");
     rect.setAttribute("fill", `url(#tbar-grad-${i})`);
     rect.setAttribute("stroke", theme.stroke);
     rect.setAttribute("stroke-width", "1.5");

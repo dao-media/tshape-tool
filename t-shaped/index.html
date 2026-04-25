@@ -121,15 +121,25 @@
       <div class="card card--scrollable">
         <div class="card-title-row">
           <h2>Select skills & specialties</h2>
-          <button
-            type="button"
-            class="icon-btn"
-            data-action="selection-reset"
-            title="Clear all selections"
-            aria-label="Clear all selections"
-          >
-            ⟲
-          </button>
+          <div class="card-title-actions" role="group" aria-label="Selection helpers">
+            <button
+              type="button"
+              class="secondary"
+              data-action="selection-random"
+              title="Fill selection at random (up to your cap)"
+            >
+              Random
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              data-action="selection-reset"
+              title="Clear all selections"
+              aria-label="Clear all selections"
+            >
+              ⟲
+            </button>
+          </div>
         </div>
         <p class="muted" id="selection-cap"></p>
         <div class="scroll-panel scroll-panel--main" id="selection-scroll">

@@ -193,10 +193,10 @@ h6 {
 }
 
 .darkmode .moon.sun {
-  top: 3.4em;
-  left: 28.6em;
-  width: 5.2em;
-  height: 5.2em;
+  top: 2em;
+  left: 34em;
+  width: 20em;
+  height: 20em;
   transform: rotate(0deg);
   background: #fff;
   box-shadow:

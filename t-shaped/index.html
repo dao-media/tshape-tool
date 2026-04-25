@@ -27,65 +27,55 @@
         <div class="step-pill" data-step="5">5. Shape</div>
       </section>
 
-      <section id="view" class="view" aria-live="polite"></section>
+      <section class="app-layout" id="app-layout">
+        <aside class="card side-info-card" id="side-info-card">
+          <h2 class="side-info-title">T-Shaped Designer Mapper</h2>
+          <p class="muted side-info-desc">
+            Map your strongest design capabilities, visualize your profile shape, and export the
+            result.
+          </p>
+
+          <div class="side-demo-block">
+            <p class="muted small side-demo-title">Example outcomes (randomized demos)</p>
+            <div class="side-demos-row">
+              <div class="mini-graph-wrap">
+                <span class="mini-graph-label">T demo</span>
+                <div class="mini-graph" id="mini-graph-t" role="img" aria-label="Random T-shaped demo graph"></div>
+              </div>
+              <div class="mini-graph-wrap">
+                <span class="mini-graph-label">M demo</span>
+                <div class="mini-graph" id="mini-graph-m" role="img" aria-label="Random M-shaped demo graph"></div>
+              </div>
+            </div>
+          </div>
+
+          <details class="tips-disclosure">
+            <summary>How to use this tool</summary>
+            <ol class="tips-list">
+              <li>Choose your profile type (generalist or specialist).</li>
+              <li>Select the skills/specialties that represent your work.</li>
+              <li>Rate each selection from 1 to 10.</li>
+              <li>Review your shape, switch Labels/Key view, and export.</li>
+            </ol>
+          </details>
+
+          <div class="actions side-actions">
+            <button data-action="start-over" class="secondary">Start Over</button>
+          </div>
+        </aside>
+
+        <section class="card tool-card">
+          <div id="view" class="view" aria-live="polite"></div>
+        </section>
+      </section>
     </main>
 
     <template id="step1-template">
       <div class="card card--start">
-        <div class="start-hero">
-          <div class="start-hero__text">
-            <h2>Would you like to map your designer shape?</h2>
-            <p class="muted">
-              A short flow: pick generalist or specialist, choose skills, assign each a rank
-              1–10 with the artwork icons, then get a top-aligned bar chart and a best-fit label:
-              T, Pi, M, I, or X.
-            </p>
-          </div>
-          <div class="start-hero__viz">
-            <p class="demo-t-caption muted small">Preview (like your result)</p>
-            <div
-              class="demo-t-chart"
-              id="demo-t-chart"
-              role="img"
-              aria-label="Example T-shaped profile with five bars"
-            >
-              <div class="demo-t-bar" data-demo-rank="3" style="--h-frac: 0.32; --d: 0.05s">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col"></span>
-                </div>
-                <span class="demo-t-label">Strategy</span>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="4" style="--h-frac: 0.38; --d: 0.1s">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col"></span>
-                </div>
-                <span class="demo-t-label">Systems</span>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="10" style="--h-frac: 1; --d: 0.15s">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col"></span>
-                </div>
-                <span class="demo-t-label">Business ROI</span>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="5" style="--h-frac: 0.35; --d: 0.2s">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col"></span>
-                </div>
-                <span class="demo-t-label">A11y + ethics</span>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="2" style="--h-frac: 0.3; --d: 0.25s">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col"></span>
-                </div>
-                <span class="demo-t-label">Cross-func.</span>
-              </div>
-            </div>
-            <p class="demo-t-hint muted small">
-              <span class="demo-t-hint-desktop">Desktop: hover a bar to grow it and show the label.</span>
-              <span class="demo-t-hint-mobile">Mobile: tap the chart once to show labels, again to hide.</span>
-            </p>
-          </div>
-        </div>
+        <h2>Ready to map your designer shape?</h2>
+        <p class="muted">
+          Run a short flow to identify your strongest profile pattern (T, Pi, M, I, or X).
+        </p>
         <div class="actions">
           <button data-action="start-yes">Yes</button>
           <button data-action="start-no" class="secondary">No</button>

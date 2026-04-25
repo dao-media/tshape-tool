@@ -355,6 +355,8 @@ function getUsageCounts(assignments, excludeSkill) {
 }
 
 const view = document.querySelector("#view");
+const appLayout = document.querySelector("#app-layout");
+const sideInfoCard = document.querySelector("#side-info-card");
 
 const SHAPE_ANALYZE_MS = 2000;
 const SHAPE_ANALYZE_LINES = [
@@ -455,6 +457,57 @@ function bindCardInteractionEffects() {
   });
 }
 
+function wireStaticPanelHandlers() {
+  const root = document.querySelector("#side-info-card");
+  if (!root) return;
+  root.querySelectorAll("[data-action]").forEach((el) => {
+    if (el.dataset.bound === "1") return;
+    el.dataset.bound = "1";
+    el.addEventListener("click", (event) => {
+      const action = event.currentTarget.dataset.action;
+      handleAction(action);
+    });
+  });
+}
+
+function randBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+function buildMiniBars(values) {
+  return values
+    .map((value, i) => {
+      const rank = Math.max(1, Math.min(10, Math.round(value * 10)));
+      const { top, bottom } = barFillGradientStopsForRank(rank);
+      return `<span class="mini-bar" style="--h:${Math.round(value * 100)}%;--d:${(i * 0.04).toFixed(
+        2
+      )}s;background:linear-gradient(180deg,${top},${bottom})"></span>`;
+    })
+    .join("");
+}
+
+function renderMiniDemoGraphs() {
+  const tHost = document.querySelector("#mini-graph-t");
+  const mHost = document.querySelector("#mini-graph-m");
+  if (!tHost || !mHost) return;
+  const tValues = [
+    randBetween(0.36, 0.56),
+    randBetween(0.28, 0.5),
+    randBetween(0.78, 0.98),
+    randBetween(0.3, 0.54),
+    randBetween(0.24, 0.46),
+  ];
+  const mValues = [
+    randBetween(0.56, 0.88),
+    randBetween(0.24, 0.44),
+    randBetween(0.58, 0.92),
+    randBetween(0.26, 0.46),
+    randBetween(0.6, 0.9),
+  ];
+  tHost.innerHTML = buildMiniBars(tValues);
+  mHost.innerHTML = buildMiniBars(mValues);
+}
+
 function render() {
   document.querySelectorAll(".step-pill").forEach((pill) => {
     const isActive = Number(pill.dataset.step) === state.step;
@@ -465,11 +518,16 @@ function render() {
   view.innerHTML = "";
   view.appendChild(template.content.cloneNode(true));
   bindCardInteractionEffects();
+  wireStaticPanelHandlers();
   wireStepHandlers();
 
-  if (state.step === 1) {
-    mountDemoTChart();
-  } else if (state.step === 2) {
+  if (appLayout && sideInfoCard) {
+    const shapeMode = state.step === 5;
+    appLayout.classList.toggle("app-layout--shape-mode", shapeMode);
+    sideInfoCard.hidden = shapeMode;
+  }
+
+  if (state.step === 2) {
     syncProfileRadios();
   } else if (state.step === 3) {
     renderSelectionLists();
@@ -1505,6 +1563,8 @@ try {
 
 document.documentElement.style.setProperty("--global-pulse-scale", "1");
 ensureGlobalPulseLoop();
+wireStaticPanelHandlers();
+renderMiniDemoGraphs();
 
 for (let r = 1; r <= 10; r += 1) {
   if (!rankColors[r]) rankColors[r] = hexToRgb(FALLBACK_RANK_HEX[r]);

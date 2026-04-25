@@ -1885,13 +1885,12 @@ async function sendEmailViaBackend({ toEmail, userName, shapeKey, svgString, bas
     }),
   });
   if (!resp.ok) {
-    let detail = "";
+    const raw = await resp.text();
+    let detail = raw;
     try {
-      const data = await resp.json();
-      detail = data?.error || "";
-    } catch {
-      detail = await resp.text();
-    }
+      const data = JSON.parse(raw);
+      detail = data?.error || raw;
+    } catch {}
     throw new Error(detail || `Email request failed (${resp.status}).`);
   }
 }

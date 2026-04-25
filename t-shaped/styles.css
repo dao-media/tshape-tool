@@ -112,6 +112,17 @@ h6 {
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   gap: clamp(0.75rem, 1.6vw, 1.25rem);
   align-items: start;
+  align-content: start;
+  justify-items: stretch;
+}
+
+/* Keep both main panels pinned to the top of the row (no vertical centering in the grid). */
+.app-layout > .side-info-card,
+.app-layout > .tool-card {
+  align-self: start;
+  justify-self: stretch;
+  min-width: 0;
+  width: 100%;
 }
 
 .app-layout--shape-mode {
@@ -1277,7 +1288,7 @@ button:disabled {
 .shape-viz-outer {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
   gap: 1rem;
   margin-top: 0.85rem;
 }
@@ -1566,6 +1577,42 @@ button:disabled {
 
 .card--start .actions {
   margin-top: 1.25rem;
+}
+
+.start-name-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  max-width: 22rem;
+}
+
+.start-name-label {
+  font-size: var(--text-small-size, 0.875rem);
+  font-weight: 500;
+  color: var(--text, #e8ecff);
+}
+
+.start-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text, #e8ecff);
+  font-family: var(--font-sans, "Inter", system-ui, sans-serif);
+  font-size: 1rem;
+}
+
+.start-name-input::placeholder {
+  color: var(--muted, rgba(232, 236, 255, 0.45));
+}
+
+.start-name-input:focus {
+  outline: none;
+  border-color: rgba(120, 160, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(120, 160, 255, 0.2);
 }
 
 /* Start: copy left, viz right; narrow viewports: viz on top, copy below */

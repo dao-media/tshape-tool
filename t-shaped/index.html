@@ -76,13 +76,21 @@
         <p class="muted">
           Run a short flow to identify your strongest profile pattern (T, Pi, M, I, or X).
         </p>
-        <div class="actions">
-          <button data-action="start-yes">Yes</button>
-          <button data-action="start-no" class="secondary">No</button>
+        <div class="start-name-field">
+          <label for="start-name" class="start-name-label">Optional name field</label>
+          <input
+            type="text"
+            id="start-name"
+            class="start-name-input"
+            name="userName"
+            autocomplete="given-name"
+            placeholder="e.g. Alex"
+            maxlength="80"
+          />
         </div>
-        <p class="feedback hidden" id="start-no-feedback">
-          No problem. You can start anytime from this screen.
-        </p>
+        <div class="actions">
+          <button type="button" data-action="start" class="btn btn-primary">Start</button>
+        </div>
       </div>
     </template>
 

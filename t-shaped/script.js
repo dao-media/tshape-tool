@@ -74,6 +74,8 @@ const DATA = {
 
 const state = {
   step: 1,
+  /** Optional display name from step 1; first word used for export title when set. */
+  userName: "",
   profileType: null,
   selectedItems: [],
   /** @type {Record<string, number | null>} */
@@ -433,6 +435,7 @@ function setStep(step) {
 
 function resetAllToStart() {
   state.step = 1;
+  state.userName = "";
   state.profileType = null;
   state.selectedItems = [];
   state.assignments = {};
@@ -527,7 +530,10 @@ function render() {
     sideInfoCard.hidden = shapeMode;
   }
 
-  if (state.step === 2) {
+  if (state.step === 1) {
+    const nameInput = document.getElementById("start-name");
+    if (nameInput) nameInput.value = state.userName;
+  } else if (state.step === 2) {
     syncProfileRadios();
   } else if (state.step === 3) {
     renderSelectionLists();
@@ -626,15 +632,43 @@ function buildAutoRatings(items, preset = "balanced") {
   return out;
 }
 
+/** @param {string} shapeKey */
+function articleForShapeLabel(shapeKey) {
+  if (shapeKey === "I" || shapeKey === "M" || shapeKey === "X") return "an";
+  return "a";
+}
+
+/**
+ * @param {string} raw
+ * @returns {string} First name only, e.g. "JANE doe" -> "Jane"; empty if no usable name.
+ */
+function parseFirstName(raw) {
+  if (raw == null || typeof raw !== "string") return "";
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+  const first = trimmed.split(/\s+/)[0];
+  if (!first) return "";
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+}
+
+/**
+ * @param {string} shapeKey e.g. T, Pi, M, I, X
+ * @param {string} rawName
+ */
+function getShapeGraphicHeadline(shapeKey, rawName) {
+  const first = parseFirstName(rawName);
+  if (first) return `The Shape of ${first}`;
+  const art = articleForShapeLabel(shapeKey);
+  return `You're ${art} ${shapeKey}-Shaped Designer`;
+}
+
 function handleAction(action) {
   switch (action) {
-    case "start-yes":
+    case "start": {
+      const nameInput = document.getElementById("start-name");
+      state.userName = nameInput && "value" in nameInput ? String(nameInput.value) : "";
       state.profileType = null;
       setStep(2);
-      break;
-    case "start-no": {
-      const feedback = document.querySelector("#start-no-feedback");
-      feedback.classList.remove("hidden");
       break;
     }
     case "to-step-1":
@@ -1298,8 +1332,9 @@ function renderVisualization() {
 
   const detection = detectDesignerShape(mapped);
   state.detectedShape = detection;
+  const headline = getShapeGraphicHeadline(detection.shape, state.userName);
   if (titleEl) {
-    titleEl.textContent = `Your profile: ${detection.shape}-shaped designer`;
+    titleEl.textContent = headline;
   }
   if (subEl) {
     subEl.textContent = detection.label;
@@ -1358,6 +1393,7 @@ function renderVisualization() {
   bg.setAttribute("fill", "transparent");
   bg.setAttribute("pointer-events", "none");
   svg.setAttribute("viewBox", `0 0 ${plotW} ${H}`);
+  svg.setAttribute("aria-label", headline);
   svg.appendChild(bg);
 
   const defs = document.createElementNS(ns, "defs");
@@ -1389,7 +1425,7 @@ function renderVisualization() {
   title.setAttribute("font-size", "19");
   title.setAttribute("font-weight", "700");
   title.setAttribute("pointer-events", "none");
-  title.textContent = `${detection.shape}-shaped profile`;
+  title.textContent = headline;
   svg.appendChild(title);
 
   mapped.forEach((item, i) => {

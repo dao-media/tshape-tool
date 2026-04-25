@@ -82,6 +82,8 @@ const state = {
   maxPerCurrent: null,
   /** @type {{ shape: string, label: string, detail: string } | null} */
   detectedShape: null,
+  /** Step 5: category names on-chart vs side legend. */
+  shapeVizMode: "labels",
 };
 
 const MAX_BY_TYPE = {
@@ -99,6 +101,16 @@ const EXPORT_ATTRIBUTION = "Dane O'Leary | /in/daneoleary";
 const VIZ_SVG_W = 900;
 const VIZ_SVG_H = 560;
 const EXPORT_FOOTER_H = 36;
+
+function getCurrentShapeSvgWidth() {
+  const svg = document.querySelector("#t-shape-svg");
+  if (!svg) return VIZ_SVG_W;
+  const vb = svg.getAttribute("viewBox");
+  if (!vb) return VIZ_SVG_W;
+  const p = vb.trim().split(/\s+/);
+  const w = Number(p[2]);
+  return Number.isFinite(w) && w > 0 ? w : VIZ_SVG_W;
+}
 
 const FALLBACK_RANK_HEX = {
   1: "#5a6d8f",
@@ -365,6 +377,17 @@ function setStep(step) {
   render();
 }
 
+function resetAllToStart() {
+  state.step = 1;
+  state.profileType = null;
+  state.selectedItems = [];
+  state.assignments = {};
+  state.maxPerCurrent = null;
+  state.detectedShape = null;
+  state.shapeVizMode = "labels";
+  render();
+}
+
 function render() {
   document.querySelectorAll(".step-pill").forEach((pill) => {
     const isActive = Number(pill.dataset.step) === state.step;
@@ -515,6 +538,17 @@ function handleAction(action) {
       runShapeAnalysisInterstitial(() => setStep(5));
       break;
     }
+    case "start-over":
+      resetAllToStart();
+      break;
+    case "shape-viz-labels":
+      state.shapeVizMode = "labels";
+      renderVisualization();
+      break;
+    case "shape-viz-key":
+      state.shapeVizMode = "key";
+      renderVisualization();
+      break;
     case "download-png":
       downloadFromSvg("png");
       break;
@@ -934,6 +968,46 @@ function detectDesignerShape(items) {
   };
 }
 
+function fillShapeKeyCard(mapped, keyMode) {
+  const card = document.getElementById("shape-key-card");
+  const outer = document.getElementById("shape-viz-outer");
+  if (!card) return;
+  if (!keyMode) {
+    card.hidden = true;
+    card.innerHTML = "";
+    if (outer) outer.classList.remove("shape-viz-outer--key");
+    return;
+  }
+  card.hidden = false;
+  if (outer) outer.classList.add("shape-viz-outer--key");
+  card.innerHTML = mapped
+    .map((item) => {
+      const theme = getRankTheme(item.value);
+      const { top, bottom } = barFillGradientStopsForRank(item.value);
+      return `<div class="shape-key-row">
+      <span class="shape-key-swatch" style="background:linear-gradient(180deg,${top},${bottom});box-shadow:inset 0 0 0 1.5px ${theme.stroke}"></span>
+      <span class="shape-key-name">${escapeHtml(item.name)}</span>
+      <span class="shape-key-val">${item.value}/10</span>
+    </div>`;
+    })
+    .join("");
+}
+
+function syncShapeVizToggle() {
+  const bl = document.querySelector('[data-action="shape-viz-labels"]');
+  const bk = document.querySelector('[data-action="shape-viz-key"]');
+  if (bl) {
+    const on = state.shapeVizMode === "labels";
+    bl.classList.toggle("is-active", on);
+    bl.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  if (bk) {
+    const on = state.shapeVizMode === "key";
+    bk.classList.toggle("is-active", on);
+    bk.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+
 function renderVisualization() {
   const svg = document.querySelector("#t-shape-svg");
   const titleEl = document.querySelector("#shape-result-title");
@@ -943,6 +1017,11 @@ function renderVisualization() {
   const mapped = state.selectedItems
     .map((name) => ({ name, value: state.assignments[name] }))
     .filter((x) => x.value != null);
+
+  const keyMode = state.shapeVizMode === "key";
+  const isMobileViz =
+    typeof window.matchMedia === "function" && window.matchMedia("(max-width: 720px)").matches;
+  const targetBarW = isMobileViz ? 65 : 80;
 
   const detection = detectDesignerShape(mapped);
   state.detectedShape = detection;
@@ -954,7 +1033,7 @@ function renderVisualization() {
   }
 
   svg.innerHTML = "";
-  const W = VIZ_SVG_W;
+  const plotW = keyMode ? Math.round(VIZ_SVG_W * 0.88) : VIZ_SVG_W;
   const H = VIZ_SVG_H;
   const padL = 48;
   const padR = 48;
@@ -964,16 +1043,27 @@ function renderVisualization() {
   const chartH = H - padT - padB;
   const n = mapped.length;
   const gap = 10;
-  const slotW = n > 0 ? (W - padL - padR - gap * (n - 1)) / n : 40;
-  const barW = Math.max(4, Math.min(9, (slotW * 0.22 * 2) / 3));
+  const innerW = plotW - padL - padR;
+
+  let barW = targetBarW;
+  if (n > 0) {
+    const required = n * barW + (n - 1) * gap;
+    if (required > innerW) {
+      barW = Math.max(4, (innerW - (n - 1) * gap) / n);
+    }
+  } else {
+    barW = 40;
+  }
+  const totalContentW = n > 0 ? n * barW + (n - 1) * gap : 0;
+  const startX = padL + (innerW - totalContentW) / 2;
 
   const ns = "http://www.w3.org/2000/svg";
   const bg = document.createElementNS(ns, "rect");
-  bg.setAttribute("width", String(W));
+  bg.setAttribute("width", String(plotW));
   bg.setAttribute("height", String(H));
   bg.setAttribute("fill", "transparent");
   bg.setAttribute("pointer-events", "none");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("viewBox", `0 0 ${plotW} ${H}`);
   svg.appendChild(bg);
 
   const defs = document.createElementNS(ns, "defs");
@@ -1009,8 +1099,8 @@ function renderVisualization() {
   svg.appendChild(title);
 
   mapped.forEach((item, i) => {
-    const slotX = padL + i * (slotW + gap);
-    const x = slotX + (slotW - barW) / 2;
+    const slotX = startX + i * (barW + gap);
+    const x = slotX;
     const h = (item.value / 10) * chartH;
     const y = chartTop;
     const theme = getRankTheme(item.value);
@@ -1030,16 +1120,21 @@ function renderVisualization() {
     rect.dataset.value = String(item.value);
     svg.appendChild(rect);
 
-    const label = document.createElementNS(ns, "text");
-    label.setAttribute("x", String(slotX + slotW / 2));
-    label.setAttribute("y", String(H - 30));
-    label.setAttribute("fill", "#b8c4e8");
-    label.setAttribute("font-size", "10");
-    label.setAttribute("text-anchor", "middle");
-    label.setAttribute("pointer-events", "none");
-    label.textContent = truncate(item.name, Math.max(8, Math.floor(slotW / 5)));
-    svg.appendChild(label);
+    if (!keyMode) {
+      const label = document.createElementNS(ns, "text");
+      label.setAttribute("x", String(slotX + barW / 2));
+      label.setAttribute("y", String(H - 30));
+      label.setAttribute("fill", "#b8c4e8");
+      label.setAttribute("font-size", "10");
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("pointer-events", "none");
+      label.textContent = truncate(item.name, Math.max(8, Math.floor(barW / 5)));
+      svg.appendChild(label);
+    }
   });
+
+  fillShapeKeyCard(mapped, keyMode);
+  syncShapeVizToggle();
 
   // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
   const wrap = svg.closest(".viz-wrap");
@@ -1108,9 +1203,10 @@ function escapeHtml(s) {
 function buildExportSvgString() {
   const svg = document.querySelector("#t-shape-svg");
   if (!svg) return "";
+  const exportW = getCurrentShapeSvgWidth();
   const totalH = VIZ_SVG_H + EXPORT_FOOTER_H;
   const clone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
-  clone.setAttribute("viewBox", `0 0 ${VIZ_SVG_W} ${totalH}`);
+  clone.setAttribute("viewBox", `0 0 ${exportW} ${totalH}`);
   clone.setAttribute("height", String(totalH));
   const ns = "http://www.w3.org/2000/svg";
   const t = document.createElementNS(ns, "text");
@@ -1137,10 +1233,11 @@ function downloadFromSvg(type) {
   if (!str) return;
   const url = URL.createObjectURL(new Blob([str], { type: "image/svg+xml;charset=utf-8" }));
   const totalH = VIZ_SVG_H + EXPORT_FOOTER_H;
+  const exportW = getCurrentShapeSvgWidth();
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
-    canvas.width = VIZ_SVG_W;
+    canvas.width = exportW;
     canvas.height = totalH;
     const ctx = canvas.getContext("2d");
     if (type === "jpeg") {

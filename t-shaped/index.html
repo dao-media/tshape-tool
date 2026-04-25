@@ -111,7 +111,7 @@
           </label>
         </div>
         <div class="actions">
-          <button data-action="to-step-1" class="secondary">Back</button>
+          <button data-action="start-over" class="secondary">Start Over</button>
           <button data-action="to-step-3">Continue</button>
         </div>
       </div>
@@ -156,7 +156,7 @@
         </div>
         <div class="selected-summary" id="selected-summary"></div>
         <div class="actions">
-          <button data-action="to-step-2" class="secondary">Back</button>
+          <button data-action="start-over" class="secondary">Start Over</button>
           <button data-action="to-step-4">Continue</button>
         </div>
       </div>
@@ -186,7 +186,7 @@
           </div>
         </div>
         <div class="actions">
-          <button data-action="to-step-3" class="secondary">Back</button>
+          <button data-action="start-over" class="secondary">Start Over</button>
           <button
             type="button"
             class="icon-btn"
@@ -205,11 +205,27 @@
       <div class="card">
         <h2 id="shape-result-title">Your designer shape</h2>
         <p class="muted" id="shape-result-sub">Bars use your ranking colors (top-aligned).</p>
-        <div class="viz-wrap">
-          <svg id="t-shape-svg" viewBox="0 0 900 560" role="img" aria-label="Designer shape profile"></svg>
+        <div class="shape-toolbar">
+          <div class="shape-view-toggle" role="group" aria-label="How to show item names">
+            <button
+              type="button"
+              class="shape-view-btn is-active"
+              data-action="shape-viz-labels"
+              aria-pressed="true"
+            >
+              Labels
+            </button>
+            <button type="button" class="shape-view-btn" data-action="shape-viz-key" aria-pressed="false">Key</button>
+          </div>
+        </div>
+        <div class="shape-viz-outer" id="shape-viz-outer">
+          <div class="viz-wrap">
+            <svg id="t-shape-svg" viewBox="0 0 900 560" role="img" aria-label="Designer shape profile"></svg>
+          </div>
+          <aside class="shape-key-card" id="shape-key-card" hidden></aside>
         </div>
         <div class="actions">
-          <button data-action="to-step-4" class="secondary">Back</button>
+          <button data-action="start-over" class="secondary">Start Over</button>
           <button data-action="download-png">Download PNG</button>
           <button data-action="download-jpeg">Download JPEG</button>
           <button data-action="download-svg">Download SVG</button>

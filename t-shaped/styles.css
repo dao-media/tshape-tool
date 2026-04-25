@@ -698,6 +698,130 @@ button:hover {
   background: rgba(255, 255, 255, 0.01);
 }
 
+.shape-toolbar {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.shape-view-toggle {
+  display: inline-flex;
+  border-radius: 10px;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid var(--border);
+  gap: 2px;
+}
+
+.shape-view-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--subtle);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.shape-view-btn:hover {
+  color: #e8ecff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shape-view-btn.is-active {
+  color: #0b1020;
+  background: rgba(200, 210, 255, 0.95);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+}
+
+.shape-viz-outer {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.shape-viz-outer--key {
+  display: grid;
+  grid-template-columns: minmax(0, 88fr) minmax(0, 12fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.shape-viz-outer .viz-wrap {
+  margin-top: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shape-viz-outer--key .viz-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.shape-key-card {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 0.75rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.7rem;
+  line-height: 1.3;
+  align-self: flex-start;
+  max-height: min(70vh, 480px);
+  overflow: auto;
+}
+
+.shape-key-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.shape-key-row:last-child {
+  margin-bottom: 0;
+}
+
+.shape-key-swatch {
+  flex-shrink: 0;
+  width: 10px;
+  min-height: 1.2em;
+  border-radius: 2px;
+  margin-top: 0.1em;
+}
+
+.shape-key-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #c8d2f0;
+  word-break: break-word;
+}
+
+.shape-key-val {
+  flex-shrink: 0;
+  color: #8a9cc4;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .shape-viz-outer--key {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .shape-viz-outer--key .viz-wrap,
+  .shape-viz-outer--key .shape-key-card {
+    max-width: none;
+    width: 100%;
+  }
+}
+
 #t-shape-svg {
   width: 100%;
   min-height: 320px;

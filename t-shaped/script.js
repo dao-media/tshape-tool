@@ -1260,23 +1260,24 @@ function renderShapeInsights(shape) {
   if (!host) return;
   const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
   host.innerHTML = `
-    <h3 class="shape-insights-title">${shape}-shaped designer guide</h3>
+    <h2 class="shape-insights-heading">What does being ${shape}-shaped mean?</h2>
+    <p class="body-normal shape-insights-subtitle">Insight into what the shape of your skills means.</p>
     <div class="shape-insights-grid stagger-group">
       <article class="shape-insight-card">
         <h4>What is this shape?</h4>
-        <p>${escapeHtml(guide.meaning)}</p>
+        <p class="body-normal">${escapeHtml(guide.meaning)}</p>
       </article>
       <article class="shape-insight-card">
         <h4>Where this shape thrives</h4>
-        <p>${escapeHtml(guide.roles)}</p>
+        <p class="body-normal">${escapeHtml(guide.roles)}</p>
       </article>
       <article class="shape-insight-card">
         <h4>Strengths</h4>
-        <p>${escapeHtml(guide.strengths)}</p>
+        <p class="body-normal">${escapeHtml(guide.strengths)}</p>
       </article>
       <article class="shape-insight-card">
         <h4>Watchouts</h4>
-        <p>${escapeHtml(guide.weaknesses)}</p>
+        <p class="body-normal">${escapeHtml(guide.weaknesses)}</p>
       </article>
     </div>
   `;

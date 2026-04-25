@@ -1371,8 +1371,10 @@ button:disabled {
 
 .shape-insights {
   margin-top: 0;
-  display: grid;
-  gap: 0.15rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
 }
 
 .shape-insights-card {
@@ -1384,10 +1386,17 @@ button:disabled {
   gap: 1.2rem;
 }
 
-.shape-insights-title {
-  margin: 0 0 0.9rem;
-  font-size: 1.04rem;
+h2.shape-insights-heading {
+  margin: 0 0 0.45rem;
+  font: 600 clamp(1.1rem, 2vw, 1.4rem) / 1.25 var(--font-main);
   color: #e6edff;
+  letter-spacing: -0.02em;
+}
+
+.shape-insights-subtitle {
+  margin: 0 0 1.1rem;
+  color: var(--muted);
+  max-width: 42ch;
 }
 
 .shape-insights-grid {
@@ -1423,11 +1432,9 @@ button:disabled {
   color: #eaf0ff;
 }
 
-.shape-insight-card p {
+.shape-insight-card p.body-normal {
   margin: 0;
   color: #b8c4e8;
-  font-size: 0.86rem;
-  line-height: 1.58;
 }
 
 /* WCAG-focused keyboard visibility and interactive spacing */

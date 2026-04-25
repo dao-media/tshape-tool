@@ -9,7 +9,7 @@ Preliminary prototype for a web app called **T-Shaped** that helps designers:
 
 ## Current Status
 
-This is a front-end prototype (HTML/CSS/JavaScript) with no backend required.
+Front-end prototype (HTML/CSS/JavaScript) plus optional Netlify serverless email delivery.
 
 Implemented flow:
 
@@ -51,6 +51,36 @@ python3 -m http.server 8080
 Then open:
 
 - [http://localhost:8080](http://localhost:8080)
+
+### Option 3: Full stack (native email send on localhost)
+
+From the repository root:
+
+```bash
+npm install
+npx netlify dev
+```
+
+Then open:
+
+- [http://localhost:8888](http://localhost:8888)
+
+For local email testing, run an SMTP sink such as Mailpit and point env vars accordingly.
+
+## Native Email Setup (Netlify + localhost)
+
+The app sends email through `/.netlify/functions/send-shape-email`.
+
+Required env vars (copy from `.env.example`):
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE` (`true`/`false`)
+- `SMTP_USER` (optional for local SMTP without auth)
+- `SMTP_PASS` (optional for local SMTP without auth)
+- `SMTP_FROM` (sender display and email)
+
+On Netlify, add these in **Site settings → Environment variables**.
 
 ## Behavior Notes
 

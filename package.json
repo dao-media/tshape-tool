@@ -1,0 +1,17 @@
+{
+  "name": "t-shaped-email-functions",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Netlify functions for T-shaped tool email delivery",
+  "scripts": {
+    "dev": "netlify dev",
+    "serve": "npx serve t-shaped"
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "archiver": "^7.0.1",
+    "jpeg-js": "^0.4.4",
+    "nodemailer": "^6.9.16",
+    "pngjs": "^7.0.0"
+  }
+}

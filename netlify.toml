@@ -4,6 +4,7 @@
 # (or disable “Use Next.js Runtime” for this site).
 [build]
   publish = "t-shaped"
+  functions = "netlify/functions"
 
 [build.environment]
   # Skip Next.js build plugin when the site has no Next app (v4+ may respect this).

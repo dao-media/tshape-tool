@@ -1212,7 +1212,7 @@ function renderVisualization() {
   const titleY = 40;
   const titleH = 26;
   const maxLabelLen = mapped.reduce((m, item) => Math.max(m, item.name.length), 0);
-  const labelBand = keyMode ? 0 : clamp(Math.round(maxLabelLen * 5.8 + 12), 70, 170);
+  const labelBand = keyMode ? 0 : clamp(Math.round(maxLabelLen * 5.8 + 28), 86, 186);
   let padT = titleY + titleH + labelBand;
   let padB = keyMode ? 30 : 42;
   if (isMobileViz) {
@@ -1309,7 +1309,8 @@ function renderVisualization() {
     if (!keyMode) {
       const label = document.createElementNS(ns, "text");
       const lx = slotX + barW / 2;
-      const ly = chartTop - 8;
+      const labelGap = isMobileViz ? 16 : 20;
+      const ly = chartTop - labelGap;
       label.setAttribute("x", String(lx));
       label.setAttribute("y", String(ly));
       label.setAttribute("fill", "#b8c4e8");
@@ -1318,6 +1319,7 @@ function renderVisualization() {
       label.setAttribute("class", "tbar-label-vertical");
       label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
       label.setAttribute("pointer-events", "none");
+      label.setAttribute("dominant-baseline", "middle");
       label.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
       label.textContent = item.name;
       svg.appendChild(label);

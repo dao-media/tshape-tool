@@ -158,6 +158,11 @@ h6 {
 
 /* Theme toggle (moon / sun) */
 .darkmode.tdnn {
+  --tdnn-w: clamp(108px, 15vw, 144px);
+  --u: calc(100% / 30);
+  inline-size: min(100%, var(--tdnn-w));
+  aspect-ratio: 30 / 16;
+  block-size: auto;
   border: 1px solid rgba(153, 171, 215, 0.55);
   background: #423966;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.32);
@@ -178,37 +183,41 @@ h6 {
 }
 
 .darkmode .moon {
+  top: calc(var(--u) * 3);
+  left: calc(var(--u) * 3);
+  width: calc(var(--u) * 10);
+  height: calc(var(--u) * 10);
   transform: rotate(-75deg);
   background: #423966;
   box-shadow:
-    3em 2.5em 0 0 #d9fbff inset,
-    rgba(255, 255, 255, 0.18) 0 -3.3em 0 -6.9em,
-    rgba(255, 255, 255, 0.18) 2.6em 3.6em 0 -6.8em,
-    rgba(255, 255, 255, 0.18) 1.6em 6.3em 0 -6.7em,
-    rgba(255, 255, 255, 0.18) 5.3em 1.4em 0 -6.9em,
-    rgba(255, 255, 255, 0.18) 6.9em 4.7em 0 -6.8em,
-    rgba(255, 255, 255, 0.18) 5.1em 7.3em 0 -6.9em,
-    rgba(255, 255, 255, 0.18) -2.5em 3.9em 0 -6.9em,
-    rgba(255, 255, 255, 0.18) -0.8em 5.8em 0 -6.9em;
+    calc(var(--u) * 1.8) calc(var(--u) * 1.5) 0 0 #d9fbff inset,
+    rgba(255, 255, 255, 0.1) 0 calc(var(--u) * -4.2) 0 calc(var(--u) * -2.7),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * 1.8) calc(var(--u) * 4.2) 0 calc(var(--u) * -2.7),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * 1.2) calc(var(--u) * 7.8) 0 calc(var(--u) * -2.4),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * 3.6) calc(var(--u) * 1.2) 0 calc(var(--u) * -2.46),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * 4.8) calc(var(--u) * 4.8) 0 calc(var(--u) * -2.7),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * 3.6) calc(var(--u) * 7.8) 0 calc(var(--u) * -2.7),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * -2.4) calc(var(--u) * 4.2) 0 calc(var(--u) * -2.7),
+    rgba(255, 255, 255, 0.1) calc(var(--u) * -0.6) calc(var(--u) * 6) 0 calc(var(--u) * -2.7);
 }
 
 .darkmode .moon.sun {
-  top: 3em;
-  left: 37em;
-  width: 16em;
-  height: 16em;
+  top: calc(var(--u) * 4.5);
+  left: calc(var(--u) * 18);
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
   transform: rotate(0deg);
   background: #fff;
   box-shadow:
-    3em 3em 0 5em #fff inset,
-    0 -5em 0 -2.7em #fff,
-    3.5em -3.5em 0 -3em #fff,
-    5em 0 0 -2.7em #fff,
-    3.5em 3.5em 0 -3em #fff,
-    0 5em 0 -2.7em #fff,
-    -3.5em 3.5em 0 -3em #fff,
-    -5em 0 0 -2.7em #fff,
-    -3.5em -3.5em 0 -3em #fff;
+    calc(var(--u) * 1.8) calc(var(--u) * 1.8) 0 calc(var(--u) * 3) #fff inset,
+    0 calc(var(--u) * -3) 0 calc(var(--u) * -1.62) #fff,
+    calc(var(--u) * 2.1) calc(var(--u) * -2.1) 0 calc(var(--u) * -1.8) #fff,
+    calc(var(--u) * 3) 0 0 calc(var(--u) * -1.62) #fff,
+    calc(var(--u) * 2.1) calc(var(--u) * 2.1) 0 calc(var(--u) * -1.8) #fff,
+    0 calc(var(--u) * 3) 0 calc(var(--u) * -1.62) #fff,
+    calc(var(--u) * -2.1) calc(var(--u) * 2.1) 0 calc(var(--u) * -1.8) #fff,
+    calc(var(--u) * -3) 0 0 calc(var(--u) * -1.62) #fff,
+    calc(var(--u) * -2.1) calc(var(--u) * -2.1) 0 calc(var(--u) * -1.8) #fff;
 }
 
 .app-layout {
@@ -483,7 +492,13 @@ body:not(.dark) button:not(.secondary):not(.icon-btn) {
 body:not(.dark) .btn-primary:hover,
 body:not(.dark) button:not(.secondary):not(.icon-btn):hover {
   background: var(--accent-soft);
-  box-shadow: 0 4px 15px rgba(82, 72, 204, 0.32);
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--accent-soft), var(--accent-soft)),
+    linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 4px 15px rgba(82, 72, 204, 0.24);
 }
 
 body:not(.dark) .btn-secondary,
@@ -496,7 +511,12 @@ body:not(.dark) button.secondary {
 body:not(.dark) .btn-secondary:hover,
 body:not(.dark) button.secondary:hover {
   background: #e7ecfa;
-  border-color: #95a6cf;
+  border-color: transparent;
+  background-image:
+    linear-gradient(#e7ecfa, #e7ecfa),
+    linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
 
 body:not(.dark) .icon-btn {
@@ -1064,8 +1084,13 @@ button:not(.secondary):not(.icon-btn) {
 .btn-primary:hover,
 button:not(.secondary):not(.icon-btn):hover {
   filter: brightness(1.1);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(45, 212, 191, 0.3);
+  border-color: transparent;
+  background-image:
+    linear-gradient(var(--accent), var(--accent)),
+    linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 4px 15px rgba(45, 212, 191, 0.2);
 }
 
 .btn-primary:active,
@@ -1084,7 +1109,12 @@ button.secondary {
 .btn-secondary:hover,
 button.secondary:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: transparent;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
+    linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
 }
 
 .btn-secondary:active,
@@ -1380,8 +1410,13 @@ button:disabled {
 }
 
 .rank-toggle:hover {
-  border-color: var(--accent);
-  transform: translateY(-2px);
+  border-color: transparent;
+  background-image:
+    linear-gradient(#151b2e, #151b2e),
+    linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 14px rgba(138, 125, 255, 0.22);
 }
 
 .rank-btn--selected {

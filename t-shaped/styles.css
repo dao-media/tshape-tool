@@ -194,8 +194,19 @@ body:not(.dark) .darkmode .dark {
 }
 
 .app-layout--shape-mode {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) !important;
   gap: 0;
+}
+
+.app-layout--shape-mode > .side-info-card {
+  display: none !important;
+}
+
+.app-layout--shape-mode > .tool-card {
+  grid-column: 1 / -1;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 .tool-card {

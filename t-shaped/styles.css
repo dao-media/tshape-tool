@@ -214,6 +214,10 @@ body:not(.dark) .darkmode .dark {
   padding: 0 !important;
 }
 
+.app-layout--shape-mode > .card.tool-card {
+  padding: 0 !important;
+}
+
 .tool-card {
   padding: 0;
   background: transparent;

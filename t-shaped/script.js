@@ -475,15 +475,20 @@ function renderQuotaKeyEl(maxPer, assignments) {
     const rem = max - used;
     const line = document.createElement("div");
     line.className = "quota-line";
-    if (rem <= 0) line.classList.add("quota-line--exhausted");
-    const th = document.createElement("img");
-    th.className = "quota-line-icon";
-    th.src = rankIconPath(score);
-    th.alt = "";
-    line.appendChild(th);
-    const span = document.createElement("span");
-    span.textContent = `${score}/10 — ${rem} of ${max} left`;
-    line.appendChild(span);
+    if (rem <= 0) line.classList.add("quota-line--depleted");
+    const group = document.createElement("div");
+    group.className = "quota-line-icons";
+    group.setAttribute("aria-label", `Rank ${score}: ${rem} of ${max} available`);
+    for (let k = 0; k < max; k += 1) {
+      const im = document.createElement("img");
+      im.className = "quota-line-icon";
+      if (k < used) im.classList.add("quota-line-icon--exhausted");
+      im.src = rankIconPath(score);
+      im.alt = "";
+      im.draggable = false;
+      group.appendChild(im);
+    }
+    line.appendChild(group);
     rows.appendChild(line);
   }
   return rows;
@@ -505,12 +510,20 @@ function updateTickAvailability(assignments, maxPer) {
   const usage = getUsageCounts(assignments, null);
   document.querySelectorAll("[data-rank-btn]").forEach((btn) => {
     const rank = Number(btn.dataset.rank);
+    const row = btn.closest(".skill-rate-row");
+    const skill = row && row.dataset.skill;
+    const cur = skill != null ? assignments[skill] : null;
+
+    if (rank === 0) {
+      btn.classList.remove("rank-btn--unavailable");
+      btn.classList.toggle("rank-btn--selected", cur == null);
+      return;
+    }
+
     const max = maxPer[rank] || 0;
     const used = usage[rank] || 0;
     const rem = max - used;
-    const row = btn.closest(".skill-rate-row");
-    const skill = row && row.dataset.skill;
-    const holds = skill != null && assignments[skill] === rank;
+    const holds = skill != null && cur === rank;
     const unavailable = rem <= 0 && !holds;
     btn.classList.toggle("rank-btn--unavailable", unavailable);
     btn.classList.toggle("rank-btn--selected", Boolean(holds));
@@ -698,12 +711,12 @@ function renderRatingStep(fullRebuild) {
           <div class="skill-rate-value" aria-live="polite">${rank == null ? "—" : `${rank}/10`}</div>
         </div>
         <div class="skill-rate-rating">
-          <div class="thermo" role="group" aria-label="Thermometer rank 0 to 10"></div>
+          <div class="thermo" role="group" aria-label="Horizontal thermometer rank 0 to 10"></div>
         </div>
       `;
 
       const thermo = row.querySelector(".thermo");
-      for (let r = 10; r >= 0; r -= 1) {
+      for (let r = 0; r <= 10; r += 1) {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "thermo-slot";

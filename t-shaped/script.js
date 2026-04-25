@@ -1009,6 +1009,24 @@ function applyRank(skill, requestedRaw) {
   updateAllTickAvailability();
 }
 
+function handleThermoKeydown(e, skill, rank) {
+  const key = e.key;
+  if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)) return;
+  e.preventDefault();
+  const current = normalizeRankValue(state.assignments[skill]) ?? 1;
+  if (key === "Home") {
+    applyRank(skill, 1);
+    return;
+  }
+  if (key === "End") {
+    applyRank(skill, 10);
+    return;
+  }
+  const delta = key === "ArrowLeft" || key === "ArrowDown" ? -1 : 1;
+  const next = Math.max(1, Math.min(10, current + delta));
+  applyRank(skill, next);
+}
+
 function renderRatingStep(fullRebuild) {
   const n = state.selectedItems.length;
   const maxPer = getMaxPerScore(state.profileType, n);
@@ -1056,7 +1074,9 @@ function renderRatingStep(fullRebuild) {
         b.dataset.rank = String(r);
         b.dataset.rankBtn = "1";
         b.setAttribute("aria-label", r === 0 ? "Clear rating" : `Set rank ${r} of 10`);
+          b.setAttribute("aria-keyshortcuts", "ArrowLeft ArrowRight ArrowUp ArrowDown Home End");
         b.addEventListener("click", () => applyRank(skill, r));
+          b.addEventListener("keydown", (e) => handleThermoKeydown(e, skill, r));
         thermo.appendChild(b);
       }
       ensureThermometerIcon(row);

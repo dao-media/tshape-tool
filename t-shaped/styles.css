@@ -49,6 +49,7 @@ body {
   background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-main);
+  line-height: 1.55;
 }
 
 h0,
@@ -102,13 +103,13 @@ h6 {
 .app-shell {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: clamp(1rem, 2.4vw, 1.75rem);
 }
 
 .app-layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  gap: 1rem;
+  gap: clamp(1rem, 2.3vw, 1.5rem);
   align-items: start;
 }
 
@@ -289,7 +290,7 @@ h6 {
   z-index: 1;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: clamp(1rem, 2.2vw, 1.45rem);
   animation: entryAnim 0.4s var(--ease-out) forwards;
   transition: transform 0.4s var(--ease-out-back);
 }
@@ -561,8 +562,8 @@ h3 {
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
 .btn,
@@ -709,7 +710,7 @@ button:disabled {
   background: #2b3550;
   color: #d8e2ff;
   border-radius: 10px;
-  padding: 0.45rem 0.55rem;
+  padding: 0.55rem 0.65rem;
   border: 1px solid rgba(188, 204, 246, 0.18);
 }
 
@@ -748,7 +749,7 @@ button:disabled {
   align-items: flex-start;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 0.85rem;
+  padding: 1rem;
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -759,12 +760,12 @@ button:disabled {
 .selection-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .option-list {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.58rem;
   padding-right: 0.25rem;
 }
 
@@ -774,7 +775,7 @@ button:disabled {
   align-items: flex-start;
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 0.5rem;
+  padding: 0.68rem 0.7rem;
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -786,7 +787,7 @@ button:disabled {
 .rating-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.15rem;
   align-items: stretch;
 }
 
@@ -807,7 +808,7 @@ button:disabled {
 
 .slider-zone-list {
   display: grid;
-  gap: 1rem;
+  gap: 1.12rem;
   padding-bottom: 0.25rem;
 }
 
@@ -815,7 +816,7 @@ button:disabled {
   border: 1px solid var(--border);
   border-left: 4px solid var(--rank-stroke, var(--border));
   border-radius: 10px;
-  padding: 0.75rem;
+  padding: 0.95rem;
   background: linear-gradient(120deg, var(--rank-fill, rgba(255, 255, 255, 0.04)), rgba(0, 0, 0, 0.06));
   box-shadow: var(--rank-glow, 0 0 0 transparent), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
@@ -1323,7 +1324,7 @@ button:disabled {
 }
 
 .shape-insights {
-  margin-top: 0.9rem;
+  margin-top: 1.15rem;
 }
 
 .shape-insights-title {
@@ -1335,13 +1336,13 @@ button:disabled {
 .shape-insights-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.68rem;
+  gap: 0.86rem;
 }
 
 .shape-insight-card {
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 0.75rem 0.8rem;
+  padding: 0.95rem 1rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
   animation: shapeInsightIn 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
@@ -1369,7 +1370,39 @@ button:disabled {
   margin: 0;
   color: #b8c4e8;
   font-size: 0.86rem;
-  line-height: 1.45;
+  line-height: 1.58;
+}
+
+/* WCAG-focused keyboard visibility and interactive spacing */
+:where(button, .btn, .link, select, input, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 3px solid #6ee7ff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(110, 231, 255, 0.22);
+}
+
+.selectable:focus-within,
+.option-item:focus-within,
+.skill-rate-row:focus-within,
+.tips-disclosure:focus-within {
+  border-color: #6ee7ff;
+  box-shadow: 0 0 0 2px rgba(110, 231, 255, 0.16);
+}
+
+.option-item input,
+.selectable input {
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @media (max-width: 720px) {

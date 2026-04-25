@@ -729,6 +729,12 @@ function handleAction(action) {
       state.shapeVizMode = "key";
       renderVisualization();
       break;
+    case "shape-viz-toggle": {
+      const toggle = document.getElementById("shape-viz-toggle");
+      state.shapeVizMode = toggle?.checked ? "key" : "labels";
+      renderVisualization();
+      break;
+    }
     case "download-png":
       downloadFromSvg("png");
       break;
@@ -1268,18 +1274,11 @@ function fillShapeKeyCard(mapped, keyMode) {
 }
 
 function syncShapeVizToggle() {
-  const bl = document.querySelector('[data-action="shape-viz-labels"]');
-  const bk = document.querySelector('[data-action="shape-viz-key"]');
-  if (bl) {
-    const on = state.shapeVizMode === "labels";
-    bl.classList.toggle("is-active", on);
-    bl.setAttribute("aria-pressed", on ? "true" : "false");
-  }
-  if (bk) {
-    const on = state.shapeVizMode === "key";
-    bk.classList.toggle("is-active", on);
-    bk.setAttribute("aria-pressed", on ? "true" : "false");
-  }
+  const toggle = document.getElementById("shape-viz-toggle");
+  if (!toggle) return;
+  const keyMode = state.shapeVizMode === "key";
+  toggle.checked = keyMode;
+  toggle.setAttribute("aria-checked", keyMode ? "true" : "false");
 }
 
 function renderVisualization() {
@@ -1318,9 +1317,9 @@ function renderVisualization() {
   const labelBand = keyMode
     ? 0
     : clamp(
-        Math.round(longestLabelChars * (isMobileViz ? 4.9 : 5.8) + (isMobileViz ? 30 : 38)),
-        isMobileViz ? 96 : 118,
-        isMobileViz ? 210 : 260
+        Math.round(longestLabelChars * (isMobileViz ? 5.6 : 6.5) + (isMobileViz ? 42 : 56)),
+        isMobileViz ? 120 : 145,
+        isMobileViz ? 260 : 320
       );
   let padT = titleY + titleH + labelBand;
   let padB = keyMode ? 30 : 42;
@@ -1419,20 +1418,31 @@ function renderVisualization() {
       const label = document.createElementNS(ns, "text");
       const lx = slotX + barW / 2;
       const labelGap = isMobileViz ? 12 : 16;
-      const ly = chartTop - labelGap;
+      let ly = chartTop - labelGap;
       label.setAttribute("x", String(lx));
       label.setAttribute("y", String(ly));
       label.setAttribute("fill", "#b8c4e8");
       label.setAttribute("font-size", String(isMobileViz ? 8.5 : 9.5));
       label.setAttribute("font-weight", "600");
-      label.setAttribute("text-anchor", "end");
+      // Anchor at the bar axis and run text away/up from the bar.
+      label.setAttribute("text-anchor", "start");
       label.setAttribute("class", "tbar-label-vertical");
       label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
       label.setAttribute("pointer-events", "none");
-      label.setAttribute("dominant-baseline", "auto");
+      label.setAttribute("dominant-baseline", "hanging");
       label.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
       label.textContent = item.name;
       svg.appendChild(label);
+
+      // Hard guarantee: keep label bottom above bar top.
+      const maxBottom = chartTop - labelGap;
+      const box = label.getBBox();
+      const overlap = box.y + box.height - maxBottom;
+      if (overlap > 0) {
+        ly -= overlap + 2;
+        label.setAttribute("y", String(ly));
+        label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
+      }
     }
   });
 

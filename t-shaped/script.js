@@ -76,6 +76,8 @@ const state = {
   step: 1,
   /** Optional display name from step 1; first word used for export title when set. */
   userName: "",
+  /** Optional email from step 1 used for draft/send flow. */
+  userEmail: "",
   profileType: null,
   selectedItems: [],
   /** @type {Record<string, number | null>} */
@@ -436,6 +438,7 @@ function setStep(step) {
 function resetAllToStart() {
   state.step = 1;
   state.userName = "";
+  state.userEmail = "";
   state.profileType = null;
   state.selectedItems = [];
   state.assignments = {};
@@ -533,6 +536,8 @@ function render() {
   if (state.step === 1) {
     const nameInput = document.getElementById("start-name");
     if (nameInput) nameInput.value = state.userName;
+    const emailInput = document.getElementById("start-email");
+    if (emailInput) emailInput.value = state.userEmail;
   } else if (state.step === 2) {
     syncProfileRadios();
   } else if (state.step === 3) {
@@ -662,11 +667,66 @@ function getShapeGraphicHeadline(shapeKey, rawName) {
   return `You're ${art} ${shapeKey}-Shaped Designer`;
 }
 
+function escapeForEmailLine(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+function isLikelyEmail(value) {
+  if (!value) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getDetectedShapeKey() {
+  if (state.detectedShape?.shape) return state.detectedShape.shape;
+  const mapped = state.selectedItems
+    .map((name) => ({ name, value: state.assignments[name] }))
+    .filter((x) => x.value != null);
+  const d = detectDesignerShape(mapped);
+  state.detectedShape = d;
+  return d.shape;
+}
+
+function buildEmailSubject(shapeKey) {
+  return `Your ${shapeKey}-shaped skill map`;
+}
+
+function buildEmailBody(shapeKey) {
+  const first = parseFirstName(state.userName);
+  const greeting = first ? `Hi ${first},` : "Hello,";
+  const guide = SHAPE_GUIDE[shapeKey] || SHAPE_GUIDE.T;
+  const feedbackUrl =
+    "https://docs.google.com/forms/d/e/1FAIpQLSeXdR-MvBi27FW1wgWyVv-dp7XgWqyS6I495NGsp_C4PuRoYA/viewform?usp=header";
+  return [
+    greeting,
+    "",
+    "Thanks for testing T-Shaped, a tool I've recently begun building to give designers a high-level, big-picture view of their skills and competencies.",
+    "",
+    `Since you're a ${shapeKey}-shaped designer, here's some info you may find interesting:`,
+    "",
+    `What is this shape? ${escapeForEmailLine(guide.meaning)}`,
+    `Where this shape thrives: ${escapeForEmailLine(guide.roles)}`,
+    `Strengths: ${escapeForEmailLine(guide.strengths)}`,
+    `Watchouts: ${escapeForEmailLine(guide.weaknesses)}`,
+    "",
+    "Again, thanks for using T-Shaped. Your files are attached to this email as a zip file.",
+    "",
+    `If you have any questions or issues, reach out to Dane at hello@daneoleary.com. Want to provide feedback? Click here: ${feedbackUrl}`,
+    "",
+    "Warmly,",
+    "Dane O'Leary",
+    "https://linkedin.com/in/daneoleary",
+    "https://daneoleary.com",
+    "hello@daneoleary.com",
+  ].join("\n");
+}
+
 function handleAction(action) {
   switch (action) {
     case "start": {
       const nameInput = document.getElementById("start-name");
+      const emailInput = document.getElementById("start-email");
       state.userName = nameInput && "value" in nameInput ? String(nameInput.value) : "";
+      state.userEmail = emailInput && "value" in emailInput ? String(emailInput.value).trim() : "";
       state.profileType = null;
       setStep(2);
       break;
@@ -777,6 +837,9 @@ function handleAction(action) {
       break;
     case "download-svg":
       downloadSvg();
+      break;
+    case "email-files":
+      emailShapeFiles();
       break;
     default:
       break;
@@ -1320,6 +1383,7 @@ function renderVisualization() {
   const svg = document.querySelector("#t-shape-svg");
   const titleEl = document.querySelector("#shape-result-title");
   const subEl = document.querySelector("#shape-result-sub");
+  const step5EmailInput = document.getElementById("shape-email");
   if (!svg) return;
 
   const mapped = state.selectedItems
@@ -1339,6 +1403,15 @@ function renderVisualization() {
   }
   if (subEl) {
     subEl.textContent = detection.label;
+  }
+  if (step5EmailInput && "value" in step5EmailInput) {
+    step5EmailInput.value = state.userEmail || "";
+    if (step5EmailInput.dataset.bound !== "1") {
+      step5EmailInput.dataset.bound = "1";
+      step5EmailInput.addEventListener("input", () => {
+        state.userEmail = String(step5EmailInput.value || "").trim();
+      });
+    }
   }
   renderShapeInsights(detection.shape);
 
@@ -1716,43 +1789,165 @@ function buildExportSvgString() {
   return new XMLSerializer().serializeToString(outer);
 }
 
+function getExportBaseName(shapeKey) {
+  const first = parseFirstName(state.userName);
+  const safeFirst = first ? first.toLowerCase().replace(/[^a-z0-9_-]/g, "-") : "designer";
+  const mode = state.shapeVizMode === "key" ? "key" : "labels";
+  return `t-shaped-${shapeKey.toLowerCase()}-${safeFirst}-${mode}`;
+}
+
+function buildExportFilename(type, shapeKey) {
+  const base = getExportBaseName(shapeKey);
+  if (type === "jpeg") return `${base}.jpg`;
+  return `${base}.${type}`;
+}
+
+function svgStringToBlob(svgStr) {
+  return new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+}
+
+function renderRasterBlobFromSvgString(type, svgStr, width, height) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(svgStringToBlob(svgStr));
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          reject(new Error("Canvas context unavailable."));
+          return;
+        }
+        if (type === "jpeg") {
+          ctx.fillStyle = "white";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            if (!blob) {
+              reject(new Error(`Failed to render ${type} blob.`));
+              return;
+            }
+            resolve(blob);
+          },
+          type === "jpeg" ? "image/jpeg" : "image/png",
+          0.95
+        );
+      } catch (err) {
+        URL.revokeObjectURL(url);
+        reject(err);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`Failed to load export SVG for ${type}.`));
+    };
+    img.src = url;
+  });
+}
+
+async function createExportFileBundle() {
+  const svgStr = buildExportSvgString();
+  if (!svgStr) throw new Error("Could not build export SVG.");
+  const layout = getExportLayout();
+  const shapeKey = getDetectedShapeKey();
+  const [pngBlob, jpegBlob] = await Promise.all([
+    renderRasterBlobFromSvgString("png", svgStr, layout.totalW, layout.totalH),
+    renderRasterBlobFromSvgString("jpeg", svgStr, layout.totalW, layout.totalH),
+  ]);
+  return {
+    shapeKey,
+    files: [
+      { name: buildExportFilename("png", shapeKey), blob: pngBlob },
+      { name: buildExportFilename("jpeg", shapeKey), blob: jpegBlob },
+      { name: buildExportFilename("svg", shapeKey), blob: svgStringToBlob(svgStr) },
+    ],
+  };
+}
+
+async function emailShapeFiles() {
+  const step5EmailInput = document.getElementById("shape-email");
+  if (step5EmailInput && "value" in step5EmailInput) {
+    state.userEmail = String(step5EmailInput.value || "").trim();
+  }
+  if (!state.userEmail || !isLikelyEmail(state.userEmail)) {
+    alert("Add a valid email in Step 1 or Step 5 to send files.");
+    return;
+  }
+  if (!window.JSZip) {
+    alert("ZIP library didn't load. Refresh and try again.");
+    return;
+  }
+  try {
+    const { shapeKey, files } = await createExportFileBundle();
+    const zip = new window.JSZip();
+    files.forEach((file) => zip.file(file.name, file.blob));
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    const zipName = `${getExportBaseName(shapeKey)}-files.zip`;
+    const zipFile = new File([zipBlob], zipName, { type: "application/zip" });
+    const subject = buildEmailSubject(shapeKey);
+    const body = buildEmailBody(shapeKey);
+
+    // Best path where supported: native share sheet allows attaching ZIP directly.
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({ files: [zipFile] })
+    ) {
+      await navigator.share({
+        title: subject,
+        text: body,
+        files: [zipFile],
+      });
+      return;
+    }
+
+    // Desktop/web fallback: download ZIP and open email draft prefilled.
+    triggerDownload(URL.createObjectURL(zipBlob), zipName);
+    const mailto = `mailto:${encodeURIComponent(state.userEmail)}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(
+      `${body}\n\n---\nIf your email client did not auto-attach files, attach the downloaded ZIP: ${zipName}`
+    )}`;
+    window.location.href = mailto;
+  } catch (err) {
+    console.error(err);
+    alert("Could not prepare your email package. Please try again.");
+  }
+}
+
 function downloadSvg() {
-  const str = buildExportSvgString();
-  if (!str) return;
-  const blob = new Blob([str], { type: "image/svg+xml;charset=utf-8" });
-  triggerDownload(URL.createObjectURL(blob), "designer-shape-profile.svg");
+  try {
+    const str = buildExportSvgString();
+    if (!str) return;
+    const shapeKey = getDetectedShapeKey();
+    const blob = svgStringToBlob(str);
+    triggerDownload(URL.createObjectURL(blob), buildExportFilename("svg", shapeKey));
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 function downloadFromSvg(type) {
   const str = buildExportSvgString();
   if (!str) return;
-  const url = URL.createObjectURL(new Blob([str], { type: "image/svg+xml;charset=utf-8" }));
   const { totalW, totalH } = getExportLayout();
-  const img = new Image();
-  img.onload = () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = totalW;
-    canvas.height = totalH;
-    const ctx = canvas.getContext("2d");
-    if (type === "jpeg") {
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    ctx.drawImage(img, 0, 0);
-    canvas.toBlob(
-      (blob) => {
-        const filename = type === "jpeg" ? "designer-shape.jpg" : "designer-shape.png";
-        triggerDownload(URL.createObjectURL(blob), filename);
-      },
-      type === "jpeg" ? "image/jpeg" : "image/png",
-      0.95
-    );
-    URL.revokeObjectURL(url);
-  };
-  img.onerror = () => URL.revokeObjectURL(url);
-  img.src = url;
+  renderRasterBlobFromSvgString(type, str, totalW, totalH)
+    .then((blob) => {
+      const shapeKey = getDetectedShapeKey();
+      triggerDownload(URL.createObjectURL(blob), buildExportFilename(type, shapeKey));
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Could not render export file.");
+    });
 }
 
 function triggerDownload(url, filename) {

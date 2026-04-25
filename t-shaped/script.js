@@ -107,8 +107,22 @@ const FALLBACK_RANK_HEX = {
   10: "#a060c8",
 };
 
+/**
+ * Resolves so icons work when the page is opened as file://, from any CWD, or with querystrings.
+ */
+function tShapedAppBase() {
+  const el =
+    document.currentScript && document.currentScript.src
+      ? document.currentScript
+      : document.querySelector('script[src$="script.js"]');
+  if (el && el.src) {
+    return new URL(".", el.src);
+  }
+  return new URL(".", document.baseURI);
+}
+
 function rankIconPath(n) {
-  return `./icons/Rating%20icon_${n}-10.png`;
+  return new URL(`icons/Rating%20icon_${n}-10.png`, tShapedAppBase()).href;
 }
 
 function getRankTheme(rank) {
@@ -116,7 +130,7 @@ function getRankTheme(rank) {
     return {
       hex: "#6c7698",
       accent: "hsl(226 18% 52%)",
-      fill: "rgba(108, 118, 152, 0.35)",
+      fill: "rgba(255, 255, 255, 0.04)",
       stroke: "hsl(226 18% 58%)",
     };
   }
@@ -128,7 +142,7 @@ function getRankTheme(rank) {
   return {
     hex,
     accent: hex,
-    fill: `rgba(${r}, ${g}, ${b}, 0.42)`,
+    fill: `rgba(${r}, ${g}, ${b}, 0.5)`,
     stroke: hex,
   };
 }
@@ -507,7 +521,14 @@ function applyRankThemeToRow(row, rank) {
   const t = getRankTheme(rank);
   row.style.setProperty("--rank-accent", t.accent);
   row.style.setProperty("--rank-fill", t.fill);
-  row.style.setProperty("--rank-stroke", t.stroke);
+  if (rank != null && rank >= 1 && rank <= 10) {
+    row.style.setProperty("--rank-stroke", t.stroke);
+    const c = rankColors[rank] || { r: 120, g: 130, b: 160 };
+    row.style.setProperty("--rank-glow", `0 0 28px rgba(${c.r}, ${c.g}, ${c.b}, 0.4)`);
+  } else {
+    row.style.removeProperty("--rank-stroke");
+    row.style.setProperty("--rank-glow", "none");
+  }
 }
 
 function playHeroEnter(row) {

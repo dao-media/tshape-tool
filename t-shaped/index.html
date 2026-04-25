@@ -25,45 +25,50 @@
     </main>
 
     <template id="step1-template">
-      <div class="card">
-        <h2>Would you like to map your designer shape?</h2>
-        <p class="muted">
-          A short flow: profile → pick skills → rank with icons → see whether you read as T, Pi,
-          M, I, or X-shaped.
-        </p>
-        <div class="demo-t-wrap">
-          <p class="demo-t-caption muted small">Preview · top-aligned bars like your final plot</p>
-          <div
-            class="demo-t-chart"
-            id="demo-t-chart"
-            role="img"
-            aria-label="Example T-shaped profile with five bars"
-          >
-            <div class="demo-t-bar" style="--h: 28%; --d: 0.05s">
-              <span class="demo-t-label">Strategy</span>
-              <span class="demo-t-col"></span>
-            </div>
-            <div class="demo-t-bar" style="--h: 34%; --d: 0.1s">
-              <span class="demo-t-label">Systems</span>
-              <span class="demo-t-col"></span>
-            </div>
-            <div class="demo-t-bar demo-t-bar--stem" style="--h: 92%; --d: 0.15s">
-              <span class="demo-t-label">Business ROI</span>
-              <span class="demo-t-col"></span>
-            </div>
-            <div class="demo-t-bar" style="--h: 30%; --d: 0.2s">
-              <span class="demo-t-label">A11y + ethics</span>
-              <span class="demo-t-col"></span>
-            </div>
-            <div class="demo-t-bar" style="--h: 26%; --d: 0.25s">
-              <span class="demo-t-label">Cross-func.</span>
-              <span class="demo-t-col"></span>
-            </div>
+      <div class="card card--start">
+        <div class="start-hero">
+          <div class="start-hero__text">
+            <h2>Would you like to map your designer shape?</h2>
+            <p class="muted">
+              A short flow: pick generalist or specialist, choose skills, assign each a rank
+              1–10 with the artwork icons, then get a top-aligned bar chart and a best-fit label:
+              T, Pi, M, I, or X.
+            </p>
           </div>
-          <p class="demo-t-hint muted small">
-            <span class="demo-t-hint-desktop">Desktop: hover a bar.</span>
-            <span class="demo-t-hint-mobile">Mobile: tap the chart to expand labels.</span>
-          </p>
+          <div class="start-hero__viz">
+            <p class="demo-t-caption muted small">Preview (like your result)</p>
+            <div
+              class="demo-t-chart"
+              id="demo-t-chart"
+              role="img"
+              aria-label="Example T-shaped profile with five bars"
+            >
+              <div class="demo-t-bar" style="--h-frac: 0.32; --d: 0.05s">
+                <span class="demo-t-label">Strategy</span>
+                <span class="demo-t-col"></span>
+              </div>
+              <div class="demo-t-bar" style="--h-frac: 0.38; --d: 0.1s">
+                <span class="demo-t-label">Systems</span>
+                <span class="demo-t-col"></span>
+              </div>
+              <div class="demo-t-bar demo-t-bar--stem" style="--h-frac: 1; --d: 0.15s">
+                <span class="demo-t-label">Business ROI</span>
+                <span class="demo-t-col"></span>
+              </div>
+              <div class="demo-t-bar" style="--h-frac: 0.35; --d: 0.2s">
+                <span class="demo-t-label">A11y + ethics</span>
+                <span class="demo-t-col"></span>
+              </div>
+              <div class="demo-t-bar" style="--h-frac: 0.3; --d: 0.25s">
+                <span class="demo-t-label">Cross-func.</span>
+                <span class="demo-t-col"></span>
+              </div>
+            </div>
+            <p class="demo-t-hint muted small">
+              <span class="demo-t-hint-desktop">Desktop: hover a bar to grow it and show the label.</span>
+              <span class="demo-t-hint-mobile">Mobile: tap the chart once to show labels, again to hide.</span>
+            </p>
+          </div>
         </div>
         <div class="actions">
           <button data-action="start-yes">Yes</button>

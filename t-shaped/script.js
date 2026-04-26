@@ -1989,41 +1989,43 @@ function runSelfTestIfQuery() {
   }
 }
 
-function applyTheme(mode) {
-  const isDark = mode !== "light";
-  const toggle = document.getElementById("theme-toggle");
-  const moon = toggle ? toggle.querySelector(".moon") : null;
-  document.body.classList.toggle("dark", isDark);
-  document.body.classList.toggle("light", !isDark);
-  if (toggle) {
-    toggle.classList.toggle("day", !isDark);
-    toggle.setAttribute("aria-pressed", String(!isDark));
-    toggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-    toggle.setAttribute("title", isDark ? "Switch to light mode" : "Switch to dark mode");
-  }
-  if (moon) {
-    moon.classList.toggle("sun", !isDark);
-  }
+function syncBodyFromHash() {
+  const h = (location.hash || "").toLowerCase();
+  if (h !== "#light" && h !== "#dark") return;
+  const isLight = h === "#light";
+  document.body.classList.toggle("dark", !isLight);
+  document.body.classList.toggle("light", isLight);
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
-  } catch {}
+    localStorage.setItem(THEME_STORAGE_KEY, isLight ? "light" : "dark");
+  } catch (e) {}
+}
+
+function applyTheme(mode) {
+  const next = mode === "light" ? "#light" : "#dark";
+  if ((location.hash || "").toLowerCase() === next) {
+    syncBodyFromHash();
+  } else {
+    location.hash = next;
+  }
 }
 
 function initThemeToggle() {
-  const toggle = document.getElementById("theme-toggle");
-  if (!toggle) return;
+  const root = document.getElementById("theme-toggle");
+  if (!root) return;
   let stored = "dark";
   try {
     stored = localStorage.getItem(THEME_STORAGE_KEY) || "dark";
-  } catch {}
+  } catch (e) {}
   if (stored !== "dark" && stored !== "light") stored = "dark";
-  applyTheme(stored);
-  if (toggle.dataset.bound === "1") return;
-  toggle.dataset.bound = "1";
-  toggle.addEventListener("click", () => {
-    const next = document.body.classList.contains("dark") ? "light" : "dark";
-    applyTheme(next);
-  });
+  const h = (location.hash || "").toLowerCase();
+  if (h === "#light" || h === "#dark") {
+    syncBodyFromHash();
+  } else {
+    applyTheme(stored);
+  }
+  if (root.dataset.hashBound === "1") return;
+  root.dataset.hashBound = "1";
+  window.addEventListener("hashchange", syncBodyFromHash, false);
 }
 
 try {
@@ -2032,22 +2034,25 @@ try {
   console.error("T-Shaped selfTest failed", e);
 }
 
-document.documentElement.style.setProperty("--global-pulse-scale", "1");
-ensureGlobalPulseLoop();
-initThemeToggle();
-wireStaticPanelHandlers();
-renderMiniDemoGraphs();
+void (async function bootApp() {
+  await loadThemeToggleFragment();
+  document.documentElement.style.setProperty("--global-pulse-scale", "1");
+  ensureGlobalPulseLoop();
+  initThemeToggle();
+  wireStaticPanelHandlers();
+  renderMiniDemoGraphs();
 
-for (let r = 1; r <= 10; r += 1) {
-  if (!rankColors[r]) rankColors[r] = hexToRgb(FALLBACK_RANK_HEX[r]);
-}
-loadRankColorsFromIcons().then(() => {
-  if (state.step === 4) {
-    refreshQuotaHost();
-    state.selectedItems.forEach((sk) => updateRowUI(sk, { refreshTicks: false }));
-    updateAllTickAvailability();
+  for (let r = 1; r <= 10; r += 1) {
+    if (!rankColors[r]) rankColors[r] = hexToRgb(FALLBACK_RANK_HEX[r]);
   }
-});
+  loadRankColorsFromIcons().then(() => {
+    if (state.step === 4) {
+      refreshQuotaHost();
+      state.selectedItems.forEach((sk) => updateRowUI(sk, { refreshTicks: false }));
+      updateAllTickAvailability();
+    }
+  });
 
-render();
-runSelfTestIfQuery();
+  render();
+  runSelfTestIfQuery();
+})();

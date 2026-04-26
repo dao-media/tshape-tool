@@ -535,6 +535,7 @@ function render() {
     if (nameInput) nameInput.value = state.userName;
     const emailInput = document.getElementById("start-email");
     if (emailInput) emailInput.value = state.userEmail;
+    mountDemoTChart();
   } else if (state.step === 2) {
     syncProfileRadios();
   } else if (state.step === 3) {

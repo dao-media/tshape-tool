@@ -117,7 +117,7 @@ export default function App() {
         </section>
       </section>
 
-      <div class="app-corner-badge app-corner-badge--left">Beta | v 0.1</div>
+      <div class="app-corner-badge app-corner-badge--left">Beta | v 0.15</div>
       <div class="app-corner-badge app-corner-badge--right">
         Created with ❤️ by{" "}
         <a

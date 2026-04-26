@@ -1,7 +1,7 @@
 {
   "name": "t-shaped-email-functions",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.15.0",
   "description": "Netlify functions for T-shaped tool email delivery",
   "scripts": {
     "dev": "netlify dev",

@@ -2000,10 +2000,7 @@ function syncBodyFromHash() {
   } catch (e) {}
 }
 
-/**
- * Same-document #light / #dark links scroll the fragment into view and break the toggle’s :target styles.
- * Use location.hash so :target updates (replaceState does not), then restore scroll.
- */
+/** In-page #light / #id fragment navigation scrolls the target into view; use replaceState + scroll restore. */
 function setThemeHashNoScroll(hash) {
   const normalized = (hash || "").toLowerCase();
   if (normalized !== "#light" && normalized !== "#dark") return;
@@ -2013,7 +2010,9 @@ function setThemeHashNoScroll(hash) {
   }
   const x = window.scrollX;
   const y = window.scrollY;
-  location.hash = normalized;
+  const u = new URL(window.location.href);
+  u.hash = normalized === "#light" ? "light" : "dark";
+  history.replaceState(null, "", u.href);
   syncBodyFromHash();
   const restore = () => window.scrollTo(x, y);
   restore();

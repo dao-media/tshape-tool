@@ -28,24 +28,24 @@
               aria-label="Toggle dark and light mode"
               title="Toggle dark and light mode"
             >
-              <div class="theme-toggle__content relative isolate h-full w-full" aria-hidden="true">
-                <div class="theme-toggle__satallite">
-                  <div
-                    class="theme-toggle__sun relative z-[1] size-full overflow-hidden rounded-full bg-[#fbc72d]"
-                  >
-                    <div class="theme-toggle__moon moon">
+              <div id="light" aria-hidden="true"><span class="light"></span></div>
+              <div id="dark" aria-hidden="true"><span class="dark"></span></div>
+              <div class="content" aria-hidden="true">
+                <div class="satallite">
+                  <div class="sun">
+                    <div class="moon">
                       <div class="dot dot1" aria-hidden="true"></div>
                       <div class="dot dot2" aria-hidden="true"></div>
                       <div class="dot dot3" aria-hidden="true"></div>
                     </div>
                   </div>
-                  <div class="theme-toggle__rays absolute inset-0">
+                  <div class="rays">
                     <div class="ray ray1"></div>
                     <div class="ray ray2"></div>
                     <div class="ray ray3"></div>
                   </div>
                 </div>
-                <div class="theme-toggle__clouds absolute left-0 top-full isolate h-full w-full">
+                <div class="clouds">
                   <div class="cloudset cloudset1">
                     <div class="cloud cloud1"></div>
                     <div class="cloud cloud2"></div>
@@ -65,7 +65,7 @@
                     <div class="cloud cloud7"></div>
                   </div>
                 </div>
-                <div class="theme-toggle__stars absolute left-0 top-0 h-full w-[70%]">
+                <div class="stars">
                   <div class="star star1"></div>
                   <div class="star star2"></div>
                   <div class="star star3"></div>

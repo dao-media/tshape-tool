@@ -23,8 +23,6 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --rainbow-grad: linear-gradient(45deg, #2dd4bf, #3b82f6, #8b5cf6, #ec4899);
   --radius: 16px;
-  /* Horizontal page gutter for card bodies lives on .view / .side-info-card, not on .card */
-  --card-pad: clamp(1.6rem, 2.9vw, 2.35rem);
   --bg-card: #161616;
   --btn-radius: 12px;
   --btn-transition: all 0.2s var(--ease-out);
@@ -190,6 +188,11 @@ h6 {
   margin: 0;
   width: 100%;
   max-width: 100%;
+  padding: 0 !important;
+}
+
+.app-layout--shape-mode > .card.tool-card {
+  padding: 0 !important;
 }
 
 .tool-card {
@@ -201,13 +204,11 @@ h6 {
 .tool-card > .view {
   width: 100%;
   min-width: 0;
-  box-sizing: border-box;
-  /* Replaces former horizontal .card padding so stacked cards share one gutter; gap separates siblings */
-  padding-inline: var(--card-pad);
 }
 
 .app-layout--shape-mode .tool-card > .view {
   margin: 0;
+  padding: 0;
 }
 
 .tool-card::before,
@@ -218,7 +219,6 @@ h6 {
 .side-info-card {
   position: sticky;
   top: 0.9rem;
-  padding-inline: var(--card-pad);
 }
 
 .side-info-title {
@@ -672,17 +672,9 @@ body:not(.dark) .shape-insight-card p.body-normal {
   z-index: 1;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: var(--card-pad) 0;
+  padding: clamp(1.6rem, 2.9vw, 2.35rem);
   animation: entryAnim 0.4s var(--ease-out) forwards;
   transition: transform 0.4s var(--ease-out-back);
-}
-
-/* Outer right column: .card + .tool-card; suppress inner shell padding (moved to .view) */
-.card.tool-card {
-  padding: 0;
-  background: transparent;
-  border: 0;
-  animation: none;
 }
 
 .card::before {
@@ -1816,8 +1808,7 @@ button:disabled {
 
 .shape-results-stack {
   display: grid;
-  /* Vertical space between the shape card and the insights card (not extra per-card top/bottom padding) */
-  gap: clamp(1.25rem, 2.5vw, 1.5rem);
+  gap: 1.2rem;
   width: 100%;
   margin: 0;
   justify-items: stretch;

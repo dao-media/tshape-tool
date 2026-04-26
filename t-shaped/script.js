@@ -2000,32 +2000,12 @@ function syncBodyFromHash() {
   } catch (e) {}
 }
 
-/** In-page #light / #id fragment navigation scrolls the target into view; use replaceState + scroll restore. */
-function setThemeHashNoScroll(hash) {
-  const normalized = (hash || "").toLowerCase();
-  if (normalized !== "#light" && normalized !== "#dark") return;
-  if ((location.hash || "").toLowerCase() === normalized) {
-    syncBodyFromHash();
-    return;
-  }
-  const x = window.scrollX;
-  const y = window.scrollY;
-  const u = new URL(window.location.href);
-  u.hash = normalized === "#light" ? "light" : "dark";
-  history.replaceState(null, "", u.href);
-  syncBodyFromHash();
-  const restore = () => window.scrollTo(x, y);
-  restore();
-  requestAnimationFrame(restore);
-  requestAnimationFrame(() => requestAnimationFrame(restore));
-}
-
 function applyTheme(mode) {
   const next = mode === "light" ? "#light" : "#dark";
   if ((location.hash || "").toLowerCase() === next) {
     syncBodyFromHash();
   } else {
-    setThemeHashNoScroll(next);
+    location.hash = next;
   }
 }
 
@@ -2046,18 +2026,6 @@ function initThemeToggle() {
   if (root.dataset.hashBound === "1") return;
   root.dataset.hashBound = "1";
   window.addEventListener("hashchange", syncBodyFromHash, false);
-  root.addEventListener(
-    "click",
-    (e) => {
-      const a = e.target?.closest("a[href^='#']");
-      if (!a) return;
-      const href = (a.getAttribute("href") || "").toLowerCase();
-      if (href !== "#light" && href !== "#dark") return;
-      e.preventDefault();
-      setThemeHashNoScroll(href);
-    },
-    false
-  );
 }
 
 try {

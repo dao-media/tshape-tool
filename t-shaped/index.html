@@ -23,15 +23,62 @@
           <div class="app-header-theme">
             <button
               type="button"
-              class="darkmode tdnn relative inline-block m-0 cursor-pointer overflow-hidden rounded-full p-0 transition-[background,border-color,box-shadow] duration-300 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-[3px]"
               id="theme-toggle"
+              class="theme-toggle darkmode relative m-0 inline-block min-h-0 w-[min(100%,clamp(6rem,14vw,8.25rem))] shrink-0 cursor-pointer select-none overflow-hidden border-0 !p-0 !min-h-0 leading-none isolate rounded-full aspect-[20/7] [touch-action:manipulation] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-[rgba(133,160,228,0.85)]"
               aria-label="Toggle dark and light mode"
               title="Toggle dark and light mode"
             >
-              <span
-                class="moon absolute block rounded-full transition-all duration-[400ms] ease-in-out"
-                aria-hidden="true"
-              ></span>
+              <div class="theme-toggle__content relative isolate h-full w-full" aria-hidden="true">
+                <div class="theme-toggle__satallite">
+                  <div
+                    class="theme-toggle__sun relative z-[1] size-full overflow-hidden rounded-full bg-[#fbc72d]"
+                  >
+                    <div class="theme-toggle__moon moon">
+                      <div class="dot dot1" aria-hidden="true"></div>
+                      <div class="dot dot2" aria-hidden="true"></div>
+                      <div class="dot dot3" aria-hidden="true"></div>
+                    </div>
+                  </div>
+                  <div class="theme-toggle__rays absolute inset-0">
+                    <div class="ray ray1"></div>
+                    <div class="ray ray2"></div>
+                    <div class="ray ray3"></div>
+                  </div>
+                </div>
+                <div class="theme-toggle__clouds absolute left-0 top-full isolate h-full w-full">
+                  <div class="cloudset cloudset1">
+                    <div class="cloud cloud1"></div>
+                    <div class="cloud cloud2"></div>
+                    <div class="cloud cloud3"></div>
+                    <div class="cloud cloud4"></div>
+                    <div class="cloud cloud5"></div>
+                    <div class="cloud cloud6"></div>
+                    <div class="cloud cloud7"></div>
+                  </div>
+                  <div class="cloudset cloudset2">
+                    <div class="cloud cloud1"></div>
+                    <div class="cloud cloud2"></div>
+                    <div class="cloud cloud3"></div>
+                    <div class="cloud cloud4"></div>
+                    <div class="cloud cloud5"></div>
+                    <div class="cloud cloud6"></div>
+                    <div class="cloud cloud7"></div>
+                  </div>
+                </div>
+                <div class="theme-toggle__stars absolute left-0 top-0 h-full w-[70%]">
+                  <div class="star star1"></div>
+                  <div class="star star2"></div>
+                  <div class="star star3"></div>
+                  <div class="star star4"></div>
+                  <div class="star star5"></div>
+                  <div class="star star6"></div>
+                  <div class="star star7"></div>
+                  <div class="star star8"></div>
+                  <div class="star star9"></div>
+                  <div class="star star10"></div>
+                  <div class="star star11"></div>
+                </div>
+              </div>
             </button>
           </div>
         </div>

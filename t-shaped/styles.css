@@ -677,6 +677,11 @@ body:not(.dark) .shape-insight-card p.body-normal {
   transition: transform 0.4s var(--ease-out-back);
 }
 
+/* Main tool column: no padding on the section shell; inner step .card blocks keep their own padding */
+.card.tool-card {
+  padding: 0;
+}
+
 .card::before {
   content: "";
   position: absolute;

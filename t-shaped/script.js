@@ -2002,16 +2002,14 @@ function syncBodyFromHash() {
 
 function applyTheme(mode) {
   const next = mode === "light" ? "#light" : "#dark";
-  if ((location.hash || "").toLowerCase() === next) {
-    syncBodyFromHash();
-  } else {
+  if ((location.hash || "").toLowerCase() !== next) {
     location.hash = next;
   }
+  /* hashchange is not guaranteed before paint; keep body in sync for :target + class */
+  syncBodyFromHash();
 }
 
 function initThemeToggle() {
-  const root = document.getElementById("theme-toggle");
-  if (!root) return;
   let stored = "dark";
   try {
     stored = localStorage.getItem(THEME_STORAGE_KEY) || "dark";
@@ -2023,6 +2021,8 @@ function initThemeToggle() {
   } else {
     applyTheme(stored);
   }
+  const root = document.getElementById("theme-toggle");
+  if (!root) return;
   if (root.dataset.hashBound === "1") return;
   root.dataset.hashBound = "1";
   window.addEventListener("hashchange", syncBodyFromHash, false);

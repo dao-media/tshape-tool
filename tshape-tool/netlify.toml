@@ -1,0 +1,11 @@
+# Static HTML/CSS/JS in t-shaped/ — this is not a Next.js app.
+# If the build still runs @netlify/plugin-nextjs, open Netlify → Site
+# configuration → Build & deploy → remove the Next.js integration / runtime
+# (or disable “Use Next.js Runtime” for this site).
+[build]
+  publish = "t-shaped"
+  functions = "netlify/functions"
+
+[build.environment]
+  # Skip Next.js build plugin when the site has no Next app (v4+ may respect this).
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"

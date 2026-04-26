@@ -682,10 +682,6 @@ body:not(.dark) .shape-insight-card p.body-normal {
   padding: 0;
 }
 
-.card.side-info-card {
-  padding: 0;
-}
-
 .card::before {
   content: "";
   position: absolute;

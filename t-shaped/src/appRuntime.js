@@ -2016,13 +2016,39 @@ function syncBodyFromHash() {
   } catch (e) {}
 }
 
+/**
+ * Set #light / #dark for :target CSS without changing scroll. Default <a href="#...">
+ * and location.hash both scroll the fragment into view; we block the former and restore
+ * after the latter.
+ */
+function setThemeHashNoScroll(nextHash) {
+  const want = nextHash.startsWith("#") ? nextHash : `#${nextHash}`;
+  const cur = (location.hash || "").toLowerCase();
+  if (cur === want.toLowerCase()) {
+    syncBodyFromHash();
+    return;
+  }
+  const sx = window.scrollX;
+  const sy = window.scrollY;
+  location.hash = want;
+  syncBodyFromHash();
+  const restore = () => {
+    if (window.scrollX !== sx || window.scrollY !== sy) {
+      window.scrollTo(sx, sy);
+    }
+  };
+  restore();
+  queueMicrotask(restore);
+  requestAnimationFrame(restore);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(restore);
+  });
+  setTimeout(restore, 0);
+}
+
 function applyTheme(mode) {
   const next = mode === "light" ? "#light" : "#dark";
-  if ((location.hash || "").toLowerCase() !== next) {
-    location.hash = next;
-  }
-  /* hashchange is not guaranteed before paint; keep body in sync for :target + class */
-  syncBodyFromHash();
+  setThemeHashNoScroll(next);
 }
 
 function initThemeToggle() {
@@ -2042,6 +2068,19 @@ function initThemeToggle() {
   if (root.dataset.hashBound === "1") return;
   root.dataset.hashBound = "1";
   window.addEventListener("hashchange", syncBodyFromHash, false);
+  /* Clicks on <a href="#light|#dark"> would scroll that fragment into view — block it. */
+  root.addEventListener(
+    "click",
+    (e) => {
+      const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a || !root.contains(a)) return;
+      const href = (a.getAttribute("href") || "").toLowerCase();
+      if (href !== "#light" && href !== "#dark") return;
+      e.preventDefault();
+      applyTheme(href === "#light" ? "light" : "dark");
+    },
+    true
+  );
 }
 
 try {

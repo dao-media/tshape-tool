@@ -43,6 +43,8 @@
 
 html {
   min-height: 100%;
+  /* Reduce scroll anchoring nudges when body/theme styles change (e.g. light/dark) */
+  overflow-anchor: none;
 }
 
 body {
@@ -483,17 +485,26 @@ body:not(.dark) .shape-toggle__label {
 body:not(.dark) .shape-toggle:has(input:not(:checked)) .shape-toggle__label:first-of-type,
 body:not(.dark) .shape-toggle:has(input:checked) .shape-toggle__label:last-of-type {
   color: #1f2a44;
-  font-weight: 700;
+  font-weight: 600;
+  opacity: 1;
 }
 
 body:not(.dark) .shape-toggle:has(input:not(:checked)) .shape-toggle__label:last-of-type,
 body:not(.dark) .shape-toggle:has(input:checked) .shape-toggle__label:first-of-type {
   color: #4e6290;
-  opacity: 1;
+  opacity: 0.55;
 }
 
-body:not(.dark) .shape-toggle__track:focus-within {
-  outline-color: rgba(72, 95, 158, 0.65);
+body:not(.dark) .shape-toggle__track:has(input:focus-visible) {
+  box-shadow:
+    inset 0 1px 2px rgba(20, 27, 45, 0.18),
+    0 0 0 2px rgba(72, 95, 158, 0.5);
+}
+
+body:not(.dark) .shape-toggle__track:has(input:focus-visible):has(input:checked) {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.2),
+    0 0 0 2px rgba(72, 95, 158, 0.45);
 }
 
 body:not(.dark) .start-name-input {
@@ -1474,38 +1485,55 @@ body:not(.dark) .thermo-slot.thermo-slot--in-fill {
 
 .shape-toolbar {
   margin: 0.8rem 0 0.55rem;
+  width: 100%;
 }
 
-/* Labels / Key — minimal neutral switch (no bright accent fill) */
+/* Labels / Key — fixed grid so the track stays centered; no font-weight swap (avoids width twitch) */
 .shape-toggle {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  width: 100%;
+  max-width: 17.5rem;
+  column-gap: 0.65rem;
   align-items: center;
-  gap: 0.6rem 0.75rem;
   padding: 0;
   background: none;
   border: none;
   font-family: var(--font-main);
+  white-space: nowrap;
 }
 
 .shape-toggle__label {
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--muted);
-  transition: color 0.2s var(--ease-out), font-weight 0.15s var(--ease-out);
+  min-width: 0;
+  transition: color 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
+}
+
+.shape-toggle__label:first-of-type {
+  text-align: end;
+  justify-self: stretch;
+  padding-inline-end: 0.1rem;
+}
+
+.shape-toggle__label:last-of-type {
+  text-align: start;
+  justify-self: stretch;
+  padding-inline-start: 0.1rem;
 }
 
 .shape-toggle:has(input:not(:checked)) .shape-toggle__label:first-of-type,
 .shape-toggle:has(input:checked) .shape-toggle__label:last-of-type {
   color: rgba(244, 246, 255, 0.95);
-  font-weight: 600;
+  opacity: 1;
 }
 
 .shape-toggle:has(input:not(:checked)) .shape-toggle__label:last-of-type,
 .shape-toggle:has(input:checked) .shape-toggle__label:first-of-type {
   color: var(--muted);
-  font-weight: 500;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 .shape-toggle__track {
@@ -1517,7 +1545,7 @@ body:not(.dark) .thermo-slot.thermo-slot--in-fill {
   background: var(--panel);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
-  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+  transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out), box-shadow 0.15s var(--ease-out);
 }
 
 .shape-toggle__track:has(input:checked) {
@@ -1533,10 +1561,6 @@ body:not(.dark) .thermo-slot.thermo-slot--in-fill {
   margin: 0;
   cursor: pointer;
   opacity: 0;
-}
-
-.shape-toggle__track input:focus,
-.shape-toggle__track input:focus-visible {
   outline: none;
   box-shadow: none;
 }
@@ -1564,10 +1588,17 @@ body:not(.dark) .thermo-slot.thermo-slot--in-fill {
   border-color: rgba(255, 255, 255, 0.65);
 }
 
-.shape-toggle__track:focus-within {
-  outline: 2px solid rgba(120, 140, 180, 0.45);
-  outline-offset: 2px;
-  border-radius: 999px;
+/* Keyboard focus only — avoid ring flash / layout nudge on every tap */
+.shape-toggle__track:has(input:focus-visible) {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 0 0 2px rgba(120, 140, 180, 0.55);
+}
+
+.shape-toggle__track:has(input:focus-visible):has(input:checked) {
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.25),
+    0 0 0 2px rgba(120, 140, 180, 0.5);
 }
 
 .shape-viz-outer {
@@ -1804,7 +1835,7 @@ h2.shape-insights-heading {
 }
 
 .shape-viz-outer--key .viz-wrap {
-  transform: translateX(-1px) scale(0.995);
+  transform: scale(0.996);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
   border-color: rgba(162, 180, 236, 0.42);
 }

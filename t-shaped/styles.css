@@ -159,7 +159,7 @@ h6 {
 .app-layout {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  gap: clamp(0.75rem, 1.6vw, 1.25rem);
+  gap: 32px;
   align-items: start;
   align-content: start;
   justify-items: stretch;
@@ -679,6 +679,10 @@ body:not(.dark) .shape-insight-card p.body-normal {
 
 /* Main tool column: no padding on the section shell; inner step .card blocks keep their own padding */
 .card.tool-card {
+  padding: 0;
+}
+
+.card.side-info-card {
   padding: 0;
 }
 

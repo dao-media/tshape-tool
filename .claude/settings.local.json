@@ -3,7 +3,10 @@
     "allow": [
       "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__get_metadata",
       "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__get_variable_defs",
-      "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__get_design_context"
+      "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__get_design_context",
+      "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__whoami",
+      "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__use_figma",
+      "mcp__29975102-5b38-4df1-9d9d-2a3686707c40__get_screenshot"
     ]
   }
 }

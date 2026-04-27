@@ -1,11 +1,13 @@
 {
   "name": "t-shaped-email-functions",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.15.0",
   "description": "Netlify functions for T-shaped tool email delivery",
   "scripts": {
     "dev": "netlify dev",
-    "serve": "npx serve t-shaped",
+    "dev:shape": "cd t-shaped && npm run dev",
+    "build:shape": "cd t-shaped && npm run build",
+    "serve": "npx serve t-shaped/dist",
     "build:css": "tailwindcss -i ./t-shaped/styles.css -o ./t-shaped/styles.out.css --minify",
     "watch:css": "tailwindcss -i ./t-shaped/styles.css -o ./t-shaped/styles.out.css --watch"
   },

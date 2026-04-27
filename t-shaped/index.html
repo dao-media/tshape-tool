@@ -10,116 +10,104 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.out.css" />
-    <link rel="stylesheet" href="./theme-toggle.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy.css"
+      crossorigin="anonymous"
+    />
   </head>
   <body class="dark">
-    <main class="app-shell">
-      <header class="app-header">
-        <div class="app-header-inner">
-          <div class="app-header-copy">
-            <h1>T-Shaped</h1>
-            <p>Map your strengths, plot your design profile, and export it.</p>
-          </div>
-          <div class="app-header-theme" id="theme-toggle-host"></div>
-        </div>
-      </header>
-
-      <section class="stepper" aria-label="Progress">
-        <div class="step-pill active" data-step="1">1. Start</div>
-        <div class="step-pill" data-step="2">2. Profile</div>
-        <div class="step-pill" data-step="3">3. Select</div>
-        <div class="step-pill" data-step="4">4. Rank</div>
-        <div class="step-pill" data-step="5">5. Shape</div>
-      </section>
-
-      <section class="app-layout" id="app-layout">
-        <aside class="card side-info-card" id="side-info-card">
-          <h2 class="side-info-title">What's Your Designer Shape?</h2>
-          <p class="muted side-info-desc">
-            Map your strongest design capabilities, visualize your profile shape, and export the
-            result.
-          </p>
-
-          <div class="side-demo-block">
-            <p class="muted small side-demo-title">Examples</p>
-            <div class="side-demos-row">
-              <div class="mini-graph-wrap">
-                <span class="mini-graph-label"><strong>T SHAPE</strong> (DEMO)</span>
-                <div class="mini-graph" id="mini-graph-t" role="img" aria-label="Random T-shaped demo graph"></div>
-              </div>
-              <div class="mini-graph-wrap">
-                <span class="mini-graph-label"><strong>M SHAPE</strong> (DEMO)</span>
-                <div class="mini-graph" id="mini-graph-m" role="img" aria-label="Random M-shaped demo graph"></div>
-              </div>
-            </div>
-          </div>
-
-          <section class="tips-disclosure" aria-label="How to use this tool">
-            <h2 class="tips-title">How to Use This Tool</h2>
-            <details class="tips-step" open>
-              <summary><h3 class="tips-step-heading">1. Choose a designer type</h3></summary>
-              <p class="tips-step-body">Do you consider yourself more of a generalist or specialist?</p>
-            </details>
-            <details class="tips-step">
-              <summary><h3 class="tips-step-heading">2. Select your skills/competencies</h3></summary>
-              <p class="tips-step-body">Which best represent you as a designer?</p>
-            </details>
-            <details class="tips-step">
-              <summary><h3 class="tips-step-heading">3. Rate each of your skills</h3></summary>
-              <p class="tips-step-body">Using a 1-to-10 scale, assess the strength of each skill.</p>
-            </details>
-            <details class="tips-step">
-              <summary><h3 class="tips-step-heading">4. Review and export your shape</h3></summary>
-              <p class="tips-step-body">
-                Toggle between labeled and label-key views and save to your device.
-              </p>
-            </details>
-          </section>
-
-          <div class="actions side-actions">
-            <button data-action="start-over" class="secondary">Start Over</button>
-          </div>
-        </aside>
-
-        <section class="card tool-card">
-          <div id="view" class="view" aria-live="polite"></div>
-        </section>
-      </section>
-      <div class="app-corner-badge app-corner-badge--left">Beta | v 0.1</div>
-      <div class="app-corner-badge app-corner-badge--right">
-        Created with ❤️ by
-        <a href="https://linkedin.com/in/daneoleary" target="_blank" rel="noopener noreferrer">Dane O'Leary</a>
-      </div>
-    </main>
+    <div id="root"></div>
 
     <template id="step1-template">
       <div class="card card--start">
-        <h2>Ready to map your designer shape?</h2>
-        <div class="start-name-field">
-          <label for="start-name" class="start-name-label">Name (Optional)</label>
-          <input
-            type="text"
-            id="start-name"
-            class="start-name-input"
-            name="userName"
-            autocomplete="given-name"
-            placeholder="e.g. Alex"
-            maxlength="80"
-          />
-        </div>
-        <div class="start-name-field">
-          <label for="start-email" class="start-name-label">Email (Optional)</label>
-          <input
-            type="email"
-            id="start-email"
-            class="start-name-input"
-            name="userEmail"
-            autocomplete="email"
-            placeholder="e.g. alex@domain.com"
-            maxlength="120"
-          />
-          <p class="start-email-note muted">Used only to email your shape map files to you. Will not be added to email list.</p>
+        <div class="start-hero">
+          <div class="start-hero__text">
+            <h2>Ready to map your designer shape?</h2>
+            <p class="muted small" style="margin: 0 0 0.5rem; max-width: 34rem">
+              Below is a <strong>condensed T-shaped</strong> example: bar height shows strength; colors match
+              the rank scale you will use in step 4.
+            </p>
+            <div class="start-name-field">
+              <label for="start-name" class="start-name-label">Name (Optional)</label>
+              <input
+                type="text"
+                id="start-name"
+                class="start-name-input"
+                name="userName"
+                autocomplete="given-name"
+                placeholder="e.g. Alex"
+                maxlength="80"
+              />
+            </div>
+            <div class="start-name-field">
+              <label for="start-email" class="start-name-label">Email (Optional)</label>
+              <input
+                type="email"
+                id="start-email"
+                class="start-name-input"
+                name="userEmail"
+                autocomplete="email"
+                placeholder="e.g. alex@domain.com"
+                maxlength="120"
+              />
+              <p class="start-email-note muted">
+                Used only to email your shape map files to you. Will not be added to email list.
+              </p>
+            </div>
+          </div>
+          <div class="start-hero__viz" aria-label="Example bar profile">
+            <p class="demo-t-caption small muted" style="margin: 0 0 0.25rem">Example (not your data)</p>
+            <p class="demo-t-hint demo-t-hint-desktop small muted" style="margin: 0 0 0.35rem">
+              Hover a bar to show its label.
+            </p>
+            <p class="demo-t-hint demo-t-hint-mobile small muted" style="margin: 0 0 0.35rem">
+              Tap the chart to show bar labels.
+            </p>
+            <div
+              id="demo-t-chart"
+              class="demo-t-chart"
+              role="img"
+              aria-label="Example T-shaped profile with six strength bars"
+            >
+              <div class="demo-t-bar" data-demo-rank="2">
+                <div class="demo-t-bar__track">
+                  <span class="demo-t-col" style="--h-frac: 0.24"></span>
+                </div>
+                <div class="demo-t-label">Res</div>
+              </div>
+              <div class="demo-t-bar" data-demo-rank="3">
+                <div class="demo-t-bar__track">
+                  <span class="demo-t-col" style="--h-frac: 0.38"></span>
+                </div>
+                <div class="demo-t-label">IA</div>
+              </div>
+              <div class="demo-t-bar" data-demo-rank="7">
+                <div class="demo-t-bar__track">
+                  <span class="demo-t-col" style="--h-frac: 0.92"></span>
+                </div>
+                <div class="demo-t-label">Core</div>
+              </div>
+              <div class="demo-t-bar" data-demo-rank="4">
+                <div class="demo-t-bar__track">
+                  <span class="demo-t-col" style="--h-frac: 0.45"></span>
+                </div>
+                <div class="demo-t-label">UI</div>
+              </div>
+              <div class="demo-t-bar" data-demo-rank="2">
+                <div class="demo-t-bar__track">
+                  <span class="demo-t-col" style="--h-frac: 0.3"></span>
+                </div>
+                <div class="demo-t-label">Dev</div>
+              </div>
+              <div class="demo-t-bar" data-demo-rank="1">
+                <div class="demo-t-bar__track">
+                  <span class="demo-t-col" style="--h-frac: 0.18"></span>
+                </div>
+                <div class="demo-t-label">Wri</div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="actions">
           <button type="button" data-action="start" class="btn btn-primary">Start</button>
@@ -162,7 +150,8 @@
               type="button"
               class="secondary"
               data-action="selection-random"
-              title="Fill selection at random (up to your cap)"
+              data-tippy-content="Fill selection at random (up to your cap)"
+              aria-label="Fill selection at random (up to your cap)"
             >
               Random
             </button>
@@ -170,7 +159,7 @@
               type="button"
               class="icon-btn"
               data-action="selection-reset"
-              title="Clear all selections"
+              data-tippy-content="Clear all selections"
               aria-label="Clear all selections"
             >
               ⟲
@@ -201,9 +190,9 @@
       <div class="card card--scrollable">
         <h2>Rate each selection</h2>
         <p class="muted">
-          Use the horizontal thermometer (0–10). Ranks 1–7 are unlimited; only <strong>one</strong> skill
-          in your whole profile may be 8, one may be 9, and one may be 10. See the key for
-          8/9/10.
+          Use the horizontal thermometer (0–10). Ranks 1–7 are unlimited; only
+          <strong>one</strong> skill in your whole profile may be 8, one may be 9, and one may be 10. See
+          the key for 8/9/10.
         </p>
         <div class="rating-layout">
           <div class="rating-col">
@@ -212,10 +201,23 @@
               <div id="selected-items" class="slider-zone-list"></div>
             </div>
           </div>
+          <div class="rating-col">
+            <h3>8 / 9 / 10 quota</h3>
+            <p class="small muted" style="margin: 0 0 0.5rem">
+              Only <strong>one</strong> skill can be 8, one 9, and one 10. Icons show what is still free.
+            </p>
+            <div class="scroll-panel scroll-panel--side" id="rate-key-scroll">
+              <div id="ranking-key-host" class="ranking-key-host"></div>
+            </div>
+          </div>
         </div>
         <div class="actions">
           <button type="button" class="secondary" data-action="rate-all">Rate All</button>
-          <label class="rate-all-preset-wrap" for="rate-all-preset">
+          <label
+            class="rate-all-preset-wrap"
+            for="rate-all-preset"
+            data-tippy-content="Preset used with Rate All: balanced, top-heavy, or random within quota rules"
+          >
             <span class="rate-all-preset-label">Preset</span>
             <select id="rate-all-preset" class="rate-all-preset" aria-label="Rate all preset">
               <option value="balanced">Balanced</option>
@@ -227,7 +229,7 @@
             type="button"
             class="icon-btn"
             data-action="rate-start-over"
-            title="Clear all scores"
+            data-tippy-content="Clear all scores"
             aria-label="Clear all scores"
           >
             ⟲
@@ -243,14 +245,7 @@
           <h2 id="shape-result-title">Your designer shape</h2>
           <p class="muted" id="shape-result-sub">Bars use your ranking colors (top-aligned).</p>
           <div class="shape-toolbar">
-            <label class="shape-toggle" for="shape-viz-toggle" aria-label="Show Labels or Key">
-              <span class="shape-toggle__label">Labels</span>
-              <span class="shape-toggle__track">
-                <input type="checkbox" id="shape-viz-toggle" data-action="shape-viz-toggle" />
-                <span class="shape-toggle__thumb" aria-hidden="true"></span>
-              </span>
-              <span class="shape-toggle__label">Key</span>
-            </label>
+            <label class="shape-toggle" for="shape-viz-toggle" aria-label="Show Labels or Key"><span class="shape-toggle__label">Labels</span><span class="shape-toggle__track"><input type="checkbox" id="shape-viz-toggle" data-action="shape-viz-toggle" /><span class="shape-toggle__thumb" aria-hidden="true"></span></span><span class="shape-toggle__label">Key</span></label>
           </div>
           <div class="shape-viz-outer" id="shape-viz-outer">
             <div class="viz-wrap">
@@ -269,7 +264,10 @@
               placeholder="e.g. alex@domain.com"
               maxlength="120"
             />
-            <p class="start-email-note muted">Add an email here if you decide to have your shape files sent later. Will not be added to email list.</p>
+            <p class="start-email-note muted">
+              Add an email here if you decide to have your shape files sent later. Will not be added to
+              email list.
+            </p>
           </div>
           <div class="actions">
             <button data-action="start-over" class="secondary">Start Over</button>
@@ -286,7 +284,11 @@
       </div>
     </template>
 
-    <script src="./theme-toggle.js"></script>
-    <script src="./script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

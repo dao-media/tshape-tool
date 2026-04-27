@@ -1,27 +1,35 @@
-# T-Shaped Prototype
+# T-Shaped Prototype (v0.15)
 
-Preliminary prototype for a web app called **T-Shaped** that helps designers:
+T-Shaped is a designer self-assessment web app for mapping skill depth, classifying profile shape, and exporting results.
 
-- choose skills/specialties
-- assign strength ratings
-- generate a bar-chart **designer shape** (T, Pi, M, I, or X) from ratings
-- export results as PNG, JPEG, or SVG
+## Current App Specs
 
-## Current Status
+### Stack
 
-**Front end:** [Solid](https://www.solidjs.com/) (app shell) and [Vite](https://vitejs.dev/) with TypeScript, plus the existing **DOM-driven step flow** in `t-shaped/src/appRuntime.js` and step templates in `t-shaped/index.html`. Styles use **Tailwind** (source `styles.css`, built to `styles.out.css`).
+- **UI shell:** [SolidJS](https://www.solidjs.com/) + [Vite](https://vitejs.dev/) (`t-shaped/src/main.tsx`, `t-shaped/src/App.tsx`)
+- **Runtime logic:** DOM-driven flow in `t-shaped/src/appRuntime.js` with templates in `t-shaped/index.html`
+- **Styling:** Tailwind pipeline (`t-shaped/styles.css` -> `t-shaped/styles.out.css`)
+- **Optional backend:** Netlify function email endpoint at `/.netlify/functions/send-shape-email` (`netlify/functions/send-shape-email.js`)
 
-**Back end (optional):** Netlify function `send-shape-email` in `netlify/functions/` for server-side email from the app.
+### User Flow (5 Steps)
 
-**Deploy:** Netlify builds with `cd t-shaped && npm ci && npm run build` and publishes `t-shaped/dist` (see `netlify.toml`).
-
-Implemented user flow:
-
-1. Start (`Yes/No`) + condensed **demo T-chart** (hover bars on desktop; tap to toggle labels on touch)
-2. Profile type (`Generalist` or `Specialist`)
-3. Skill/specialty selection
-4. **Rank** with `public/icons/Rating icon_*-10.png`: tap a rank → hero icon **spin-zoom** (ease-out-back) then joins a **shared global pulse** (`requestAnimationFrame` → `--global-pulse-scale`). Row colors come from **sampled icon pixels** per rank (fallback palette if sampling fails).
-5. **Shape plot**: top-aligned bars (like the reference infographic), auto **T / Pi / M / I / X** classification from scores, export PNG/JPEG/SVG
+1. **Start**
+   - Optional Name + Email inputs
+   - Condensed demo T-chart preview (hover labels on desktop, tap-to-toggle labels on touch)
+2. **Profile**
+   - Choose `Generalist` (up to 12 items) or `Specialist` (up to 6 items)
+3. **Select**
+   - Pick categories/specializations
+   - Helpers: `Random`, reset (`⟲`)
+4. **Rank**
+   - Horizontal thermometer control per selected item (0-10)
+   - `8`, `9`, and `10` are globally unique (quota panel shown beside ranking list)
+   - Helpers: `Rate All` presets (`balanced`, `top-heavy`, `random-valid`) and reset (`⟲`)
+5. **Shape**
+   - Auto-detects `I`, `T`, `Pi`, `M`, or `X`
+   - Labels/Key toggle for visualization mode
+   - Export: PNG, JPEG, SVG
+   - Optional email delivery (ZIP with PNG/JPG/SVG) through Netlify function
 
 ## Project Structure
 
@@ -46,15 +54,15 @@ Implemented user flow:
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── vite.config.ts
-├── tshape-tool/              # Alternate package: Netlify + static `t-shaped` (email tooling)
+├── tshape-tool/              # Separate/legacy package snapshot
 └── README.md
 ```
 
-## Run Locally
+## Install and Run
 
-### T-shaped app (Vite) — recommended
+### Recommended: Vite app only
 
-From the repository root:
+From repository root:
 
 ```bash
 cd t-shaped
@@ -62,74 +70,69 @@ npm install
 npm run dev
 ```
 
-Open the URL Vite prints (usually [http://localhost:5173](http://localhost:5173)).
+Open the URL Vite prints (typically [http://localhost:5173](http://localhost:5173)).
 
-Production build and local preview of the static output:
+### Build / serve production output
 
 ```bash
-# from repo root
+# from repository root
 npm run build:shape
 npm run serve
 ```
 
-(`serve` points at `t-shaped/dist`.)
+`serve` hosts `t-shaped/dist`.
 
-**Tailwind only** (if you are editing `t-shaped/styles.css` without a full Vite build):
+### CSS-only build (Tailwind)
 
 ```bash
 npm run build:css
 ```
 
-at the **repository** root, or from `t-shaped/` run `npm run build:css` (same pipeline as the full `build` script).
+Run from repository root (targets `t-shaped/styles.css`), or from `t-shaped/` run `npm run build:css`.
 
 > **Note:** Opening `t-shaped/index.html` as a `file://` URL is not supported; the app expects the Vite dev server or a built `dist` tree served over HTTP.
 
-### Full stack: Netlify dev (site + serverless functions)
+### Full stack: Netlify dev (frontend + functions)
 
-From the **repository** root, install root dependencies, then (with the [Netlify CLI](https://docs.netlify.com/cli/get-started/) available, e.g. `npm i -g netlify-cli` or `npx`):
+From repository root:
 
 ```bash
 npm install
 npx netlify dev
 ```
 
-Then open the URL Netlify prints (often [http://localhost:8888](http://localhost:8888)).
+Open the URL Netlify prints (often [http://localhost:8888](http://localhost:8888)).
 
-For local email testing, use an SMTP sink such as [Mailpit](https://github.com/axllent/mailpit) and set env vars to match.
+For local email testing, run an SMTP sink such as [Mailpit](https://github.com/axllent/mailpit) and configure env vars.
 
 ## Native Email Setup (Netlify + localhost)
 
-The app can send email through `/.netlify/functions/send-shape-email`.
+The app sends ZIP attachments via `/.netlify/functions/send-shape-email`.
 
-Required environment variables (copy from **`.env.example`**, or set in the Netlify UI):
+Required environment variables (copy from `.env.example`):
 
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_SECURE` (`true`/`false`)
 - `SMTP_USER` (optional for local SMTP without auth)
 - `SMTP_PASS` (optional for local SMTP without auth)
-- `SMTP_FROM` (sender display and email)
+- `SMTP_FROM`
 
 On Netlify, add these under **Site settings → Environment variables**.
 
-## Behavior Notes
+## Deploy (Netlify)
 
-- **Generalist**: up to 12 selected items. **Specialist**: up to 6.
-- **Ranking**: tap a rank icon (1–10). Pool limits still apply; if a rank is exhausted, the choice
-  snaps to the nearest available value.
-- **Colors**: driven by the **rank** (sampled from the matching PNG), not by skill name.
-- **Pulse**: one global sine cycle updates `--global-pulse-scale` every frame; every hero icon
-  that has finished its entrance animation uses that same value so pulses stay in phase.
-- Scrollable selection/rank panels; **⟲** clears selections on step 3 or scores on step 4.
-- **Shape** step: bar chart (top baseline), heuristic best match among **I, T, Pi, M, X**.
+- Build command: `cd t-shaped && npm ci && npm run build`
+- Publish directory: `t-shaped/dist`
+- Functions directory: `netlify/functions`
 
-Optional: append `?selftest=1` to the URL to re-run a small in-browser self-check (see console).
+All are already configured in `netlify.toml`.
 
-## Exports
+## Notes
 
-- **PNG**: transparent background
-- **JPEG**: solid white background
-- **SVG**: transparent vector output
+- Theme toggle is hash-driven (`#light` / `#dark`) with scroll-preserving logic in `appRuntime.js`.
+- Shape chart hover pill uses viewport-clamped positioning (desktop hover + mobile tap behavior).
+- You can run a small in-browser logic self-check with `?selftest=1` in the URL.
 
 ## Next Suggested Enhancements
 

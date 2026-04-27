@@ -742,6 +742,25 @@ function parseFirstName(raw) {
 }
 
 /**
+ * Prefer "First Last" if available; otherwise first token only.
+ * @param {string} raw
+ * @returns {string}
+ */
+function parseDisplayName(raw) {
+  if (raw == null || typeof raw !== "string") return "";
+  const tokens = raw.trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return "";
+  if (tokens.length === 1) {
+    const t = tokens[0];
+    return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+  }
+  const first = tokens[0];
+  const last = tokens[tokens.length - 1];
+  const fmt = (t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+  return `${fmt(first)} ${fmt(last)}`;
+}
+
+/**
  * @param {string} shapeKey e.g. T, Pi, M, I, X
  * @param {string} rawName
  */
@@ -750,6 +769,26 @@ function getShapeGraphicHeadline(shapeKey, rawName) {
   if (first) return `The Shape of ${first}`;
   const art = articleForShapeLabel(shapeKey);
   return `You're ${art} ${shapeKey}-Shaped Designer`;
+}
+
+function showEmailComingSoon() {
+  const btn = document.querySelector('[data-action="email-files"]');
+  if (!btn) return;
+  btn.classList.remove("btn-shudder");
+  // restart animation
+  // eslint-disable-next-line no-unused-expressions
+  btn.offsetWidth;
+  btn.classList.add("btn-shudder");
+  btn.setAttribute("data-tippy-content", "Coming soon");
+  if (window.TShapedTippy) {
+    TShapedTippy.initIn(document);
+    if (btn._tippy) {
+      btn._tippy.show();
+      setTimeout(() => {
+        btn._tippy?.hide();
+      }, 3000);
+    }
+  }
 }
 
 function escapeForEmailLine(text) {
@@ -924,8 +963,15 @@ function handleAction(action) {
       downloadSvg();
       break;
     case "email-files":
-      emailShapeFiles();
+      showEmailComingSoon();
       break;
+    case "learn-more-shape": {
+      const guide = document.getElementById("shape-guide-card");
+      if (guide) {
+        guide.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      break;
+    }
     default:
       break;
   }
@@ -1105,6 +1151,7 @@ function setThermometerUI(row, rank, opts = {}) {
 
   const slots = [...t.querySelectorAll(".thermo-slot")];
   const selectedRank = rank == null ? 0 : rank;
+  t.style.setProperty("--thermo-fill-ratio", String(selectedRank / 10));
   slots.forEach((s) => {
     s.classList.remove("rank-btn--selected", "thermo-slot--in-fill");
     const r = Number(s.dataset.rank);
@@ -1499,12 +1546,22 @@ function renderVisualization() {
 
   const detection = detectDesignerShape(mapped);
   state.detectedShape = detection;
-  const headline = getShapeGraphicHeadline(detection.shape, state.userName);
+  const article = articleForShapeLabel(detection.shape);
+  const shapeHeadline = `You're ${article} ${detection.shape}-Shaped Designer`;
+  const guide = SHAPE_GUIDE[detection.shape] || SHAPE_GUIDE.T;
   if (titleEl) {
-    titleEl.textContent = headline;
+    titleEl.textContent = shapeHeadline;
   }
   if (subEl) {
-    subEl.textContent = detection.label;
+    subEl.innerHTML = `${escapeHtml(guide.meaning)} <button type="button" class="link-btn" data-action="learn-more-shape">Learn More</button>`;
+    const learnBtn = subEl.querySelector('[data-action="learn-more-shape"]');
+    if (learnBtn && learnBtn.dataset.bound !== "1") {
+      learnBtn.dataset.bound = "1";
+      learnBtn.addEventListener("click", () => {
+        const guideCard = document.getElementById("shape-guide-card");
+        if (guideCard) guideCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }
   if (step5EmailInput && "value" in step5EmailInput) {
     step5EmailInput.value = state.userEmail || "";
@@ -1528,9 +1585,9 @@ function renderVisualization() {
   const labelBand = keyMode
     ? 0
     : clamp(
-        Math.round(longestLabelChars * (isMobileViz ? 5.6 : 6.5) + (isMobileViz ? 42 : 56)),
-        isMobileViz ? 120 : 145,
-        isMobileViz ? 260 : 320
+        Math.round(longestLabelChars * (isMobileViz ? 5.2 : 5.9) + (isMobileViz ? 34 : 44)),
+        isMobileViz ? 96 : 118,
+        isMobileViz ? 220 : 270
       );
   let padT = titleY + titleH + labelBand;
   let padB = keyMode ? 30 : 42;
@@ -1569,7 +1626,7 @@ function renderVisualization() {
   bg.setAttribute("fill", "transparent");
   bg.setAttribute("pointer-events", "none");
   svg.setAttribute("viewBox", `0 0 ${plotW} ${H}`);
-  svg.setAttribute("aria-label", headline);
+  svg.setAttribute("aria-label", shapeHeadline);
   svg.appendChild(bg);
 
   const defs = document.createElementNS(ns, "defs");
@@ -1601,7 +1658,8 @@ function renderVisualization() {
   title.setAttribute("font-size", "19");
   title.setAttribute("font-weight", "700");
   title.setAttribute("pointer-events", "none");
-  title.textContent = headline;
+  const displayName = parseDisplayName(state.userName);
+  title.textContent = `${displayName || "Designer"} | ${detection.shape}-Shaped Designer`;
   svg.appendChild(title);
 
   mapped.forEach((item, i) => {
@@ -1680,16 +1738,20 @@ function renderVisualization() {
   const setTip = (text, clientX, clientY) => {
     tip.textContent = text;
     tip.classList.remove("hidden");
+    tip.style.position = "fixed";
+    tip.style.transform = "none";
     const gap = 12;
     const vw = window.innerWidth || document.documentElement.clientWidth;
     const vh = window.innerHeight || document.documentElement.clientHeight;
     const w = tip.offsetWidth || 120;
     const h = tip.offsetHeight || 32;
-    let x = clientX + gap;
-    let y = clientY - h - gap;
-    if (x + w > vw - 8) x = clientX - w - gap;
+    const cx = Number.isFinite(clientX) ? clientX : 0;
+    const cy = Number.isFinite(clientY) ? clientY : 0;
+    let x = cx + gap;
+    let y = cy - h - gap;
+    if (x + w > vw - 8) x = cx - w - gap;
     if (x < 8) x = 8;
-    if (y < 8) y = clientY + gap;
+    if (y < 8) y = cy + gap;
     if (y + h > vh - 8) y = Math.max(8, vh - h - 8);
     tip.style.left = `${Math.round(x)}px`;
     tip.style.top = `${Math.round(y)}px`;

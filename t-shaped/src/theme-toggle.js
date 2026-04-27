@@ -1,11 +1,29 @@
 const THEME_STORAGE_KEY = "tshaped-theme";
 
+function syncToggleVisualMode(isLight) {
+  const root = document.getElementById("theme-toggle");
+  if (!root) return;
+  root.classList.toggle("is-dark", !isLight);
+  root.classList.toggle("is-light", isLight);
+}
+
+function forceRetargetCurrentHash() {
+  const h = (location.hash || "").toLowerCase();
+  if (h !== "#light" && h !== "#dark") return;
+  const url = new URL(window.location.href);
+  const base = `${url.pathname}${url.search}`;
+  // Re-emit the same hash after toggle markup exists so CSS :target resolves correctly.
+  history.replaceState(null, "", base);
+  history.replaceState(null, "", `${base}${h}`);
+}
+
 function syncBodyFromHash() {
   const h = (location.hash || "").toLowerCase();
   if (h !== "#light" && h !== "#dark") return;
   const isLight = h === "#light";
   document.body.classList.toggle("dark", !isLight);
   document.body.classList.toggle("light", isLight);
+  syncToggleVisualMode(isLight);
   try {
     localStorage.setItem(THEME_STORAGE_KEY, isLight ? "light" : "dark");
   } catch (e) {}
@@ -58,6 +76,7 @@ export async function initThemeToggle() {
     return;
   }
   host.innerHTML = await res.text();
+  forceRetargetCurrentHash();
 
   let stored = "dark";
   try {
@@ -69,6 +88,7 @@ export async function initThemeToggle() {
     syncBodyFromHash();
   } else {
     applyTheme(stored);
+    syncToggleVisualMode(stored === "light");
   }
 
   const root = document.getElementById("theme-toggle");

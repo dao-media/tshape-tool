@@ -421,7 +421,7 @@
       g.fromTo(
         el,
         { opacity: 0 },
-        { opacity: 1, duration: 0.32, delay: sec, ease: "power1.out", clearProps: "opacity" }
+        { opacity: 1, duration: 0.32, delay: sec, ease: "power1.out" }
       );
     });
   }

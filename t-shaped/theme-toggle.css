@@ -40,7 +40,8 @@
 #theme-toggle .link-to-light { z-index: 1; }
 
 /* When Dark is active, bring the Light link to the front */
-#theme-toggle #dark:target ~ .link-to-light { z-index: 20; }
+#theme-toggle #dark:target ~ .link-to-light,
+#theme-toggle.toggle-button.is-dark .link-to-light { z-index: 20; }
 
 #theme-toggle.toggle-button::before {
   content: "";
@@ -60,7 +61,8 @@
   position: relative;
 }
 
-#theme-toggle #dark:target ~ .content { background-color: #1f2234; }
+#theme-toggle #dark:target ~ .content,
+#theme-toggle.toggle-button.is-dark > .content { background-color: #1f2234; }
 
 /* Satellite Sizing & Even Padding (3px = ~3.5% width, 10% height) */
 #theme-toggle .satallite {
@@ -77,7 +79,8 @@
 /* Dark position calculation: 
   Total(100%) - Width(28.23%) - RightPadding(3.53%) = 68.24% 
 */
-#theme-toggle #dark:target ~ .content .satallite {
+#theme-toggle #dark:target ~ .content .satallite,
+#theme-toggle.toggle-button.is-dark .content .satallite {
   left: 68.24%;
 }
 
@@ -103,7 +106,8 @@
   transform: rotate(60deg);
 }
 
-#theme-toggle #dark:target ~ .content .moon {
+#theme-toggle #dark:target ~ .content .moon,
+#theme-toggle.toggle-button.is-dark .content .moon {
   left: 0;
   transform: rotate(0deg);
 }
@@ -134,7 +138,8 @@
 #theme-toggle .ray1 { transform: scale(1.8); }
 #theme-toggle .ray2 { transform: scale(2.5); }
 
-#theme-toggle #dark:target ~ .content .rays { opacity: 0; }
+#theme-toggle #dark:target ~ .content .rays,
+#theme-toggle.toggle-button.is-dark .content .rays { opacity: 0; }
 
 /* Stars - Percentage Based */
 #theme-toggle .stars {
@@ -145,7 +150,8 @@
   transition: var(--transition);
 }
 
-#theme-toggle #dark:target ~ .content .stars { top: 0; }
+#theme-toggle #dark:target ~ .content .stars,
+#theme-toggle.toggle-button.is-dark .content .stars { top: 0; }
 
 #theme-toggle .star {
   position: absolute;
@@ -170,7 +176,8 @@
   transition: var(--transition);
 }
 
-#theme-toggle #dark:target ~ .content .clouds { transform: translateY(100%); }
+#theme-toggle #dark:target ~ .content .clouds,
+#theme-toggle.toggle-button.is-dark .content .clouds { transform: translateY(100%); }
 
 #theme-toggle .cloudset {
   position: absolute;
@@ -248,23 +255,28 @@
 }
 
 /* Dark/night: twinkle + tiny scale/rotate variation on stars. */
-#theme-toggle #dark:target ~ .content .star1 {
+#theme-toggle #dark:target ~ .content .star1,
+#theme-toggle.toggle-button.is-dark .content .star1 {
   animation: tshaped-star-twinkle-1 2.7s ease-in-out infinite;
 }
 
-#theme-toggle #dark:target ~ .content .star2 {
+#theme-toggle #dark:target ~ .content .star2,
+#theme-toggle.toggle-button.is-dark .content .star2 {
   animation: tshaped-star-twinkle-2 3.4s ease-in-out infinite;
 }
 
-#theme-toggle #dark:target ~ .content .star3 {
+#theme-toggle #dark:target ~ .content .star3,
+#theme-toggle.toggle-button.is-dark .content .star3 {
   animation: tshaped-star-twinkle-3 2.3s ease-in-out infinite;
 }
 
-#theme-toggle #dark:target ~ .content .star4 {
+#theme-toggle #dark:target ~ .content .star4,
+#theme-toggle.toggle-button.is-dark .content .star4 {
   animation: tshaped-star-twinkle-4 3.1s ease-in-out infinite;
 }
 
-#theme-toggle #dark:target ~ .content .star5 {
+#theme-toggle #dark:target ~ .content .star5,
+#theme-toggle.toggle-button.is-dark .content .star5 {
   animation: tshaped-star-twinkle-5 2.9s ease-in-out infinite;
 }
 

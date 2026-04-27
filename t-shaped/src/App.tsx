@@ -48,7 +48,6 @@ export default function App() {
           </p>
 
           <div class="side-demo-block">
-            <p class="muted small side-demo-title">Examples</p>
             <div class="side-demos-row">
               <div class="mini-graph-wrap">
                 <span class="mini-graph-label">

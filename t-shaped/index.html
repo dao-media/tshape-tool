@@ -21,93 +21,33 @@
 
     <template id="step1-template">
       <div class="card card--start">
-        <div class="start-hero">
-          <div class="start-hero__text">
-            <h2>Ready to map your designer shape?</h2>
-            <p class="muted small" style="margin: 0 0 0.5rem; max-width: 34rem">
-              Below is a <strong>condensed T-shaped</strong> example: bar height shows strength; colors match
-              the rank scale you will use in step 4.
-            </p>
-            <div class="start-name-field">
-              <label for="start-name" class="start-name-label">Name (Optional)</label>
-              <input
-                type="text"
-                id="start-name"
-                class="start-name-input"
-                name="userName"
-                autocomplete="given-name"
-                placeholder="e.g. Alex"
-                maxlength="80"
-              />
-            </div>
-            <div class="start-name-field">
-              <label for="start-email" class="start-name-label">Email (Optional)</label>
-              <input
-                type="email"
-                id="start-email"
-                class="start-name-input"
-                name="userEmail"
-                autocomplete="email"
-                placeholder="e.g. alex@domain.com"
-                maxlength="120"
-              />
-              <p class="start-email-note muted">
-                Used only to email your shape map files to you. Will not be added to email list.
-              </p>
-            </div>
-          </div>
-          <div class="start-hero__viz" aria-label="Example bar profile">
-            <p class="demo-t-caption small muted" style="margin: 0 0 0.25rem">Example (not your data)</p>
-            <p class="demo-t-hint demo-t-hint-desktop small muted" style="margin: 0 0 0.35rem">
-              Hover a bar to show its label.
-            </p>
-            <p class="demo-t-hint demo-t-hint-mobile small muted" style="margin: 0 0 0.35rem">
-              Tap the chart to show bar labels.
-            </p>
-            <div
-              id="demo-t-chart"
-              class="demo-t-chart"
-              role="img"
-              aria-label="Example T-shaped profile with six strength bars"
-            >
-              <div class="demo-t-bar" data-demo-rank="2">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col" style="--h-frac: 0.24"></span>
-                </div>
-                <div class="demo-t-label">Res</div>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="3">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col" style="--h-frac: 0.38"></span>
-                </div>
-                <div class="demo-t-label">IA</div>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="7">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col" style="--h-frac: 0.92"></span>
-                </div>
-                <div class="demo-t-label">Core</div>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="4">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col" style="--h-frac: 0.45"></span>
-                </div>
-                <div class="demo-t-label">UI</div>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="2">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col" style="--h-frac: 0.3"></span>
-                </div>
-                <div class="demo-t-label">Dev</div>
-              </div>
-              <div class="demo-t-bar" data-demo-rank="1">
-                <div class="demo-t-bar__track">
-                  <span class="demo-t-col" style="--h-frac: 0.18"></span>
-                </div>
-                <div class="demo-t-label">Wri</div>
-              </div>
-            </div>
-          </div>
+        <h2>Ready to map your designer shape?</h2>
+        <div class="start-name-field">
+          <label for="start-name" class="start-name-label">Name (Optional)</label>
+          <input
+            type="text"
+            id="start-name"
+            class="start-name-input"
+            name="userName"
+            autocomplete="given-name"
+            placeholder="e.g. Alex"
+            maxlength="80"
+          />
+        </div>
+        <div class="start-name-field">
+          <label for="start-email" class="start-name-label">Email (Optional)</label>
+          <input
+            type="email"
+            id="start-email"
+            class="start-name-input"
+            name="userEmail"
+            autocomplete="email"
+            placeholder="e.g. alex@domain.com"
+            maxlength="120"
+          />
+          <p class="start-email-note muted">
+            Used only to email your shape map files to you. Will not be added to email list.
+          </p>
         </div>
         <div class="actions">
           <button type="button" data-action="start" class="btn btn-primary">Start</button>
@@ -191,23 +131,13 @@
         <h2>Rate each selection</h2>
         <p class="muted">
           Use the horizontal thermometer (0–10). Ranks 1–7 are unlimited; only
-          <strong>one</strong> skill in your whole profile may be 8, one may be 9, and one may be 10. See
-          the key for 8/9/10.
+          <strong>one</strong> skill in your whole profile may be 8, one may be 9, and one may be 10.
         </p>
         <div class="rating-layout">
           <div class="rating-col">
             <h3>Your selected items</h3>
             <div class="scroll-panel scroll-panel--main" id="rate-items-scroll">
               <div id="selected-items" class="slider-zone-list"></div>
-            </div>
-          </div>
-          <div class="rating-col">
-            <h3>8 / 9 / 10 quota</h3>
-            <p class="small muted" style="margin: 0 0 0.5rem">
-              Only <strong>one</strong> skill can be 8, one 9, and one 10. Icons show what is still free.
-            </p>
-            <div class="scroll-panel scroll-panel--side" id="rate-key-scroll">
-              <div id="ranking-key-host" class="ranking-key-host"></div>
             </div>
           </div>
         </div>
@@ -242,8 +172,11 @@
     <template id="step5-template">
       <div class="shape-results-stack">
         <div class="card">
-          <h2 id="shape-result-title">Your designer shape</h2>
-          <p class="muted" id="shape-result-sub">Bars use your ranking colors (top-aligned).</p>
+          <h2 id="shape-result-title">You're a T-Shaped Designer</h2>
+          <p class="muted" id="shape-result-sub">
+            A T-shaped profile blends one area of deep expertise with broad supporting strengths.
+            <button type="button" class="link-btn" data-action="learn-more-shape">Learn More</button>
+          </p>
           <div class="shape-toolbar">
             <label class="shape-toggle" for="shape-viz-toggle" aria-label="Show Labels or Key"><span class="shape-toggle__label">Labels</span><span class="shape-toggle__track"><input type="checkbox" id="shape-viz-toggle" data-action="shape-viz-toggle" /><span class="shape-toggle__thumb" aria-hidden="true"></span></span><span class="shape-toggle__label">Key</span></label>
           </div>
@@ -278,7 +211,7 @@
           </div>
         </div>
 
-        <section class="card shape-insights-card" aria-live="polite">
+        <section class="card shape-insights-card" id="shape-guide-card" aria-live="polite">
           <div class="shape-insights" id="shape-insights"></div>
         </section>
       </div>

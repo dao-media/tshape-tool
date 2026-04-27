@@ -749,8 +749,9 @@ body:not(.dark) .shape-insight-card p.body-normal {
 }
 
 .card-title-actions .secondary {
-  padding: 0.4rem 0.7rem;
-  font-size: 0.88rem;
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
 }
 
 .card--analyzing {
@@ -798,14 +799,17 @@ body:not(.dark) .shape-insight-card p.body-normal {
   height: 44px;
   padding: 0;
   border-radius: var(--btn-radius);
+  border: 1px solid var(--border);
   background: #2b3550;
   color: #e8ecff;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: var(--btn-transition);
 }
 
 .icon-btn:hover {
@@ -852,6 +856,29 @@ h3 {
 
 .muted {
   color: var(--muted);
+}
+
+.link-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  margin-left: 0.35rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  filter: brightness(1.1);
+}
+
+body:not(.dark) .link-btn {
+  color: #374ea1;
 }
 
 .actions {
@@ -980,6 +1007,19 @@ button:disabled {
   pointer-events: none;
 }
 
+@keyframes btn-shudder {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1.5px); }
+  80% { transform: translateX(1.5px); }
+  100% { transform: translateX(0); }
+}
+
+.btn-shudder {
+  animation: btn-shudder 260ms ease-out 1;
+}
+
 .link {
   font-family: var(--font-main);
   font-size: 15px;
@@ -1098,7 +1138,7 @@ button:disabled {
 
 .rating-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.45rem;
   align-items: stretch;
 }
@@ -1135,14 +1175,19 @@ button:disabled {
 }
 
 body.dark .skill-rate-row[data-rated="1"] {
-  background: color-mix(in srgb, var(--rank-accent) 36%, #131927);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rank-accent) 28%, transparent);
+  background: color-mix(in srgb, var(--rank-accent) 20%, #131927);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rank-accent) 18%, transparent);
 }
 
 body:not(.dark) .skill-rate-row[data-rated="1"] {
-  background: color-mix(in srgb, var(--rank-accent) 14%, #ffffff);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rank-accent) 20%, #d8e0f2);
-  border-color: color-mix(in srgb, var(--rank-accent) 18%, #d8e0f2);
+  background: color-mix(in srgb, var(--rank-accent) 6%, #ffffff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rank-accent) 12%, #d8e0f2);
+  border-color: color-mix(in srgb, var(--rank-accent) 12%, #d8e0f2);
+}
+
+body:not(.dark) .skill-rate-value {
+  color: #1f2a44;
+  text-shadow: none;
 }
 
 .skill-rate-head {
@@ -1258,17 +1303,14 @@ body:not(.dark) .skill-rate-row[data-rated="1"] {
   filter: saturate(0.7) brightness(0.9);
 }
 
-/* 11 equal circles; thick center bar; colors use :root / body:not(.dark) theme tokens (not b/w comp art) */
+/* 11-node rating rail (matches reference structure, retains app palette/logic) */
 .thermo {
   --slot-idx: 1;
-  --thermo-circ: min(36px, max(20px, 6.5vw));
-  /* Track line, inactive chips, and rings align with app UI */
-  --thermo-track: color-mix(in srgb, var(--text-main) 32%, #080b12);
-  --thermo-chip: color-mix(in srgb, var(--text) 6%, var(--panel-elevated));
-  --thermo-chip-border: color-mix(in srgb, var(--border) 90%, #000);
-  --thermo-fill-border: color-mix(in srgb, var(--text) 14%, #000);
-  --thermo-ring-inner: color-mix(in srgb, var(--text) 90%, #fff);
-  --thermo-ring-outer: color-mix(in srgb, var(--bg) 45%, #000);
+  --thermo-circ: min(34px, max(20px, 6vw));
+  --thermo-track: #0b0d12;
+  --thermo-ring: #0b0d12;
+  --thermo-chip: #ffffff;
+  --thermo-fill-ratio: 0;
   position: relative;
   display: grid;
   grid-template-columns: repeat(11, minmax(0, 1fr));
@@ -1276,24 +1318,18 @@ body:not(.dark) .skill-rate-row[data-rated="1"] {
   width: 100%;
   min-height: calc(var(--thermo-circ) + 8px);
   margin: 0;
-  padding: 0.35rem 0.2rem 0.15rem;
-  background: color-mix(in srgb, var(--panel) 94%, #000);
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  border-radius: var(--btn-radius, 10px);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 4%, transparent);
+  padding: 0.32rem 0.14rem 0.14rem;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   overflow: visible;
 }
 
 body:not(.dark) .thermo {
-  --thermo-track: color-mix(in srgb, var(--text) 32%, #fff);
-  --thermo-chip: var(--panel);
-  --thermo-chip-border: var(--border);
-  --thermo-fill-border: color-mix(in srgb, var(--text) 18%, #fff);
-  --thermo-ring-inner: #fff;
-  --thermo-ring-outer: color-mix(in srgb, var(--text) 45%, #fff);
-  background: var(--panel-elevated);
-  border-color: var(--border);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 55%, #fff);
+  --thermo-track: #111827;
+  --thermo-ring: #111827;
+  --thermo-chip: #ffffff;
 }
 
 .thermo::before {
@@ -1303,68 +1339,92 @@ body:not(.dark) .thermo {
   left: calc(100% / 22);
   width: calc(100% * 10 / 11);
   top: 50%;
-  height: min(10px, calc(var(--thermo-circ) * 0.32));
+  height: 8px;
   transform: translateY(-50%);
   background: var(--thermo-track);
-  border-radius: 4px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.thermo::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: calc(100% / 22);
+  width: calc((100% * 10 / 11) * var(--thermo-fill-ratio));
+  top: 50%;
+  height: 8px;
+  transform: translateY(-50%);
+  background: var(--rank-meter-fill, var(--rank-accent, #8a7dff));
+  border-radius: 999px;
+  transition: width 0.34s var(--ease-out), background 0.2s var(--ease-out);
   pointer-events: none;
 }
 
 .thermo-slot {
+  appearance: none;
+  -webkit-appearance: none;
   position: relative;
   z-index: 1;
   box-sizing: border-box;
   place-self: center;
-  min-width: 0;
-  width: 100%;
-  max-width: var(--thermo-circ);
-  aspect-ratio: 1;
-  max-height: var(--thermo-circ);
-  padding: 0;
-  border: 2px solid var(--thermo-chip-border);
+  min-width: var(--thermo-circ);
+  min-height: var(--thermo-circ);
+  inline-size: var(--thermo-circ);
+  block-size: var(--thermo-circ);
+  aspect-ratio: 1 / 1;
+  padding: 0 !important;
+  line-height: 0;
+  font-size: 0;
+  border: 4px solid var(--thermo-ring);
   border-radius: 50%;
   background: var(--thermo-chip);
   cursor: pointer;
-  transition: transform 0.12s ease, background 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+  flex: 0 0 auto;
+  transition: transform 0.12s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
 }
 
 .thermo-slot.thermo-slot--in-fill {
-  background: var(--rank-meter-fill, var(--rank-accent));
-  border-color: var(--thermo-fill-border);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 28%, var(--text));
-}
-
-body:not(.dark) .thermo-slot.thermo-slot--in-fill {
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 55%, var(--text));
-  border-color: var(--thermo-fill-border);
+  background: var(--rank-meter-fill, #111827) !important;
+  border-color: var(--rank-meter-fill, #111827) !important;
 }
 
 .thermo-slot.rank-btn--selected {
   z-index: 2;
-  /* Double ring: theme text / bg, works on any rank hue */
-  box-shadow:
-    0 0 0 2px var(--thermo-ring-inner),
-    0 0 0 3px var(--thermo-ring-outer),
-    inset 0 1px 0 color-mix(in srgb, #fff 30%, var(--text));
-  transform: scale(1.07);
+  box-shadow: none;
+  transform: scale(1.03);
 }
 
 .thermo-slot:hover {
-  filter: brightness(1.04);
+  transform: scale(1.03);
+}
+
+/* 0/10 default state: black fill when no rating selected. */
+.thermo-slot[data-rank="0"]:not(.thermo-slot--in-fill) {
+  background: #0b0d12;
+  border-color: #0b0d12;
+}
+
+/* Explicit base state to match spec:
+   - all unfilled >0 nodes stay white with black outline
+   - prevents theme/inheritance from tinting them */
+.thermo-slot:not(.thermo-slot--in-fill):not([data-rank="0"]) {
+  background: #ffffff;
+  border-color: #0b0d12;
 }
 
 .thermo-icon {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   left: calc(100% * (var(--slot-idx) + 0.5) / 11);
   top: 50%;
-  width: min(40px, calc(var(--thermo-circ) * 1.15));
-  height: min(40px, calc(var(--thermo-circ) * 1.15));
+  width: calc(var(--thermo-circ) * 1.88);
+  height: calc(var(--thermo-circ) * 1.88);
   transform: translate(-50%, -50%) scale(var(--thermo-ico-s, 1));
   object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
-  will-change: transform, opacity, left;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.35));
   pointer-events: none;
+  will-change: transform, opacity, left;
 }
 
 @media (max-width: 720px), (hover: none), (pointer: coarse) {
@@ -1375,10 +1435,10 @@ body:not(.dark) .thermo-slot.thermo-slot--in-fill {
 }
 
 .viz-pill {
-  position: fixed;
+  position: fixed !important;
   left: 0;
   top: 0;
-  transform: translate(10px, -44px);
+  transform: none;
   padding: 0.35rem 0.55rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.16);

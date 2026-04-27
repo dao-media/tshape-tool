@@ -1659,7 +1659,9 @@ function renderVisualization() {
   title.setAttribute("font-weight", "700");
   title.setAttribute("pointer-events", "none");
   const displayName = parseDisplayName(state.userName);
-  title.textContent = `${displayName || "Designer"} | ${detection.shape}-Shaped Designer`;
+  title.textContent = displayName
+    ? `${displayName} | ${detection.shape}-Shaped Designer`
+    : `${detection.shape}-Shaped Designer`;
   svg.appendChild(title);
 
   mapped.forEach((item, i) => {

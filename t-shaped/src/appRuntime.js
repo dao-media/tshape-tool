@@ -91,6 +91,7 @@ const state = {
   /** Step 5: category names on-chart vs side legend. */
   shapeVizMode: "labels",
 };
+const LOCAL_STATE_KEY = "tshaped-local-state-v1";
 
 const MAX_BY_TYPE = {
   generalist: 12,
@@ -427,7 +428,89 @@ function setStep(step) {
   render();
 }
 
+function clearPersistedLocalState() {
+  try {
+    localStorage.removeItem(LOCAL_STATE_KEY);
+  } catch (e) {}
+}
+
+function normalizeStoredRank(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  const r = Math.round(n);
+  if (r < 1 || r > 10) return null;
+  return r;
+}
+
+function isStoredProfileType(value) {
+  return value === "generalist" || value === "specialist";
+}
+
+function buildPersistableState() {
+  return {
+    version: 1,
+    step: state.step,
+    userName: state.userName,
+    userEmail: state.userEmail,
+    profileType: state.profileType,
+    selectedItems: [...state.selectedItems],
+    assignments: { ...state.assignments },
+    detectedShape: state.detectedShape ? { ...state.detectedShape } : null,
+    shapeVizMode: state.shapeVizMode,
+    updatedAt: Date.now(),
+  };
+}
+
+function saveLocalState() {
+  try {
+    localStorage.setItem(LOCAL_STATE_KEY, JSON.stringify(buildPersistableState()));
+  } catch (e) {}
+}
+
+function loadPersistedLocalState() {
+  try {
+    const raw = localStorage.getItem(LOCAL_STATE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function canRestoreDirectToStep5(payload) {
+  if (!payload || !isStoredProfileType(payload.profileType)) return false;
+  if (!Array.isArray(payload.selectedItems) || payload.selectedItems.length === 0) return false;
+  if (!payload.assignments || typeof payload.assignments !== "object") return false;
+  for (const item of payload.selectedItems) {
+    if (typeof item !== "string" || !item.trim()) return false;
+    const rank = normalizeStoredRank(payload.assignments[item]);
+    if (rank == null) return false;
+  }
+  return true;
+}
+
+function restoreStateFromLocalStorageIfAvailable() {
+  const payload = loadPersistedLocalState();
+  if (!canRestoreDirectToStep5(payload)) return false;
+  const restoredAssignments = {};
+  payload.selectedItems.forEach((item) => {
+    restoredAssignments[item] = normalizeStoredRank(payload.assignments[item]);
+  });
+  state.userName = typeof payload.userName === "string" ? payload.userName : "";
+  state.userEmail = typeof payload.userEmail === "string" ? payload.userEmail : "";
+  state.profileType = payload.profileType;
+  state.selectedItems = [...payload.selectedItems];
+  state.assignments = restoredAssignments;
+  state.detectedShape = payload.detectedShape && typeof payload.detectedShape === "object"
+    ? payload.detectedShape
+    : null;
+  state.shapeVizMode = payload.shapeVizMode === "key" ? "key" : "labels";
+  state.step = 5;
+  return true;
+}
+
 function resetAllToStart() {
+  clearPersistedLocalState();
   state.step = 1;
   state.userName = "";
   state.userEmail = "";
@@ -549,6 +632,7 @@ function render() {
     TShapedAnim.afterRender({ view, sideInfo: sideInfoCard });
   }
   if (window.TShapedTippy) TShapedTippy.initIn(view);
+  saveLocalState();
 }
 
 function mountDemoTChart() {
@@ -2120,6 +2204,7 @@ export async function bootstrapTShapedApp() {
     }
   });
 
+  restoreStateFromLocalStorageIfAvailable();
   render();
   runSelfTestIfQuery();
 }

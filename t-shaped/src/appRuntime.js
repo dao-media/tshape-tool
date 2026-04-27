@@ -1581,15 +1581,15 @@ function renderVisualization() {
   if (window.TShapedAnim) TShapedAnim.shapeChartIn(svg);
 
   // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
-  const wrap = svg.closest(".viz-wrap");
-  if (!wrap) return;
-  wrap.style.position = "relative";
-  let tip = wrap.querySelector(".viz-pill");
+  // Keep the pill on <body> (not inside transformed/scrollable chart wrappers),
+  // otherwise "fixed" positioning can become container-relative and cause jitter/scroll.
+  let tip = document.getElementById("viz-pill-global");
   if (!tip) {
     tip = document.createElement("div");
+    tip.id = "viz-pill-global";
     tip.className = "viz-pill hidden";
     tip.setAttribute("role", "status");
-    wrap.appendChild(tip);
+    document.body.appendChild(tip);
   }
 
   const isCoarse = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
@@ -1597,8 +1597,19 @@ function renderVisualization() {
   const setTip = (text, clientX, clientY) => {
     tip.textContent = text;
     tip.classList.remove("hidden");
-    tip.style.left = `${clientX}px`;
-    tip.style.top = `${clientY}px`;
+    const gap = 12;
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const w = tip.offsetWidth || 120;
+    const h = tip.offsetHeight || 32;
+    let x = clientX + gap;
+    let y = clientY - h - gap;
+    if (x + w > vw - 8) x = clientX - w - gap;
+    if (x < 8) x = 8;
+    if (y < 8) y = clientY + gap;
+    if (y + h > vh - 8) y = Math.max(8, vh - h - 8);
+    tip.style.left = `${Math.round(x)}px`;
+    tip.style.top = `${Math.round(y)}px`;
   };
 
   svg.onpointermove = (e) => {

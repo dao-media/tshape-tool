@@ -1,4 +1,4 @@
-import { loadThemeToggleFragment } from "./theme-toggle.js";
+import { initThemeToggle } from "./theme-toggle.js";
 
 const DATA = {
   categories: [
@@ -358,7 +358,6 @@ export function attachAppShellElements() {
     throw new Error("T-Shaped: #view, #app-layout, and #side-info-card must be in the DOM");
   }
 }
-const THEME_STORAGE_KEY = "tshaped-theme";
 
 const SHAPE_ANALYZE_MS = 2000;
 const SHAPE_ANALYZE_LINES = [
@@ -2100,83 +2099,6 @@ function runSelfTestIfQuery() {
   }
 }
 
-function syncBodyFromHash() {
-  const h = (location.hash || "").toLowerCase();
-  if (h !== "#light" && h !== "#dark") return;
-  const isLight = h === "#light";
-  document.body.classList.toggle("dark", !isLight);
-  document.body.classList.toggle("light", isLight);
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, isLight ? "light" : "dark");
-  } catch (e) {}
-}
-
-/**
- * Set #light / #dark for :target CSS without changing scroll. Default <a href="#...">
- * and location.hash both scroll the fragment into view; we block the former and restore
- * after the latter.
- */
-function setThemeHashNoScroll(nextHash) {
-  const want = nextHash.startsWith("#") ? nextHash : `#${nextHash}`;
-  const cur = (location.hash || "").toLowerCase();
-  if (cur === want.toLowerCase()) {
-    syncBodyFromHash();
-    return;
-  }
-  const sx = window.scrollX;
-  const sy = window.scrollY;
-  location.hash = want;
-  syncBodyFromHash();
-  const restore = () => {
-    if (window.scrollX !== sx || window.scrollY !== sy) {
-      window.scrollTo(sx, sy);
-    }
-  };
-  restore();
-  queueMicrotask(restore);
-  requestAnimationFrame(restore);
-  requestAnimationFrame(() => {
-    requestAnimationFrame(restore);
-  });
-  setTimeout(restore, 0);
-}
-
-function applyTheme(mode) {
-  const next = mode === "light" ? "#light" : "#dark";
-  setThemeHashNoScroll(next);
-}
-
-function initThemeToggle() {
-  let stored = "dark";
-  try {
-    stored = localStorage.getItem(THEME_STORAGE_KEY) || "dark";
-  } catch (e) {}
-  if (stored !== "dark" && stored !== "light") stored = "dark";
-  const h = (location.hash || "").toLowerCase();
-  if (h === "#light" || h === "#dark") {
-    syncBodyFromHash();
-  } else {
-    applyTheme(stored);
-  }
-  const root = document.getElementById("theme-toggle");
-  if (!root) return;
-  if (root.dataset.hashBound === "1") return;
-  root.dataset.hashBound = "1";
-  window.addEventListener("hashchange", syncBodyFromHash, false);
-  /* Clicks on <a href="#light|#dark"> would scroll that fragment into view — block it. */
-  root.addEventListener(
-    "click",
-    (e) => {
-      const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
-      if (!a || !root.contains(a)) return;
-      const href = (a.getAttribute("href") || "").toLowerCase();
-      if (href !== "#light" && href !== "#dark") return;
-      e.preventDefault();
-      applyTheme(href === "#light" ? "light" : "dark");
-    },
-    true
-  );
-}
 
 try {
   selfTestRankingLogic();
@@ -2185,11 +2107,10 @@ try {
 }
 
 export async function bootstrapTShapedApp() {
-  await loadThemeToggleFragment();
+  await initThemeToggle();
   if (window.TShapedTippy) TShapedTippy.initThemeToggle();
   document.documentElement.style.setProperty("--global-pulse-scale", "1");
   if (window.TShapedAnim) TShapedAnim.startGlobalPulse();
-  initThemeToggle();
   wireStaticPanelHandlers();
   renderMiniDemoGraphs();
 

@@ -203,3 +203,139 @@
   position: absolute;
   visibility: hidden;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Ambient Motion (easy undo)                                                 */
+/* Remove this block if motion causes issues.                                 */
+/* -------------------------------------------------------------------------- */
+
+/* Light/day: subtle random-looking cloud bob (2-3px). */
+#theme-toggle .cloudset1 {
+  animation: tshaped-cloud-bob-a 6.8s ease-in-out infinite;
+}
+
+#theme-toggle .cloudset2 {
+  animation: tshaped-cloud-bob-b 8.9s ease-in-out infinite;
+}
+
+@keyframes tshaped-cloud-bob-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  28% {
+    transform: translateY(-2px);
+  }
+  63% {
+    transform: translateY(1px);
+  }
+}
+
+@keyframes tshaped-cloud-bob-b {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  22% {
+    transform: translateY(1px);
+  }
+  54% {
+    transform: translateY(-3px);
+  }
+  81% {
+    transform: translateY(-1px);
+  }
+}
+
+/* Dark/night: twinkle + tiny scale/rotate variation on stars. */
+#theme-toggle #dark:target ~ .content .star1 {
+  animation: tshaped-star-twinkle-1 2.7s ease-in-out infinite;
+}
+
+#theme-toggle #dark:target ~ .content .star2 {
+  animation: tshaped-star-twinkle-2 3.4s ease-in-out infinite;
+}
+
+#theme-toggle #dark:target ~ .content .star3 {
+  animation: tshaped-star-twinkle-3 2.3s ease-in-out infinite;
+}
+
+#theme-toggle #dark:target ~ .content .star4 {
+  animation: tshaped-star-twinkle-4 3.1s ease-in-out infinite;
+}
+
+#theme-toggle #dark:target ~ .content .star5 {
+  animation: tshaped-star-twinkle-5 2.9s ease-in-out infinite;
+}
+
+@keyframes tshaped-star-twinkle-1 {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1) rotate(0deg);
+  }
+  48% {
+    opacity: 1;
+    transform: scale(1.14) rotate(8deg);
+  }
+}
+
+@keyframes tshaped-star-twinkle-2 {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: scale(0.6) rotate(0deg);
+  }
+  37% {
+    opacity: 0.92;
+    transform: scale(0.76) rotate(-10deg);
+  }
+}
+
+@keyframes tshaped-star-twinkle-3 {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.5) rotate(0deg);
+  }
+  43% {
+    opacity: 0.95;
+    transform: scale(0.68) rotate(9deg);
+  }
+}
+
+@keyframes tshaped-star-twinkle-4 {
+  0%,
+  100% {
+    opacity: 0.68;
+    transform: scale(0.8) rotate(0deg);
+  }
+  52% {
+    opacity: 1;
+    transform: scale(0.96) rotate(-8deg);
+  }
+}
+
+@keyframes tshaped-star-twinkle-5 {
+  0%,
+  100% {
+    opacity: 0.52;
+    transform: scale(0.4) rotate(0deg);
+  }
+  40% {
+    opacity: 0.9;
+    transform: scale(0.56) rotate(11deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #theme-toggle .cloudset1,
+  #theme-toggle .cloudset2,
+  #theme-toggle .star1,
+  #theme-toggle .star2,
+  #theme-toggle .star3,
+  #theme-toggle .star4,
+  #theme-toggle .star5 {
+    animation: none !important;
+  }
+}

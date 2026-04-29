@@ -1974,7 +1974,7 @@ body:not(.dark) .thermo {
 
 .shape-label-text {
   max-height: 160px;
-  height: 160px;
+  height: auto;
   width: auto;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -1992,6 +1992,7 @@ body:not(.dark) .thermo {
   transform: translateX(-50%);
   transform-origin: bottom center;
   text-align: right !important;
+  display: inline-block;
   opacity: 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

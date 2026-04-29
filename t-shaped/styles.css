@@ -1759,6 +1759,7 @@ body:not(.dark) .thermo {
 /* Step 5: headline + sub precede chart; head row (plot title + toggle) stacks above SVG for paint order */
 .shape-results-stack .card > #shape-result-title,
 .shape-results-stack .card > #shape-result-sub,
+.shape-results-stack .card > .shape-result-sub-actions,
 .shape-results-stack .card #shape-chart-container .chart-container__head {
   position: relative;
   z-index: 3;
@@ -2001,6 +2002,7 @@ body:not(.dark) .thermo {
   text-align: right !important;
   display: inline-block;
   opacity: 1;
+  will-change: transform, opacity;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -2046,6 +2048,7 @@ body:not(.dark) .thermo {
   align-items: flex-start;
   gap: 0.48rem;
   margin-bottom: 0.62rem;
+  will-change: transform, opacity;
 }
 
 .shape-key-row:last-child {
@@ -2219,6 +2222,7 @@ h2.shape-insights-heading {
   transform-box: fill-box;
   transform-origin: top center;
   opacity: 0;
+  will-change: transform, opacity;
   filter: saturate(1.24) brightness(1.06) drop-shadow(0 3px 10px rgba(0, 0, 0, 0.24));
   transition: filter 0.24s ease, transform 0.24s ease;
 }

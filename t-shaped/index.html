@@ -76,7 +76,7 @@
           </label>
         </div>
         <div class="actions">
-          <button data-action="to-step-3">Continue</button>
+          <button type="button" data-action="to-step-3">Continue</button>
         </div>
       </div>
     </template>
@@ -121,7 +121,7 @@
         </div>
         <div class="selected-summary" id="selected-summary"></div>
         <div class="actions">
-          <button data-action="to-step-4">Continue</button>
+          <button type="button" data-action="to-step-4">Continue</button>
         </div>
       </div>
     </template>
@@ -164,7 +164,7 @@
           >
             ⟲
           </button>
-          <button data-action="to-step-5">See your shape</button>
+          <button type="button" data-action="to-step-5">See your shape</button>
         </div>
       </div>
     </template>
@@ -175,8 +175,10 @@
           <h2 id="shape-result-title">You're a T-Shaped Designer</h2>
           <p class="muted" id="shape-result-sub">
             A T-shaped profile blends one area of deep expertise with broad supporting strengths.
-            <button type="button" class="btn-s secondary" data-action="learn-more-shape">Learn More</button>
           </p>
+          <div class="shape-result-sub-actions">
+            <button type="button" class="btn-s secondary" data-action="learn-more-shape">Learn More</button>
+          </div>
           <div class="chart-container" id="shape-chart-container">
             <div class="chart-container__head">
               <div class="title" id="shape-chart-plot-title"></div>
@@ -228,10 +230,10 @@
               </svg>
               Start Over
             </button>
-            <button data-action="email-files" class="secondary">Email Files (ZIP)</button>
-            <button data-action="download-png">Download PNG</button>
-            <button data-action="download-jpeg">Download JPEG</button>
-            <button data-action="download-svg">Download SVG</button>
+            <button type="button" data-action="email-files" class="secondary">Email Files (ZIP)</button>
+            <button type="button" data-action="download-png">Download PNG</button>
+            <button type="button" data-action="download-jpeg">Download JPEG</button>
+            <button type="button" data-action="download-svg">Download SVG</button>
           </div>
         </div>
 

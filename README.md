@@ -8,6 +8,7 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
 
 - **UI shell:** [SolidJS](https://www.solidjs.com/) + [Vite](https://vitejs.dev/) (`t-shaped/src/main.tsx`, `t-shaped/src/App.tsx`)
 - **Runtime logic:** DOM-driven flow in `t-shaped/src/appRuntime.js` with templates in `t-shaped/index.html`
+- **Export pipeline:** Dedicated export module in `t-shaped/src/exportRuntime.js` (SVG + raster export composition)
 - **Styling:** Tailwind pipeline (`t-shaped/styles.css` -> `t-shaped/styles.out.css`)
 - **Optional backend:** Netlify function email endpoint at `/.netlify/functions/send-shape-email` (`netlify/functions/send-shape-email.js`)
 
@@ -40,6 +41,7 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
    - Labels/Key toggle for visualization mode
    - Export: PNG, JPEG, SVG (Labels-mode PNG/JPEG are rendered from the on-screen frontend chart+labels snapshot)
    - Optional email delivery (ZIP with PNG/JPG/SVG) through Netlify function
+   - Accessibility note: Step 5 subtitle action is DOM-separated (`#shape-result-sub` text + sibling action row) for cleaner screen-reader reading order
 
 ## Project Structure
 
@@ -55,6 +57,7 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
 │   │   ├── main.tsx          # Solid entry, imports CSS + app bootstrap
 │   │   ├── App.tsx           # Page shell (header, stepper, view)
 │   │   ├── appRuntime.js     # Step logic, exports, rank/shape behavior
+│   │   ├── exportRuntime.js  # Export assembly and download/email export helpers
 │   │   ├── gsap-animations.js
 │   │   ├── tippy-tooltips.js
 │   │   └── theme-toggle.js

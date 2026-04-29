@@ -399,18 +399,17 @@
     bars.forEach((rect) => {
       const d = rect.style.getPropertyValue("--tbar-d") || "0s";
       const sec = parseFloat(d) || 0;
+      const fullH = Number.parseFloat(rect.getAttribute("height") || "0");
+      if (!Number.isFinite(fullH) || fullH <= 0) return;
       g.fromTo(
         rect,
-        { autoAlpha: 0, scaleY: 0.86, transformOrigin: "50% 0" },
+        { autoAlpha: 0, attr: { height: 0 } },
         {
           autoAlpha: 1,
-          scaleY: 1,
+          attr: { height: fullH },
           duration: 0.34,
           delay: sec,
           ease: "cubic-bezier(0.22, 1, 0.36, 1)",
-          onComplete: () => {
-            g.set(rect, { clearProps: "transform" });
-          },
         }
       );
     });

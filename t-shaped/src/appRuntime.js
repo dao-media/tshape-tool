@@ -106,6 +106,7 @@ let rankColors = {};
 
 /** Shown only on file exports, below the chart. */
 const EXPORT_ATTRIBUTION = "Dane O'Leary | /in/daneoleary";
+const EXPORT_SIZE_PX = 1440;
 const VIZ_SVG_W = 900;
 const VIZ_SVG_H = 560;
 const EXPORT_FOOTER_H = 36;
@@ -763,6 +764,9 @@ function canRestoreDirectToStep5(payload) {
 
 function restoreStateFromLocalStorageIfAvailable() {
   const payload = loadPersistedLocalState();
+  if (payload && typeof payload === "object") {
+    state.shapeVizMode = payload.shapeVizMode === "key" ? "key" : "labels";
+  }
   if (!canRestoreDirectToStep5(payload)) return false;
   const restoredAssignments = {};
   payload.selectedItems.forEach((item) => {
@@ -776,7 +780,6 @@ function restoreStateFromLocalStorageIfAvailable() {
   state.detectedShape = payload.detectedShape && typeof payload.detectedShape === "object"
     ? payload.detectedShape
     : null;
-  state.shapeVizMode = payload.shapeVizMode === "key" ? "key" : "labels";
   state.step = 5;
   return true;
 }
@@ -2320,8 +2323,8 @@ function appendExportKeyGroup(ns, parent, layout) {
   panel.setAttribute("width", String(layout.keyW));
   panel.setAttribute("height", String(layout.keyContentH));
   panel.setAttribute("rx", "8");
-  panel.setAttribute("fill", "#161616");
-  panel.setAttribute("stroke", "#2a3552");
+  panel.setAttribute("fill", "#ffffff");
+  panel.setAttribute("stroke", "#d8e0f2");
   panel.setAttribute("stroke-width", "1");
   g0.appendChild(panel);
 
@@ -2331,19 +2334,20 @@ function appendExportKeyGroup(ns, parent, layout) {
   layout.mapped.forEach((item, i) => {
     const rowTop = layout.padT + i * (layout.rowH + layout.rowGap);
     const theme = getRankTheme(item.value);
+    const chip = 10;
     const sw = document.createElementNS(ns, "rect");
     sw.setAttribute("x", String(padL));
-    sw.setAttribute("y", String(rowTop));
-    sw.setAttribute("width", "8");
-    sw.setAttribute("height", "12");
+    sw.setAttribute("y", String(rowTop + 1));
+    sw.setAttribute("width", String(chip));
+    sw.setAttribute("height", String(chip));
     sw.setAttribute("fill", `url(#tbar-grad-${i})`);
     sw.setAttribute("stroke", theme.stroke);
-    sw.setAttribute("stroke-width", "1.1");
+    sw.setAttribute("stroke-width", "1");
     g0.appendChild(sw);
     const tName = document.createElementNS(ns, "text");
-    tName.setAttribute("x", String(padL + 12));
+    tName.setAttribute("x", String(padL + chip + 5));
     tName.setAttribute("y", String(rowTop + 10));
-    tName.setAttribute("fill", "#b8c4e8");
+    tName.setAttribute("fill", "#2a395e");
     tName.setAttribute("font-size", "9.5");
     tName.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
     tName.textContent = truncate(item.name, nameMax);
@@ -2352,7 +2356,7 @@ function appendExportKeyGroup(ns, parent, layout) {
     tVal.setAttribute("x", String(valRight));
     tVal.setAttribute("y", String(rowTop + 10));
     tVal.setAttribute("text-anchor", "end");
-    tVal.setAttribute("fill", "#e8ecff");
+    tVal.setAttribute("fill", "#141b2d");
     tVal.setAttribute("font-size", "9.5");
     tVal.setAttribute("font-weight", "600");
     tVal.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
@@ -2368,16 +2372,96 @@ function appendAttributionText(ns, parent, y) {
   t.setAttribute("y", String(y));
   t.setAttribute("fill", "rgba(160, 172, 210, 0.92)");
   t.setAttribute("font-size", "12");
-  t.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+  t.setAttribute(
+    "font-family",
+    "\"IBM Plex Mono\", \"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"
+  );
   t.setAttribute("pointer-events", "none");
   t.textContent = EXPORT_ATTRIBUTION;
   parent.appendChild(t);
+}
+
+/**
+ * Normalize export output to a fixed 1440×1440 artboard.
+ * @param {string} ns
+ * @param {SVGSVGElement} content
+ * @param {number} sourceW
+ * @param {number} sourceH
+ * @param {{ transparentBg?: boolean, showMainPanel?: boolean }} [opts]
+ * @returns {string}
+ */
+function wrapExportIntoSquare(ns, content, sourceW, sourceH, opts = {}) {
+  const transparentBg = opts.transparentBg === true;
+  const showMainPanel = opts.showMainPanel !== false;
+  const outer = document.createElementNS(ns, "svg");
+  outer.setAttribute("xmlns", ns);
+  outer.setAttribute("viewBox", `0 0 ${EXPORT_SIZE_PX} ${EXPORT_SIZE_PX}`);
+  outer.setAttribute("width", String(EXPORT_SIZE_PX));
+  outer.setAttribute("height", String(EXPORT_SIZE_PX));
+
+  if (!transparentBg) {
+    const bg = document.createElementNS(ns, "rect");
+    bg.setAttribute("x", "0");
+    bg.setAttribute("y", "0");
+    bg.setAttribute("width", String(EXPORT_SIZE_PX));
+    bg.setAttribute("height", String(EXPORT_SIZE_PX));
+    // Fixed export theme so light/dark app mode does not affect output.
+    bg.setAttribute("fill", "#eef2fb");
+    outer.appendChild(bg);
+  }
+
+  if (showMainPanel) {
+    const panel = document.createElementNS(ns, "rect");
+    panel.setAttribute("x", "48");
+    panel.setAttribute("y", "48");
+    panel.setAttribute("width", String(EXPORT_SIZE_PX - 96));
+    panel.setAttribute("height", String(EXPORT_SIZE_PX - 96));
+    panel.setAttribute("rx", "18");
+    panel.setAttribute("fill", "#ffffff");
+    panel.setAttribute("stroke", "#d8e0f2");
+    panel.setAttribute("stroke-width", "1.5");
+    outer.appendChild(panel);
+  }
+
+  const availW = EXPORT_SIZE_PX - 128;
+  const availH = EXPORT_SIZE_PX - 128;
+  const s = Math.min(availW / Math.max(1, sourceW), availH / Math.max(1, sourceH));
+  const fitW = sourceW * s;
+  const fitH = sourceH * s;
+  const tx = Math.round((EXPORT_SIZE_PX - fitW) / 2);
+  const ty = Math.round((EXPORT_SIZE_PX - fitH) / 2);
+
+  content.setAttribute("x", "0");
+  content.setAttribute("y", "0");
+  content.setAttribute("width", String(sourceW));
+  content.setAttribute("height", String(sourceH));
+  content.setAttribute("preserveAspectRatio", "xMinYMin meet");
+
+  const g = document.createElementNS(ns, "g");
+  g.setAttribute("transform", `translate(${tx} ${ty}) scale(${s})`);
+  g.appendChild(content);
+  outer.appendChild(g);
+
+  return new XMLSerializer().serializeToString(outer);
 }
 
 function getExportPlotTitleText() {
   const shapeKey = getDetectedShapeKey();
   const displayName = parseDisplayName(state.userName);
   return displayName ? `${displayName} | ${shapeKey}-Shaped Designer` : `${shapeKey}-Shaped Designer`;
+}
+
+function appendExportCenteredTitle(ns, parent, chartW, y = 30) {
+  const title = document.createElementNS(ns, "text");
+  title.setAttribute("x", String(Math.round(chartW / 2)));
+  title.setAttribute("y", String(y));
+  title.setAttribute("text-anchor", "middle");
+  title.setAttribute("fill", "#141b2d");
+  title.setAttribute("font-size", "18");
+  title.setAttribute("font-weight", "620");
+  title.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+  title.textContent = getExportPlotTitleText();
+  parent.appendChild(title);
 }
 
 /**
@@ -2399,8 +2483,8 @@ function appendExportLabelsAndTitle(ns, parent, chartClone, chartW) {
   });
   if (!Number.isFinite(minBarTop)) return;
 
-  const titleY = 28;
-  const labelBandTop = 44;
+  const titleY = 30;
+  const labelBandTop = 54;
   const labelBandH = CHART_LABEL_SLOT_MIN_H_PX;
   const barTopTarget = labelBandTop + labelBandH + LABEL_BAR_GAP_PX;
   const chartShiftY = Math.max(0, Math.round(barTopTarget - minBarTop));
@@ -2411,30 +2495,10 @@ function appendExportLabelsAndTitle(ns, parent, chartClone, chartW) {
   // Hide any in-svg labels if present; export uses the normalized label renderer below.
   chartClone.querySelectorAll(".tbar-label-vertical").forEach((n) => n.remove());
 
-  const title = document.createElementNS(ns, "text");
-  title.setAttribute("x", String(Math.round(chartW / 2)));
-  title.setAttribute("y", String(titleY));
-  title.setAttribute("text-anchor", "middle");
-  title.setAttribute("fill", "#0b1326");
-  title.setAttribute("font-size", "18");
-  title.setAttribute("font-weight", "620");
-  title.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
-  title.textContent = getExportPlotTitleText();
-  parent.appendChild(title);
+  appendExportCenteredTitle(ns, parent, chartW, titleY);
 
   const labelsLayer = document.createElementNS(ns, "g");
   labelsLayer.setAttribute("pointer-events", "none");
-  const clip = document.createElementNS(ns, "clipPath");
-  clip.setAttribute("id", "export-label-band-clip");
-  clip.setAttribute("clipPathUnits", "userSpaceOnUse");
-  const clipRect = document.createElementNS(ns, "rect");
-  clipRect.setAttribute("x", "0");
-  clipRect.setAttribute("y", String(labelBandTop));
-  clipRect.setAttribute("width", String(chartW));
-  clipRect.setAttribute("height", String(labelBandH));
-  clip.appendChild(clipRect);
-  parent.appendChild(clip);
-  labelsLayer.setAttribute("clip-path", "url(#export-label-band-clip)");
 
   bars.forEach((b) => {
     const x = Number.parseFloat(b.getAttribute("x") || "0");
@@ -2442,82 +2506,83 @@ function appendExportLabelsAndTitle(ns, parent, chartClone, chartW) {
     const name = b.dataset?.name || "";
     if (!Number.isFinite(x) || !Number.isFinite(w) || !name) return;
     const cx = x + w / 2;
-    const baselineY = barTopTarget - CHART_LABEL_ABOVE_BAR_SLACK_PX;
-    const text = document.createElementNS(ns, "text");
-    text.setAttribute("x", String(cx));
-    text.setAttribute("y", String(baselineY));
-    text.setAttribute("fill", "#0b1326");
-    text.setAttribute("stroke", "rgba(255, 255, 255, 0.9)");
-    text.setAttribute("stroke-width", "2");
-    text.setAttribute("paint-order", "stroke fill");
-    text.setAttribute("vector-effect", "non-scaling-stroke");
-    text.setAttribute("font-size", "13");
-    text.setAttribute("font-weight", "620");
-    text.setAttribute("letter-spacing", "0.01em");
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("dominant-baseline", "hanging");
-    text.setAttribute("transform", `rotate(-90 ${cx} ${baselineY})`);
-    const lines = wrapSkillLabelLines(name, 160, 13);
-    const leadEm = chartLabelLeadingEm();
-    lines.forEach((line, idx) => {
-      const tsp = document.createElementNS(ns, "tspan");
-      tsp.setAttribute("x", String(cx));
-      tsp.setAttribute("dy", idx === 0 ? "0" : `${leadEm}em`);
-      tsp.textContent = line;
-      text.appendChild(tsp);
-    });
-    labelsLayer.appendChild(text);
+    const labelBottom = labelBandTop + labelBandH;
+    const txt = document.createElementNS(ns, "text");
+    txt.setAttribute("x", String(cx));
+    txt.setAttribute("y", String(labelBottom));
+    txt.setAttribute("fill", "#141b2d");
+    txt.setAttribute("font-size", "13");
+    txt.setAttribute("font-weight", "620");
+    txt.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+    txt.setAttribute("text-anchor", "middle");
+    txt.setAttribute("dominant-baseline", "text-after-edge");
+    txt.setAttribute("style", "writing-mode:vertical-rl;text-orientation:mixed;");
+    txt.textContent = name;
+    labelsLayer.appendChild(txt);
   });
 
   parent.appendChild(labelsLayer);
 }
 
-function buildExportSvgString() {
+function buildExportSvgString(opts = {}) {
+  const transparentPng = opts.transparentPng === true;
   const svg = document.querySelector("#t-shape-svg");
   if (!svg) return "";
   const layout = getExportLayout();
   const ns = "http://www.w3.org/2000/svg";
 
   if (!layout.hasKey) {
-    const outer = document.createElementNS(ns, "svg");
-    outer.setAttribute("xmlns", ns);
-    outer.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
-    outer.setAttribute("width", String(layout.totalW));
-    outer.setAttribute("height", String(layout.totalH));
-
+    const content = document.createElementNS(ns, "svg");
+    content.setAttribute("xmlns", ns);
+    content.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
+    content.setAttribute("width", String(layout.totalW));
+    content.setAttribute("height", String(layout.totalH));
     const chartClone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
     chartClone.removeAttribute("id");
+    chartClone.querySelectorAll(".tbar-texture").forEach((n) => n.remove());
     chartClone.setAttribute("x", "0");
     chartClone.setAttribute("y", "0");
     chartClone.setAttribute("width", String(layout.chartW));
     chartClone.setAttribute("height", String(getCurrentShapeSvgHeight()));
-    outer.appendChild(chartClone);
-    appendExportLabelsAndTitle(ns, outer, chartClone, layout.chartW);
-    appendAttributionText(ns, outer, layout.bodyH + 22);
-    return new XMLSerializer().serializeToString(outer);
+    content.appendChild(chartClone);
+    appendExportLabelsAndTitle(ns, content, chartClone, layout.chartW);
+    appendAttributionText(ns, content, layout.bodyH + 22);
+    return wrapExportIntoSquare(ns, content, layout.totalW, layout.totalH, {
+      transparentBg: transparentPng,
+      showMainPanel: !transparentPng,
+    });
   }
 
-  const outer = document.createElementNS(ns, "svg");
-  outer.setAttribute("xmlns", ns);
-  outer.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
-  outer.setAttribute("width", String(layout.totalW));
-  outer.setAttribute("height", String(layout.totalH));
+  const content = document.createElementNS(ns, "svg");
+  content.setAttribute("xmlns", ns);
+  content.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
+  content.setAttribute("width", String(layout.totalW));
+  content.setAttribute("height", String(layout.totalH));
   const chartClone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
   chartClone.removeAttribute("id");
+  chartClone.querySelectorAll(".tbar-texture").forEach((n) => n.remove());
   const defEl = chartClone.querySelector("defs");
   if (defEl) {
-    outer.appendChild(defEl);
+    content.appendChild(defEl);
   }
   chartClone.setAttribute("x", "0");
   chartClone.setAttribute("y", "0");
   chartClone.setAttribute("width", String(layout.chartW));
   chartClone.setAttribute("height", String(getCurrentShapeSvgHeight()));
-  outer.appendChild(chartClone);
+  content.appendChild(chartClone);
+  appendExportCenteredTitle(ns, content, layout.chartW, 30);
+  chartClone.setAttribute("y", "40");
   /** @type {any} */
   const keyLayout = layout;
-  appendExportKeyGroup(ns, outer, keyLayout);
-  appendAttributionText(ns, outer, layout.bodyH + 22);
-  return new XMLSerializer().serializeToString(outer);
+  const keyWrap = document.createElementNS(ns, "g");
+  keyWrap.setAttribute("transform", "translate(0,40)");
+  appendExportKeyGroup(ns, keyWrap, keyLayout);
+  content.appendChild(keyWrap);
+  appendAttributionText(ns, content, layout.bodyH + 62);
+  return wrapExportIntoSquare(ns, content, layout.totalW, layout.totalH + 40, {
+    transparentBg: transparentPng,
+    showMainPanel: !transparentPng,
+  });
 }
 
 function getExportBaseName(shapeKey) {
@@ -2586,12 +2651,12 @@ function renderRasterBlobFromSvgString(type, svgStr, width, height) {
 
 async function createExportFileBundle() {
   const svgStr = buildExportSvgString();
-  if (!svgStr) throw new Error("Could not build export SVG.");
-  const layout = getExportLayout();
+  const pngSvgStr = buildExportSvgString({ transparentPng: true });
+  if (!svgStr || !pngSvgStr) throw new Error("Could not build export SVG.");
   const shapeKey = getDetectedShapeKey();
   const [pngBlob, jpegBlob] = await Promise.all([
-    renderRasterBlobFromSvgString("png", svgStr, layout.totalW, layout.totalH),
-    renderRasterBlobFromSvgString("jpeg", svgStr, layout.totalW, layout.totalH),
+    renderRasterBlobFromSvgString("png", pngSvgStr, EXPORT_SIZE_PX, EXPORT_SIZE_PX),
+    renderRasterBlobFromSvgString("jpeg", svgStr, EXPORT_SIZE_PX, EXPORT_SIZE_PX),
   ]);
   return {
     shapeKey,
@@ -2678,10 +2743,9 @@ function downloadSvg() {
 }
 
 function downloadFromSvg(type) {
-  const str = buildExportSvgString();
+  const str = buildExportSvgString({ transparentPng: type === "png" });
   if (!str) return;
-  const { totalW, totalH } = getExportLayout();
-  renderRasterBlobFromSvgString(type, str, totalW, totalH)
+  renderRasterBlobFromSvgString(type, str, EXPORT_SIZE_PX, EXPORT_SIZE_PX)
     .then((blob) => {
       const shapeKey = getDetectedShapeKey();
       triggerDownload(URL.createObjectURL(blob), buildExportFilename(type, shapeKey));

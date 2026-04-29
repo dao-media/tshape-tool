@@ -301,13 +301,8 @@ h6 {
   min-height: 7px;
   border-radius: 6px;
   transform-origin: top center;
-  transition: transform 0.2s var(--ease-out), filter 0.2s var(--ease-out);
+  transition: filter 0.2s var(--ease-out);
   filter: saturate(1.22) brightness(1.04);
-}
-
-.mini-bar:hover {
-  transform: scaleY(1.05);
-  filter: saturate(1.34) brightness(1.12);
 }
 
 .tips-disclosure {
@@ -451,12 +446,14 @@ body:not(.dark) button:not(.secondary):not(.icon-btn) {
 body:not(.dark) .btn-primary:hover,
 body:not(.dark) button:not(.secondary):not(.icon-btn):hover {
   background: var(--accent-soft);
+  background-color: var(--accent-soft);
   border-color: transparent;
   background-image:
     linear-gradient(var(--accent-soft), var(--accent-soft)),
     linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  background-repeat: no-repeat;
   box-shadow: 0 4px 15px rgba(82, 72, 204, 0.24);
 }
 
@@ -470,12 +467,14 @@ body:not(.dark) button.secondary {
 body:not(.dark) .btn-secondary:hover,
 body:not(.dark) button.secondary:hover {
   background: #e7ecfa;
+  background-color: #e7ecfa;
   border-color: transparent;
   background-image:
     linear-gradient(#e7ecfa, #e7ecfa),
     linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  background-repeat: no-repeat;
 }
 
 
@@ -593,10 +592,6 @@ body:not(.dark) .mini-graph {
 
 body:not(.dark) .mini-bar {
   filter: saturate(1.3) brightness(0.92) contrast(1.15);
-}
-
-body:not(.dark) .mini-bar:hover {
-  filter: saturate(1.38) brightness(0.86) contrast(1.2);
 }
 
 body:not(.dark) .tips-step {
@@ -1061,11 +1056,13 @@ button:not(.secondary):not(.icon-btn) {
 button:not(.secondary):not(.icon-btn):hover {
   filter: brightness(1.1);
   border-color: transparent;
+  background-color: var(--accent);
   background-image:
     linear-gradient(var(--accent), var(--accent)),
     linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  background-repeat: no-repeat;
   box-shadow: 0 4px 15px rgba(45, 212, 191, 0.2);
 }
 
@@ -1085,12 +1082,14 @@ button.secondary {
 .btn-secondary:hover,
 button.secondary:hover {
   background: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.1);
   border-color: transparent;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.1)),
     linear-gradient(120deg, #ff5ec4, #8a7dff, #2dd4bf, #f6c453, #ff5ec4);
   background-origin: border-box;
   background-clip: padding-box, border-box;
+  background-repeat: no-repeat;
 }
 
 .btn-secondary:active,
@@ -1956,6 +1955,11 @@ body:not(.dark) .thermo {
   gap: 32px;
 }
 
+/* Labels mode: keep a fixed gap between plot area and email capture block. */
+.shape-results-stack .card:has(.shape-chart-plot-wrap.has-html-label-row) .shape-email-wrap {
+  margin-top: 48px;
+}
+
 .shape-label-row {
   flex: 0 0 auto;
   width: 100%;
@@ -2495,14 +2499,6 @@ h2.shape-insights-heading {
 /* Demo bar fill colors are set in JS to match the result chart (per-rank gradients). */
 
 @media (hover: hover) and (pointer: fine) {
-  .demo-t-chart .demo-t-bar__track:hover .demo-t-col {
-    transform: scaleY(1.08);
-  }
-
-  .demo-t-chart .demo-t-bar__track:hover ~ .demo-t-label {
-    opacity: 1;
-  }
-
   .demo-t-hint-mobile {
     display: none;
   }

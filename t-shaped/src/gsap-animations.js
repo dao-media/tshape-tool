@@ -374,8 +374,8 @@
     if (reduced()) return;
     g.fromTo(
       card,
-      { opacity: 0, y: 8, scale: 0.985 },
-      { opacity: 1, y: 0, scale: 1, duration: 0.28, ease: "power2.out", clearProps: "all" }
+      { opacity: 0, y: 8 },
+      { opacity: 1, y: 0, duration: 0.28, ease: "power2.out", clearProps: "opacity,transform" }
     );
     const rows = card.querySelectorAll(".shape-key-row");
     rows.forEach((row) => {
@@ -384,7 +384,14 @@
       g.fromTo(
         row,
         { opacity: 0, y: 6 },
-        { opacity: 1, y: 0, duration: 0.28, delay: sec, ease: "power1.out", clearProps: "all" }
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.32,
+          delay: sec,
+          ease: "back.out(1.2)",
+          clearProps: "opacity,transform",
+        }
       );
     });
   }
@@ -421,8 +428,15 @@
       const sec = parseFloat(d) || 0;
       g.fromTo(
         el,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.32, delay: sec, ease: "power1.out" }
+        { opacity: 0, y: 4 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.34,
+          delay: sec,
+          ease: "back.out(1.2)",
+          clearProps: "opacity,transform",
+        }
       );
     });
   }

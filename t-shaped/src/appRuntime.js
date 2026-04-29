@@ -1,4 +1,5 @@
 import { initThemeToggle } from "./theme-toggle.js";
+import { toJpeg, toPng } from "html-to-image";
 
 const DATA = {
   categories: [
@@ -2649,15 +2650,111 @@ function renderRasterBlobFromSvgString(type, svgStr, width, height) {
   });
 }
 
+/**
+ * Labels-mode raster export should match the rendered frontend layout exactly.
+ * We snapshot the real plot wrapper DOM (HTML labels + SVG bars) and composite it
+ * onto a fixed 1440x1440 canvas with title/footer.
+ * @param {"png" | "jpeg"} type
+ * @returns {Promise<Blob>}
+ */
+async function renderLabelsRasterBlobFromDom(type) {
+  const plotWrap = document.querySelector("#shape-chart-container .shape-chart-plot-wrap.has-html-label-row");
+  if (!plotWrap) throw new Error("Could not find labels plot for raster export.");
+  if (document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+  const dataUrl = type === "jpeg"
+    ? await toJpeg(plotWrap, {
+      cacheBust: true,
+      quality: 0.96,
+      pixelRatio: 3,
+      backgroundColor: "#ffffff",
+    })
+    : await toPng(plotWrap, {
+      cacheBust: true,
+      pixelRatio: 3,
+      backgroundColor: "rgba(0,0,0,0)",
+    });
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = EXPORT_SIZE_PX;
+        canvas.height = EXPORT_SIZE_PX;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas context unavailable."));
+          return;
+        }
+
+        if (type === "jpeg") {
+          ctx.fillStyle = "#eef2fb";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        const title = getExportPlotTitleText();
+        ctx.fillStyle = "#141b2d";
+        ctx.font = "620 38px Inter, ui-sans-serif, system-ui, -apple-system, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(title, EXPORT_SIZE_PX / 2, 110);
+
+        const bounds = plotWrap.getBoundingClientRect();
+        const sourceW = Math.max(1, Math.round(bounds.width));
+        const sourceH = Math.max(1, Math.round(bounds.height));
+        const maxW = EXPORT_SIZE_PX - 120;
+        const maxH = EXPORT_SIZE_PX - 250;
+        const s = Math.min(maxW / sourceW, maxH / sourceH);
+        const drawW = sourceW * s;
+        const drawH = sourceH * s;
+        const drawX = Math.round((EXPORT_SIZE_PX - drawW) / 2);
+        const drawY = 170;
+        ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+        ctx.fillStyle = "rgba(160, 172, 210, 0.92)";
+        ctx.font =
+          "500 20px \"IBM Plex Mono\", \"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(EXPORT_ATTRIBUTION, 40, EXPORT_SIZE_PX - 34);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error(`Failed to render ${type} blob.`));
+              return;
+            }
+            resolve(blob);
+          },
+          type === "jpeg" ? "image/jpeg" : "image/png",
+          0.95
+        );
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => reject(new Error(`Failed to load DOM snapshot for ${type}.`));
+    img.src = dataUrl;
+  });
+}
+
 async function createExportFileBundle() {
   const svgStr = buildExportSvgString();
   const pngSvgStr = buildExportSvgString({ transparentPng: true });
   if (!svgStr || !pngSvgStr) throw new Error("Could not build export SVG.");
   const shapeKey = getDetectedShapeKey();
-  const [pngBlob, jpegBlob] = await Promise.all([
-    renderRasterBlobFromSvgString("png", pngSvgStr, EXPORT_SIZE_PX, EXPORT_SIZE_PX),
-    renderRasterBlobFromSvgString("jpeg", svgStr, EXPORT_SIZE_PX, EXPORT_SIZE_PX),
-  ]);
+  const labelsMode = state.shapeVizMode === "labels";
+  const [pngBlob, jpegBlob] = await Promise.all(
+    labelsMode
+      ? [renderLabelsRasterBlobFromDom("png"), renderLabelsRasterBlobFromDom("jpeg")]
+      : [
+        renderRasterBlobFromSvgString("png", pngSvgStr, EXPORT_SIZE_PX, EXPORT_SIZE_PX),
+        renderRasterBlobFromSvgString("jpeg", svgStr, EXPORT_SIZE_PX, EXPORT_SIZE_PX),
+      ]
+  );
   return {
     shapeKey,
     svgStr,
@@ -2743,6 +2840,18 @@ function downloadSvg() {
 }
 
 function downloadFromSvg(type) {
+  if ((type === "png" || type === "jpeg") && state.shapeVizMode === "labels") {
+    renderLabelsRasterBlobFromDom(type)
+      .then((blob) => {
+        const shapeKey = getDetectedShapeKey();
+        triggerDownload(URL.createObjectURL(blob), buildExportFilename(type, shapeKey));
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Could not render export file.");
+      });
+    return;
+  }
   const str = buildExportSvgString({ transparentPng: type === "png" });
   if (!str) return;
   renderRasterBlobFromSvgString(type, str, EXPORT_SIZE_PX, EXPORT_SIZE_PX)

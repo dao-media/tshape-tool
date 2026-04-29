@@ -19,7 +19,7 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
 - **Animation:** GSAP (`t-shaped/src/gsap-animations.js`)
 - **Tooltips:** Tippy.js (`t-shaped/src/tippy-tooltips.js`)
 - **Email backend:** Netlify Functions + Nodemailer
-- **Image/render helpers (backend):** `@resvg/resvg-js`, `pngjs`, `jpeg-js`, `archiver`
+- **Image/render helpers (frontend + backend):** `html-to-image` (frontend DOM snapshot export), `@resvg/resvg-js`, `pngjs`, `jpeg-js`, `archiver`
 
 ### User Flow (5 Steps)
 
@@ -38,7 +38,7 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
 5. **Shape**
    - Auto-detects `I`, `T`, `Pi`, `M`, or `X`
    - Labels/Key toggle for visualization mode
-   - Export: PNG, JPEG, SVG
+   - Export: PNG, JPEG, SVG (Labels-mode PNG/JPEG are rendered from the on-screen frontend chart+labels snapshot)
    - Optional email delivery (ZIP with PNG/JPG/SVG) through Netlify function
 
 ## Project Structure

@@ -92,6 +92,7 @@ const state = {
   shapeVizMode: "labels",
 };
 const LOCAL_STATE_KEY = "tshaped-local-state-v1";
+const LOCAL_STATE_COOKIE_KEY = "tshaped_local_state_v1";
 
 const MAX_BY_TYPE = {
   generalist: 12,
@@ -684,6 +685,9 @@ function clearPersistedLocalState() {
   try {
     localStorage.removeItem(LOCAL_STATE_KEY);
   } catch (e) {}
+  try {
+    document.cookie = `${LOCAL_STATE_COOKIE_KEY}=; Path=/; Max-Age=0; SameSite=Lax`;
+  } catch (e) {}
 }
 
 function normalizeStoredRank(value) {
@@ -714,8 +718,14 @@ function buildPersistableState() {
 }
 
 function saveLocalState() {
+  const payload = buildPersistableState();
   try {
-    localStorage.setItem(LOCAL_STATE_KEY, JSON.stringify(buildPersistableState()));
+    localStorage.setItem(LOCAL_STATE_KEY, JSON.stringify(payload));
+  } catch (e) {}
+  try {
+    const encoded = encodeURIComponent(JSON.stringify(payload));
+    // Keep in cookie too, so data survives storage restrictions in some contexts.
+    document.cookie = `${LOCAL_STATE_COOKIE_KEY}=${encoded}; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`;
   } catch (e) {}
 }
 
@@ -724,6 +734,16 @@ function loadPersistedLocalState() {
     const raw = localStorage.getItem(LOCAL_STATE_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
+  } catch (e) {
+    // Fall through to cookie restore.
+  }
+  try {
+    const cookies = document.cookie ? document.cookie.split("; ") : [];
+    const found = cookies.find((c) => c.startsWith(`${LOCAL_STATE_COOKIE_KEY}=`));
+    if (!found) return null;
+    const encoded = found.slice(LOCAL_STATE_COOKIE_KEY.length + 1);
+    if (!encoded) return null;
+    return JSON.parse(decodeURIComponent(encoded));
   } catch (e) {
     return null;
   }
@@ -1955,6 +1975,7 @@ function renderVisualization() {
   svg.appendChild(bg);
 
   const defs = document.createElementNS(ns, "defs");
+  const texturePatternByIndex = new Map();
   mapped.forEach((item, i) => {
     const g = document.createElementNS(ns, "linearGradient");
     g.setAttribute("id", `tbar-grad-${i}`);
@@ -1973,6 +1994,21 @@ function renderVisualization() {
     g.appendChild(s0);
     g.appendChild(s1);
     defs.appendChild(g);
+
+    const p = document.createElementNS(ns, "pattern");
+    p.setAttribute("id", `tbar-diag-${i}`);
+    p.setAttribute("patternUnits", "userSpaceOnUse");
+    p.setAttribute("width", "14");
+    p.setAttribute("height", "14");
+    p.setAttribute("patternTransform", "translate(0 0)");
+    const path = document.createElementNS(ns, "path");
+    path.setAttribute("d", "M-4 4 L4 -4 M0 14 L14 0 M10 18 L18 10");
+    path.setAttribute("stroke", "rgba(255,255,255,0.28)");
+    path.setAttribute("stroke-width", "1.35");
+    path.setAttribute("fill", "none");
+    p.appendChild(path);
+    defs.appendChild(p);
+    texturePatternByIndex.set(i, p);
   });
   svg.appendChild(defs);
 
@@ -2004,7 +2040,20 @@ function renderVisualization() {
       rect.style.setProperty("--tbar-d", `${i * 0.04}s`);
       rect.dataset.name = item.name;
       rect.dataset.value = String(item.value);
+      rect.dataset.barIndex = String(i);
       barsGroup.appendChild(rect);
+
+      const texture = document.createElementNS(ns, "rect");
+      texture.setAttribute("x", String(x));
+      texture.setAttribute("y", String(y));
+      texture.setAttribute("width", String(barW));
+      texture.setAttribute("height", String(Math.max(2, h)));
+      texture.setAttribute("rx", "6");
+      texture.setAttribute("ry", "6");
+      texture.setAttribute("fill", `url(#tbar-diag-${i})`);
+      texture.setAttribute("class", "tbar-texture");
+      texture.setAttribute("pointer-events", "none");
+      barsGroup.appendChild(texture);
     });
   };
 
@@ -2094,6 +2143,42 @@ function renderVisualization() {
 
   const isCoarse = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
   let mobileOn = false;
+  let activeTextureIdx = -1;
+  let activeTextureOffset = 0;
+  let textureRaf = 0;
+  let textureSpeedCurrent = 0;
+  let textureSpeedTarget = 0;
+  let textureLastTs = 0;
+  const TEXTURE_SPEED_MAX = 43.5; // px/s equivalent to prior 0.725/frame @60fps
+  const TEXTURE_EASE_SECONDS = 0.1;
+  const animateTexture = (ts) => {
+    const dt = textureLastTs > 0 ? Math.max(0.001, (ts - textureLastTs) / 1000) : 1 / 60;
+    textureLastTs = ts;
+    const ramp = Math.min(1, dt / TEXTURE_EASE_SECONDS);
+    textureSpeedCurrent += (textureSpeedTarget - textureSpeedCurrent) * ramp;
+
+    const pat = activeTextureIdx >= 0 ? texturePatternByIndex.get(activeTextureIdx) : null;
+    if (pat && textureSpeedCurrent > 0.02) {
+      activeTextureOffset = (activeTextureOffset + textureSpeedCurrent * dt) % 14;
+      pat.setAttribute("patternTransform", `translate(0 ${activeTextureOffset.toFixed(2)})`);
+    }
+
+    if (textureSpeedCurrent <= 0.02 && textureSpeedTarget <= 0) {
+      textureSpeedCurrent = 0;
+      textureRaf = 0;
+      textureLastTs = 0;
+      return;
+    }
+    textureRaf = requestAnimationFrame(animateTexture);
+  };
+  const setActiveTexture = (idx) => {
+    if (activeTextureIdx === idx && ((idx >= 0 && textureSpeedTarget > 0) || (idx < 0 && textureSpeedTarget <= 0))) {
+      return;
+    }
+    activeTextureIdx = idx;
+    textureSpeedTarget = idx >= 0 ? TEXTURE_SPEED_MAX : 0;
+    if (!textureRaf) textureRaf = requestAnimationFrame(animateTexture);
+  };
   const setTip = (text, clientX, clientY) => {
     tip.textContent = text;
     tip.classList.remove("hidden");
@@ -2121,14 +2206,18 @@ function renderVisualization() {
     const t = e.target;
     if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) {
       tip.classList.add("hidden");
+      setActiveTexture(-1);
       return;
     }
+    const idx = Number.parseInt(t.dataset.barIndex || "-1", 10);
+    setActiveTexture(Number.isFinite(idx) ? idx : -1);
     setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
   };
   svg.onpointerleave = () => {
     if (isCoarse) return;
     mobileOn = false;
     tip.classList.add("hidden");
+    setActiveTexture(-1);
   };
   svg.onclick = (e) => {
     if (!isCoarse) return;
@@ -2285,6 +2374,104 @@ function appendAttributionText(ns, parent, y) {
   parent.appendChild(t);
 }
 
+function getExportPlotTitleText() {
+  const shapeKey = getDetectedShapeKey();
+  const displayName = parseDisplayName(state.userName);
+  return displayName ? `${displayName} | ${shapeKey}-Shaped Designer` : `${shapeKey}-Shaped Designer`;
+}
+
+/**
+ * Render labels/title into export SVG for Labels mode (frontend labels live in HTML, not in chart SVG).
+ * Uses fixed ink colors so light/dark app theme does not change export appearance.
+ * @param {string} ns
+ * @param {SVGSVGElement} parent
+ * @param {SVGSVGElement} chartClone
+ * @param {number} chartW
+ */
+function appendExportLabelsAndTitle(ns, parent, chartClone, chartW) {
+  const bars = Array.from(chartClone.querySelectorAll("rect.tbar"));
+  if (!bars.length) return;
+
+  let minBarTop = Infinity;
+  bars.forEach((b) => {
+    const y = Number.parseFloat(b.getAttribute("y") || "0");
+    if (Number.isFinite(y)) minBarTop = Math.min(minBarTop, y);
+  });
+  if (!Number.isFinite(minBarTop)) return;
+
+  const titleY = 28;
+  const labelBandTop = 44;
+  const labelBandH = CHART_LABEL_SLOT_MIN_H_PX;
+  const barTopTarget = labelBandTop + labelBandH + LABEL_BAR_GAP_PX;
+  const chartShiftY = Math.max(0, Math.round(barTopTarget - minBarTop));
+  if (chartShiftY > 0) {
+    chartClone.setAttribute("y", String(chartShiftY));
+  }
+
+  // Hide any in-svg labels if present; export uses the normalized label renderer below.
+  chartClone.querySelectorAll(".tbar-label-vertical").forEach((n) => n.remove());
+
+  const title = document.createElementNS(ns, "text");
+  title.setAttribute("x", String(Math.round(chartW / 2)));
+  title.setAttribute("y", String(titleY));
+  title.setAttribute("text-anchor", "middle");
+  title.setAttribute("fill", "#0b1326");
+  title.setAttribute("font-size", "18");
+  title.setAttribute("font-weight", "620");
+  title.setAttribute("font-family", "Inter, ui-sans-serif, system-ui, -apple-system, sans-serif");
+  title.textContent = getExportPlotTitleText();
+  parent.appendChild(title);
+
+  const labelsLayer = document.createElementNS(ns, "g");
+  labelsLayer.setAttribute("pointer-events", "none");
+  const clip = document.createElementNS(ns, "clipPath");
+  clip.setAttribute("id", "export-label-band-clip");
+  clip.setAttribute("clipPathUnits", "userSpaceOnUse");
+  const clipRect = document.createElementNS(ns, "rect");
+  clipRect.setAttribute("x", "0");
+  clipRect.setAttribute("y", String(labelBandTop));
+  clipRect.setAttribute("width", String(chartW));
+  clipRect.setAttribute("height", String(labelBandH));
+  clip.appendChild(clipRect);
+  parent.appendChild(clip);
+  labelsLayer.setAttribute("clip-path", "url(#export-label-band-clip)");
+
+  bars.forEach((b) => {
+    const x = Number.parseFloat(b.getAttribute("x") || "0");
+    const w = Number.parseFloat(b.getAttribute("width") || "0");
+    const name = b.dataset?.name || "";
+    if (!Number.isFinite(x) || !Number.isFinite(w) || !name) return;
+    const cx = x + w / 2;
+    const baselineY = barTopTarget - CHART_LABEL_ABOVE_BAR_SLACK_PX;
+    const text = document.createElementNS(ns, "text");
+    text.setAttribute("x", String(cx));
+    text.setAttribute("y", String(baselineY));
+    text.setAttribute("fill", "#0b1326");
+    text.setAttribute("stroke", "rgba(255, 255, 255, 0.9)");
+    text.setAttribute("stroke-width", "2");
+    text.setAttribute("paint-order", "stroke fill");
+    text.setAttribute("vector-effect", "non-scaling-stroke");
+    text.setAttribute("font-size", "13");
+    text.setAttribute("font-weight", "620");
+    text.setAttribute("letter-spacing", "0.01em");
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "hanging");
+    text.setAttribute("transform", `rotate(-90 ${cx} ${baselineY})`);
+    const lines = wrapSkillLabelLines(name, 160, 13);
+    const leadEm = chartLabelLeadingEm();
+    lines.forEach((line, idx) => {
+      const tsp = document.createElementNS(ns, "tspan");
+      tsp.setAttribute("x", String(cx));
+      tsp.setAttribute("dy", idx === 0 ? "0" : `${leadEm}em`);
+      tsp.textContent = line;
+      text.appendChild(tsp);
+    });
+    labelsLayer.appendChild(text);
+  });
+
+  parent.appendChild(labelsLayer);
+}
+
 function buildExportSvgString() {
   const svg = document.querySelector("#t-shape-svg");
   if (!svg) return "";
@@ -2292,11 +2479,22 @@ function buildExportSvgString() {
   const ns = "http://www.w3.org/2000/svg";
 
   if (!layout.hasKey) {
-    const clone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
-    clone.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
-    clone.setAttribute("height", String(layout.totalH));
-    appendAttributionText(ns, clone, layout.bodyH + 22);
-    return new XMLSerializer().serializeToString(clone);
+    const outer = document.createElementNS(ns, "svg");
+    outer.setAttribute("xmlns", ns);
+    outer.setAttribute("viewBox", `0 0 ${layout.totalW} ${layout.totalH}`);
+    outer.setAttribute("width", String(layout.totalW));
+    outer.setAttribute("height", String(layout.totalH));
+
+    const chartClone = /** @type {SVGSVGElement} */ (svg.cloneNode(true));
+    chartClone.removeAttribute("id");
+    chartClone.setAttribute("x", "0");
+    chartClone.setAttribute("y", "0");
+    chartClone.setAttribute("width", String(layout.chartW));
+    chartClone.setAttribute("height", String(getCurrentShapeSvgHeight()));
+    outer.appendChild(chartClone);
+    appendExportLabelsAndTitle(ns, outer, chartClone, layout.chartW);
+    appendAttributionText(ns, outer, layout.bodyH + 22);
+    return new XMLSerializer().serializeToString(outer);
   }
 
   const outer = document.createElementNS(ns, "svg");

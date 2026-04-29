@@ -1865,6 +1865,7 @@ body:not(.dark) .thermo {
 .chart-container .column-a {
   min-width: 0;
   width: 100%;
+  height: auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1917,11 +1918,11 @@ body:not(.dark) .thermo {
 }
 
 .chart-container #t-shape-svg {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
   width: 100%;
-  height: 100%;
-  max-height: 100%;
+  height: auto;
+  max-height: none;
 }
 
 .chart-container:not(.chart-container--key) #t-shape-svg {
@@ -1956,8 +1957,10 @@ body:not(.dark) .thermo {
 }
 
 .shape-label-row {
+  flex: 0 0 auto;
   width: 100%;
-  height: var(--shape-label-h, 160px);
+  height: 180px;
+  padding-top: 20px;
   position: relative;
   pointer-events: none;
   overflow: visible;
@@ -2174,6 +2177,7 @@ h2.shape-insights-heading {
     opacity: 1 !important;
     transform: none !important;
   }
+
 }
 
 @media (max-width: 720px) {
@@ -2217,6 +2221,15 @@ h2.shape-insights-heading {
 
 #t-shape-svg .tbar:hover {
   filter: saturate(1.42) brightness(1.1) drop-shadow(0 8px 18px rgba(54, 105, 220, 0.35));
+}
+
+#t-shape-svg .tbar-texture {
+  opacity: 0.21;
+  transition: opacity 0.22s ease;
+}
+
+#t-shape-svg .tbar:hover + .tbar-texture {
+  opacity: 0.39;
 }
 
 #t-shape-svg .tbar-label-vertical {

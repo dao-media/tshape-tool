@@ -1,0 +1,112 @@
+.tshaped-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: color-mix(in oklab, var(--bg) 86%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.tshaped-preloader__logo {
+  font: 700 1.2rem/1 var(--font-main);
+  color: var(--text-main);
+  letter-spacing: 0.01em;
+}
+
+.tshaped-preloader__bars {
+  --bar-w: 12px;
+  --bar-g: 5px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--bar-g);
+  height: 112px;
+}
+
+.tshaped-preloader__bars .tbar {
+  width: var(--bar-w);
+  border-radius: 4px 4px 6px 6px;
+  background: linear-gradient(180deg, #8c7fff 0%, #6f61ec 100%);
+  transform-origin: top center;
+  animation: tshaped-loader-grow 1.05s var(--ease-out) infinite;
+  box-shadow: 0 6px 14px rgba(68, 60, 170, 0.28);
+}
+
+.tshaped-preloader__bars .tbar:nth-child(1) {
+  --h: 24px;
+  --d: 0s;
+}
+.tshaped-preloader__bars .tbar:nth-child(2) {
+  --h: 34px;
+  --d: 0.05s;
+}
+.tshaped-preloader__bars .tbar:nth-child(3) {
+  --h: 46px;
+  --d: 0.1s;
+}
+.tshaped-preloader__bars .tbar:nth-child(4) {
+  --h: 60px;
+  --d: 0.15s;
+}
+.tshaped-preloader__bars .tbar:nth-child(5) {
+  --h: 78px;
+  --d: 0.2s;
+}
+.tshaped-preloader__bars .tbar:nth-child(6) {
+  --h: 96px;
+  --d: 0.25s;
+}
+.tshaped-preloader__bars .tbar:nth-child(7) {
+  --h: 78px;
+  --d: 0.2s;
+}
+.tshaped-preloader__bars .tbar:nth-child(8) {
+  --h: 60px;
+  --d: 0.15s;
+}
+.tshaped-preloader__bars .tbar:nth-child(9) {
+  --h: 46px;
+  --d: 0.1s;
+}
+.tshaped-preloader__bars .tbar:nth-child(10) {
+  --h: 34px;
+  --d: 0.05s;
+}
+.tshaped-preloader__bars .tbar:nth-child(11) {
+  --h: 24px;
+  --d: 0s;
+}
+
+.tshaped-preloader__bars .tbar {
+  height: var(--h);
+  animation-delay: var(--d);
+}
+
+@keyframes tshaped-loader-grow {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.56;
+  }
+  40% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+body:not(.dark) .tshaped-preloader__bars .tbar {
+  background: linear-gradient(180deg, #7d74ff 0%, #6157e3 100%);
+  box-shadow: 0 6px 14px rgba(93, 86, 214, 0.24);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tshaped-preloader__bars .tbar {
+    animation: none !important;
+    transform: scaleY(1) !important;
+    opacity: 1 !important;
+  }
+}

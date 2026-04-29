@@ -11,6 +11,16 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
 - **Styling:** Tailwind pipeline (`t-shaped/styles.css` -> `t-shaped/styles.out.css`)
 - **Optional backend:** Netlify function email endpoint at `/.netlify/functions/send-shape-email` (`netlify/functions/send-shape-email.js`)
 
+### Tools and Libraries Used
+
+- **Framework/runtime:** SolidJS
+- **Build/dev server:** Vite
+- **Styling:** Tailwind CSS (+ PostCSS + Autoprefixer)
+- **Animation:** GSAP (`t-shaped/src/gsap-animations.js`)
+- **Tooltips:** Tippy.js (`t-shaped/src/tippy-tooltips.js`)
+- **Email backend:** Netlify Functions + Nodemailer
+- **Image/render helpers (backend):** `@resvg/resvg-js`, `pngjs`, `jpeg-js`, `archiver`
+
 ### User Flow (5 Steps)
 
 1. **Start**

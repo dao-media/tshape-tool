@@ -23,10 +23,21 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --rainbow-grad: linear-gradient(45deg, #2dd4bf, #3b82f6, #8b5cf6, #ec4899);
   --radius: 16px;
+  /** Shared by .card and .chart for matching inset on all sides. */
+  --card-padding: clamp(1.6rem, 2.9vw, 2.35rem);
+  /** Animated backlight (cyan ↔ violet); matches existing accent palette */
+  --tshaped-glow-a: #2dd4bf;
+  --tshaped-glow-b: #8a7dff;
+  --tshaped-glow-c: #7e0fff;
+  --tshaped-glow-duration: 10s;
   --bg-card: #161616;
   --btn-radius: 12px;
   --btn-transition: all 0.2s var(--ease-out);
   --btn-press-scale: 0.96;
+  /* Default control height (text + icon actions); icon-only squares use the same. */
+  --control-height: 44px;
+  --control-height-sm: 36px;
+  --control-height-lg: 52px;
   --bg-image:
     radial-gradient(ellipse 58% 36% at 52% 10%, rgba(210, 226, 255, 0.12), rgba(210, 226, 255, 0) 72%),
     radial-gradient(ellipse 54% 44% at -8% -10%, rgba(45, 212, 191, 0.2), rgba(45, 212, 191, 0) 68%),
@@ -39,6 +50,18 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+@keyframes tshaped-glow-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 html {
@@ -143,7 +166,7 @@ h6 {
 .app-header-inner {
   display: grid;
   grid-template-columns: minmax(0, 80fr) minmax(0, 20fr);
-  align-items: start;
+  align-items: center;
   gap: 0.4rem 0.75rem;
 }
 
@@ -276,9 +299,8 @@ h6 {
   width: 16px;
   height: var(--h);
   min-height: 7px;
-  border-radius: 0 0 2px 2px;
+  border-radius: 6px;
   transform-origin: top center;
-  transform: scaleY(0.9);
   transition: transform 0.2s var(--ease-out), filter 0.2s var(--ease-out);
   filter: saturate(1.22) brightness(1.04);
 }
@@ -349,6 +371,19 @@ h6 {
 
 .side-actions {
   margin-top: 1.35rem;
+}
+
+/* Text + inline SVG (e.g. Start Over); currentColor tracks button/secondary styles */
+.btn-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+}
+
+.btn-with-icon__svg {
+  flex-shrink: 0;
+  width: 1.125em;
+  height: 1.125em;
 }
 
 .app-header h1 {
@@ -443,11 +478,6 @@ body:not(.dark) button.secondary:hover {
   background-clip: padding-box, border-box;
 }
 
-body:not(.dark) .icon-btn {
-  background: #e8eefc;
-  border: 1px solid #becae6;
-  color: #1f2a44;
-}
 
 body:not(.dark) .rate-all-preset-wrap {
   background: #eaf0ff;
@@ -577,8 +607,41 @@ body:not(.dark) .tips-step-body {
   color: #2a395e;
 }
 
+/* Shape results (step 5): stronger text contrast on white/light surfaces */
+body:not(.dark) .shape-results-stack > .card #shape-result-title {
+  color: #141b2d;
+}
+
+body:not(.dark) .shape-results-stack #shape-result-sub.muted {
+  color: #334155;
+}
+
+body:not(.dark) .shape-results-stack .shape-email-wrap .start-name-label {
+  color: #1e293b;
+}
+
+body:not(.dark) .shape-results-stack .shape-email-wrap .start-email-note.muted {
+  color: #475569;
+}
+
+body:not(.dark) .shape-results-stack .shape-email-wrap .start-name-input::placeholder {
+  color: #64748b;
+}
+
+body:not(.dark) .shape-results-stack .shape-email-wrap .start-name-input {
+  color: #141b2d;
+}
+
+body:not(.dark) .shape-insights-card .shape-insights-subtitle {
+  color: #475569;
+}
+
+body:not(.dark) .chart-container__head .title {
+  color: #22314f;
+}
+
 /* Shape page contrast improvements in light mode */
-body:not(.dark) .shape-viz-outer .viz-wrap {
+body:not(.dark) .chart-container .chart {
   background: #ffffff;
   border-color: #b7c5e4;
   box-shadow: inset 0 1px 0 rgba(40, 57, 94, 0.06);
@@ -615,7 +678,7 @@ body:not(.dark) .shape-insight-card h3 {
 }
 
 body:not(.dark) .shape-insight-card p.body-normal {
-  color: #2a395e;
+  color: #1f2a44;
 }
 
 .stepper {
@@ -669,7 +732,7 @@ body:not(.dark) .shape-insight-card p.body-normal {
   z-index: 1;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  padding: clamp(1.6rem, 2.9vw, 2.35rem);
+  padding: var(--card-padding);
   transition: transform 0.4s var(--ease-out-back);
 }
 
@@ -681,20 +744,33 @@ body:not(.dark) .shape-insight-card p.body-normal {
 .card::before {
   content: "";
   position: absolute;
-  inset: -1.5px;
+  inset: -2px;
   z-index: -2;
-  background: var(--rainbow-grad);
-  background-size: 240% 240%;
-  background-position: var(--card-rainbow-bp, 0%) 50%;
-  border-radius: 17.5px;
+  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--radius) + 2px);
+  background: linear-gradient(
+    270deg,
+    var(--tshaped-glow-a),
+    var(--tshaped-glow-b),
+    var(--tshaped-glow-c),
+    var(--tshaped-glow-a)
+  );
+  background-size: 200% 200%;
+  background-position: 0% 50%;
   opacity: 0;
-  transition: opacity 0.3s ease, filter 0.3s ease;
+  transform: scale(0.97);
+  filter: blur(14px);
+  transition: opacity 0.35s ease;
+  animation: none;
+  pointer-events: none;
 }
 
 .card:hover::before,
 .card.active::before {
-  opacity: 0.8;
-  filter: blur(5px);
+  opacity: 0.92;
+  animation: tshaped-glow-shift var(--tshaped-glow-duration) ease infinite;
 }
 
 .card::after {
@@ -749,7 +825,7 @@ body:not(.dark) .shape-insight-card p.body-normal {
 }
 
 .card-title-actions .secondary {
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: 0 20px;
   font-size: 15px;
 }
@@ -793,27 +869,21 @@ body:not(.dark) .shape-insight-card p.body-normal {
   box-shadow: 0 0 18px rgba(138, 125, 255, 0.4);
 }
 
-.icon-btn {
+/* Icon-only actions: same footprint as default text buttons (min-height) + secondary affordances. */
+button.secondary.icon-btn {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: var(--control-height);
+  min-width: var(--control-height);
+  height: var(--control-height);
+  min-height: var(--control-height);
   padding: 0;
   border-radius: var(--btn-radius);
-  border: 1px solid var(--border);
-  background: #2b3550;
-  color: #e8ecff;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 600;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: var(--btn-transition);
-}
-
-.icon-btn:hover {
-  filter: brightness(1.12);
 }
 
 .scroll-panel {
@@ -858,38 +928,31 @@ h3 {
   color: var(--muted);
 }
 
-.link-btn {
-  appearance: none;
-  -webkit-appearance: none;
-  background: none;
-  border: none;
-  color: var(--accent);
-  font: inherit;
-  font-weight: 600;
-  padding: 0;
-  margin-left: 0.35rem;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+#shape-result-sub {
+  max-width: 540px;
 }
 
-.link-btn:hover {
-  filter: brightness(1.1);
-}
-
-body:not(.dark) .link-btn {
-  color: #374ea1;
+/* Learn More on its own line below step 5 subtitle copy */
+button[data-action="learn-more-shape"] {
+  display: flex;
+  width: fit-content;
+  margin-top: 0.75rem;
+  margin-inline-start: 0;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.95rem;
   margin-top: 1.75rem;
 }
 
 .btn,
 button {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -902,14 +965,45 @@ button {
   border: 1px solid transparent;
   user-select: none;
   white-space: nowrap;
-  min-height: 44px;
+  min-height: var(--control-height);
   padding: 0 20px;
   font-size: 15px;
   --icon-size: 18px;
 }
 
+/* Backlight glow behind buttons on hover — keeps existing gradient border fills on the button surface */
+.btn:not(:disabled)::before,
+button:not(:disabled)::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    270deg,
+    var(--tshaped-glow-a),
+    var(--tshaped-glow-b),
+    var(--tshaped-glow-c),
+    var(--tshaped-glow-a)
+  );
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  opacity: 0;
+  filter: blur(10px);
+  transform: scale(1.04);
+  transition: opacity 0.28s ease;
+  animation: none;
+  pointer-events: none;
+}
+
+.btn:not(:disabled):hover::before,
+button:not(:disabled):hover::before {
+  opacity: 0.85;
+  animation: tshaped-glow-shift var(--tshaped-glow-duration) ease infinite;
+}
+
 .btn-s {
-  min-height: 36px;
+  min-height: var(--control-height-sm);
   padding: 0 12px;
   font-size: 13px;
   --icon-size: 14px;
@@ -922,27 +1016,33 @@ button {
 }
 
 .btn-l {
-  min-height: 52px;
+  min-height: var(--control-height-lg);
   padding: 0 28px;
   font-size: 17px;
   --icon-size: 22px;
 }
 
 .btn-icon-only {
-  width: 44px;
-  min-width: 44px;
+  width: var(--control-height);
+  min-width: var(--control-height);
+  height: var(--control-height);
+  min-height: var(--control-height);
   padding: 0;
   border-radius: 50%;
 }
 
 .btn-icon-only.btn-s {
-  width: 36px;
-  min-width: 36px;
+  width: var(--control-height-sm);
+  min-width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  min-height: var(--control-height-sm);
 }
 
 .btn-icon-only.btn-l {
-  width: 52px;
-  min-width: 52px;
+  width: var(--control-height-lg);
+  min-width: var(--control-height-lg);
+  height: var(--control-height-lg);
+  min-height: var(--control-height-lg);
 }
 
 .btn i,
@@ -1059,10 +1159,12 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  min-height: var(--control-height);
+  box-sizing: border-box;
   background: #2b3550;
   color: #d8e2ff;
   border-radius: 10px;
-  padding: 0.55rem 0.65rem;
+  padding: 0.35rem 0.65rem;
   border: 1px solid rgba(188, 204, 246, 0.18);
 }
 
@@ -1534,28 +1636,26 @@ body:not(.dark) .thermo {
   display: none;
 }
 
-.viz-wrap {
-  margin-top: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: auto;
-  background: rgba(255, 255, 255, 0.02);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
 .shape-toolbar {
-  margin: 0.8rem 0 0.55rem;
-  width: 100%;
+  display: flex;
+  width: auto;
+  justify-content: flex-end;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* Labels / Key — fixed grid so the track stays centered; no font-weight swap (avoids width twitch) */
+/* Labels / Key — compact row; no 1fr columns (those mimicked extra “padding” and misaligned the bar) */
 .shape-toggle {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  width: 100%;
-  max-width: 17.5rem;
-  column-gap: 0.65rem;
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
+  gap: 0.5rem;
+  width: auto;
+  max-width: none;
+  margin: 0;
   padding: 0;
   background: none;
   border: none;
@@ -1568,20 +1668,16 @@ body:not(.dark) .thermo {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--muted);
-  min-width: 0;
+  flex: 0 0 auto;
   transition: color 0.2s var(--ease-out), opacity 0.2s var(--ease-out);
 }
 
 .shape-toggle__label:first-of-type {
   text-align: end;
-  justify-self: stretch;
-  padding-inline-end: 0.1rem;
 }
 
 .shape-toggle__label:last-of-type {
   text-align: start;
-  justify-self: stretch;
-  padding-inline-start: 0.1rem;
 }
 
 .shape-toggle:has(input:not(:checked)) .shape-toggle__label:first-of-type,
@@ -1661,30 +1757,257 @@ body:not(.dark) .thermo {
     0 0 0 2px rgba(120, 140, 180, 0.5);
 }
 
-.shape-viz-outer {
+/* Step 5: headline + sub precede chart; head row (plot title + toggle) stacks above SVG for paint order */
+.shape-results-stack .card > #shape-result-title,
+.shape-results-stack .card > #shape-result-sub,
+.shape-results-stack .card #shape-chart-container .chart-container__head {
+  position: relative;
+  z-index: 3;
+}
+
+/* Step 5: chart block (HTML title + row: column-a = plot, column-b = key legend) */
+.chart-container {
+  --chart-key-gap: 16px;
+  --chart-key-col: minmax(225px, 20%);
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-top: 0.85rem;
-}
-
-.shape-viz-outer--key {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(225px, 20%);
-  gap: 1rem;
-  align-items: start;
-}
-
-.shape-viz-outer .viz-wrap {
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
   margin-top: 0;
-  flex: 1 1 auto;
-  min-width: 0;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 0;
 }
 
-.shape-viz-outer--key .viz-wrap {
+/* Space between result copy + Learn More and the plot title / chart */
+.shape-results-stack .card > .chart-container {
+  margin-top: 64px;
+}
+
+/* Labels: height grows with SVG — no fixed box clipping. Key: chart stretches to key card. */
+.chart-container:not(.chart-container--key) {
+  height: auto;
+  --shape-chart-label-slot-min-h: 160px;
+}
+
+.chart-container__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  width: 100%;
   min-width: 0;
+  flex-shrink: 0;
+  margin: 0 0 0.15rem;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.chart-container__head .title {
+  flex-shrink: 0;
+  min-width: 0;
+  width: auto;
+  font-size: clamp(0.9rem, 1.85vw, 1.08rem);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0 0.15rem 0 0;
+  position: relative;
+  z-index: 2;
+}
+
+.chart-container__head .shape-toolbar {
+  justify-self: end;
+}
+
+.chart-container__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: min-content;
+  position: relative;
+  z-index: 0;
+}
+
+.chart-container:not(.chart-container--key) .chart-container__row {
+  flex: 0 1 auto;
+  min-height: min-content;
+  height: auto;
+  grid-template-rows: auto;
+}
+
+/* Key mode: column-a = remainder after gap + key column; row height = max(chart, key); stretch aligns chart to key height. */
+.chart-container--key .chart-container__row {
+  gap: var(--chart-key-gap);
+  grid-template-columns: minmax(0, 1fr) var(--chart-key-col);
+  align-items: stretch;
+  min-height: 0;
+}
+
+.chart-container:not(.chart-container--key) .column-b {
+  display: none;
+}
+
+.chart-container:not(.chart-container--key) .column-a {
+  min-height: min-content;
+  height: auto;
+  width: 100%;
   max-width: 100%;
+}
+
+.chart-container .column-a {
+  min-width: 0;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container .column-b {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+.chart-container .chart {
+  margin-top: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: var(--card-padding);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  flex: 1 1 auto;
+  min-height: min-content;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.chart-container:not(.chart-container--key) .chart {
+  flex: 0 1 auto;
+  min-height: min-content;
+  /* Let rotated label ink paint outside the padded box; SVG uses overflow visible. */
+  overflow: visible;
+  height: auto;
+  max-height: none;
+}
+
+.chart-container--key .chart {
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+  transform: scale(0.996);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 14px 28px rgba(0, 0, 0, 0.18);
+  border-color: rgba(162, 180, 236, 0.42);
+}
+
+.chart-container #t-shape-svg {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+
+.chart-container:not(.chart-container--key) #t-shape-svg {
+  flex: none;
+  flex-shrink: 0;
+  width: 100%;
+  height: auto;
+  min-height: auto;
+  max-height: none;
+  aspect-ratio: unset;
+  overflow: visible;
+}
+
+.chart-container--key .shape-key-card {
+  align-self: stretch;
+  height: fit-content;
+}
+
+.chart-container.chart-container--key {
+  height: auto;
+}
+
+.shape-chart-plot-wrap {
+  border-radius: 12px;
+  min-height: min-content;
+}
+
+.chart-container:not(.chart-container--key) .shape-chart-plot-wrap.has-html-label-row {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.shape-label-row {
+  width: 100%;
+  height: var(--shape-label-h, 160px);
+  position: relative;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.shape-label-cell {
+  position: absolute;
+  bottom: 0;
+  min-width: 0;
+  height: 100%;
+  display: block;
+  overflow: hidden;
+}
+
+.shape-label-text {
+  max-height: 160px;
+  height: 160px;
+  width: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.08;
+  font-weight: 620;
+  letter-spacing: 0.01em;
+  color: var(--shape-label-text-color, currentColor);
+  font-size: var(--shape-label-font-size, 13px);
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  text-align: right !important;
+  opacity: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.chart-container--key .shape-chart-plot-wrap {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.chart-container:not(.chart-container--key) .shape-chart-plot-wrap {
+  overflow: visible;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: min-content;
 }
 
 .shape-key-card {
@@ -1727,6 +2050,8 @@ body:not(.dark) .thermo {
   height: 12px;
   border-radius: 3px;
   margin-top: 0;
+  transform-origin: center top;
+  transform-box: fill-box;
 }
 
 .shape-key-name {
@@ -1851,13 +2176,13 @@ h2.shape-insights-heading {
 }
 
 @media (max-width: 720px) {
-  .shape-viz-outer--key {
-    display: flex;
-    flex-direction: column;
+  .chart-container--key .chart-container__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--chart-key-gap);
   }
 
-  .shape-viz-outer--key .viz-wrap,
-  .shape-viz-outer--key .shape-key-card {
+  .chart-container--key .column-a,
+  .chart-container--key .column-b {
     max-width: none;
     width: 100%;
   }
@@ -1868,8 +2193,17 @@ h2.shape-insights-heading {
 }
 
 #t-shape-svg {
+  display: block;
   width: 100%;
-  min-height: 320px;
+  max-width: 100%;
+  height: auto;
+  min-height: auto;
+  vertical-align: top;
+  overflow: visible;
+}
+
+.chart-container--key #t-shape-svg {
+  overflow: hidden;
 }
 
 #t-shape-svg .tbar {
@@ -1885,19 +2219,48 @@ h2.shape-insights-heading {
 }
 
 #t-shape-svg .tbar-label-vertical {
-  opacity: 0;
+  opacity: 1;
   font-weight: 620;
   letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-anchor: middle;
 }
 
-.shape-viz-outer .viz-wrap {
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+#t-shape-svg .shape-fo-label {
+  overflow: visible;
+  pointer-events: none;
 }
 
-.shape-viz-outer--key .viz-wrap {
-  transform: scale(0.996);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
-  border-color: rgba(162, 180, 236, 0.42);
+#t-shape-svg .shape-fo-label-cell {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: visible;
+}
+
+#t-shape-svg .shape-fo-label-text {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) rotate(-90deg);
+  transform-origin: bottom center;
+  width: 150px;
+  max-width: 150px;
+  text-align: left;
+  line-height: 1.22;
+  font-weight: 620;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  opacity: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .card--start {
@@ -2107,9 +2470,10 @@ h2.shape-insights-heading {
   width: 100%;
   height: calc(var(--demo-t-track) * var(--h-frac, 0.35));
   min-height: 4px;
-  border-radius: 0;
+  border-radius: 6px;
   background: linear-gradient(180deg, #c8b8ff, #6a52c9);
   transform-origin: top center;
+  transform-box: fill-box;
   transition: transform 0.28s cubic-bezier(0.34, 1.35, 0.64, 1);
   transition-delay: var(--d, 0s);
 }

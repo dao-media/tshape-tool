@@ -108,6 +108,160 @@ const EXPORT_ATTRIBUTION = "Dane O'Leary | /in/daneoleary";
 const VIZ_SVG_W = 900;
 const VIZ_SVG_H = 560;
 const EXPORT_FOOTER_H = 36;
+
+/** Labels: clear space from bottom of label ink to top of bar stack. */
+const LABEL_BAR_GAP_PX = 32;
+/** Desktop Labels: height of the bar area for a 10/10 bar (user space px). */
+const LABELS_BAR_STACK_HEIGHT_DESKTOP = 540;
+/** Mobile Labels: bar stack height (10/10) on small viewports. */
+const LABELS_BAR_STACK_HEIGHT_MOBILE = 110;
+/** Labels: minimum px reserved for bar ink below baseline when ratings are very low (layout stability before viewBox fit). */
+const LABELS_BAR_AREA_MIN_DESKTOP = 96;
+const LABELS_BAR_AREA_MIN_MOBILE = 52;
+/** User-space px: minimum Y for top of label-layer bbox from SVG y=0 — clearance inside card above rotated labels. */
+const LABEL_SVG_TOP_MARGIN_PX = 40;
+/** Labels: wrap unrotated text to lines no wider than this (user px). After -90°, one line maps to ~vertical span. */
+const CHART_SKILL_LABEL_WRAP_MAX_RUN_PX = 160;
+/** Minimum vertical extent (SVG user px) reserved for rotated label ink between top margin and bar gap. */
+const CHART_LABEL_SLOT_MIN_H_PX = 160;
+/** Extra clearance (SVG user px) kept between label ink bottom and bar top, beyond label↔bar gap. */
+const CHART_LABEL_ABOVE_BAR_SLACK_PX = 2;
+/** Labels mode: minimum gap between bars before shrinking bar width. */
+const BAR_GAP_MIN_PX = 6;
+/** Tighter wrap on phones so columns stay narrower. */
+const CHART_SKILL_LABEL_WRAP_MAX_RUN_MOBILE_PX = 120;
+
+/**
+ * Unrotated line length in px (Inter 620 + 0.01em letter-spacing, same as `.tbar-label-vertical` in CSS).
+ * After -90° rotation this ≈ vertical space the label needs.
+ * @param {string} text
+ * @param {number} fontSizePx
+ */
+function measureChartSkillLabelRunPx(text, fontSizePx) {
+  if (!text || !Number.isFinite(fontSizePx) || fontSizePx <= 0) return 0;
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Math.ceil(fontSizePx * text.length * 0.52);
+  ctx.font = `620 ${fontSizePx}px Inter, system-ui, -apple-system, "Segoe UI", sans-serif`;
+  const w = ctx.measureText(text).width;
+  const tracking = fontSizePx * 0.01;
+  const tracked = text.length > 1 ? w + tracking * (text.length - 1) : w;
+  return Math.ceil(tracked);
+}
+
+/**
+ * Word-wrap skill name to approximate max horizontal run (user-space px).
+ * @param {string} text
+ * @param {number} maxRunPx
+ * @param {number} fontSizePx
+ * @returns {string[]}
+ */
+function wrapSkillLabelLines(text, maxRunPx, fontSizePx) {
+  const m = typeof text === "string" ? text.trim() : "";
+  if (!m) return [""];
+  const measure = (s) => measureChartSkillLabelRunPx(s, fontSizePx);
+  if (!Number.isFinite(maxRunPx) || maxRunPx < 36) return [m];
+  if (measure(m) <= maxRunPx) return [m];
+
+  /**
+   * @param {string} tok
+   */
+  function breakLongToken(tok) {
+    const out = [];
+    let rest = tok;
+    while (rest.length) {
+      let lo = 0;
+      let hi = rest.length;
+      while (lo < hi) {
+        const mid = Math.floor((lo + hi + 1) / 2);
+        const seg = rest.slice(0, mid);
+        if (measure(seg) <= maxRunPx) lo = mid;
+        else hi = mid - 1;
+      }
+      let take = lo;
+      if (take === 0) take = Math.min(rest.length, 1);
+      out.push(rest.slice(0, take));
+      rest = rest.slice(take);
+    }
+    return out;
+  }
+
+  const rawWords = m.split(/\s+/);
+  /** @type {string[]} */
+  const lines = [];
+  let cur = "";
+
+  const flushCur = () => {
+    if (cur) lines.push(cur);
+    cur = "";
+  };
+
+  for (const raw of rawWords) {
+    const pieces = measure(raw) <= maxRunPx ? [raw] : breakLongToken(raw);
+    for (const piece of pieces) {
+      const trial = cur ? `${cur} ${piece}` : piece;
+      if (measure(trial) <= maxRunPx) {
+        cur = trial;
+      } else {
+        flushCur();
+        cur = piece;
+      }
+    }
+  }
+  flushCur();
+
+  return lines.length ? lines : [m];
+}
+
+/** Line gap as a fraction of font size for stacked tspans inside rotated labels */
+function chartLabelLeadingEm() {
+  return 1.22;
+}
+
+/**
+ * Canvas can under-estimate vs real SVG (weight, tracking, kerning). After labels exist, shift the
+ * plot down so the label layer’s top edge is at least `minInkY` in SVG user space.
+ * @param {SVGSVGElement} svg
+ * @param {SVGGElement} plotGroup
+ * @param {SVGRectElement} bg
+ * @param {number} plotW
+ * @param {number} plotH
+ * @param {number} minInkY
+ * @returns {number} new plot height
+ */
+function applyShapeChartLabelTopReserve(svg, plotGroup, bg, plotW, plotH, minInkY) {
+  const layer = plotGroup.querySelector(".shape-chart-label-layer");
+  if (!layer) return plotH;
+  let b;
+  try {
+    b = layer.getBBox();
+  } catch {
+    return plotH;
+  }
+  if (!Number.isFinite(b.y)) return plotH;
+  const need = Math.ceil(Math.max(0, minInkY - b.y));
+  if (need <= 0) return plotH;
+  const tr = `translate(0, ${need})`;
+  const prev = plotGroup.getAttribute("transform");
+  plotGroup.setAttribute("transform", prev ? `${prev} ${tr}` : tr);
+  const newH = plotH + need;
+  bg.setAttribute("height", String(newH));
+  svg.setAttribute("viewBox", `0 0 ${plotW} ${newH}`);
+  return newH;
+}
+
+function getCurrentShapeSvgHeight() {
+  const el = document.querySelector("#t-shape-svg");
+  if (!el) return VIZ_SVG_H;
+  const vba = el.getAttribute("viewBox");
+  if (vba) {
+    const p = vba.trim().split(/\s+/);
+    const h = Number(p[3]);
+    if (Number.isFinite(h) && h > 0) return h;
+  }
+  const h0 = el.viewBox?.baseVal?.height;
+  return typeof h0 === "number" && h0 > 0 ? h0 : VIZ_SVG_H;
+}
 const SHAPE_GUIDE = {
   I: {
     meaning:
@@ -169,6 +323,105 @@ function getCurrentShapeSvgWidth() {
   const p = vb.trim().split(/\s+/);
   const w = Number(p[2]);
   return Number.isFinite(w) && w > 0 ? w : VIZ_SVG_W;
+}
+
+/**
+ * Fit the viewBox in Y to label + bar ink (vertical padding) while keeping X fixed at `0 .. plotW`.
+ * Rotated label bboxes must not drive horizontal viewBox changes — that skewed `meet` scaling and
+ * caused uneven side padding. Labels mode sets root SVG overflow visible so glyphs are not clipped.
+ * @param {SVGSVGElement} svg
+ * @param {number} plotW
+ * @param {boolean} [forLabels] Labels mode: top-align in the viewport and a touch more y-padding so
+ *   scaling matches how Key mode reads (even fill) without vertical centering oddities.
+ */
+function applyTShapeChartViewBoxFit(svg, plotW, forLabels) {
+  if (!svg || !Number.isFinite(plotW) || plotW <= 0) return;
+  /** Extra slack above/below bbox so stroke/halo stays inside parent when ancestors clip (SVG overflow visible). */
+  const padTop = forLabels ? 140 : 12;
+  const padBottom = forLabels ? 40 : 12;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const el of svg.querySelectorAll("text, rect.tbar")) {
+    let b;
+    try {
+      b = el.getBBox();
+    } catch (e) {
+      continue;
+    }
+    if (!Number.isFinite(b.width) || !Number.isFinite(b.height)) continue;
+    if (b.width <= 0 && b.height <= 0) continue;
+    minY = Math.min(minY, b.y);
+    maxY = Math.max(maxY, b.y + b.height);
+  }
+  if (!Number.isFinite(minY) || !Number.isFinite(maxY)) return;
+  const r = (n) => Math.round(n * 1000) / 1000;
+  const vbY = r(minY - padTop);
+  const vbH = r(maxY - minY + padTop + padBottom);
+  if (vbH < 4) return;
+
+  const vbX = 0;
+  const vbW = r(plotW);
+
+  svg.setAttribute("viewBox", `${vbX} ${vbY} ${vbW} ${vbH}`);
+  svg.setAttribute("preserveAspectRatio", forLabels ? "xMinYMin meet" : "xMidYMid meet");
+  svg.setAttribute("overflow", forLabels ? "visible" : "hidden");
+  const bg = svg.querySelector("rect[fill='transparent']");
+  if (bg) {
+    bg.setAttribute("x", String(vbX));
+    bg.setAttribute("y", String(vbY));
+    bg.setAttribute("width", String(vbW));
+    bg.setAttribute("height", String(vbH));
+  }
+}
+
+/**
+ * Nudge label so axis-aligned bbox center X matches the bar column center (after rotation).
+ * Rotation must be `rotate(-90 pivotX pivotY)` so the painted center stays on the bar column.
+ * @param {SVGTextElement} label
+ * @param {number} slotCenterX
+ * @param {number} pivotY
+ */
+function alignTbarLabelCenterXToSlot(label, slotCenterX, pivotY) {
+  if (!label || !Number.isFinite(slotCenterX) || !Number.isFinite(pivotY)) return;
+  let box;
+  try {
+    box = label.getBBox();
+  } catch {
+    return;
+  }
+  if (!Number.isFinite(box.width) || !Number.isFinite(box.x) || box.width < 0.5) return;
+  const midX = box.x + box.width / 2;
+  const dx = slotCenterX - midX;
+  if (Math.abs(dx) < 0.2) return;
+  const curX = Number.parseFloat(label.getAttribute("x") || "0");
+  const nextX = curX + dx;
+  label.setAttribute("x", String(nextX));
+  label.querySelectorAll("tspan").forEach((tsp) => {
+    tsp.setAttribute("x", String(nextX));
+  });
+  label.setAttribute("transform", `rotate(-90 ${nextX} ${pivotY})`);
+}
+
+/**
+ * With no transform on `<text>`: move x/y so bbox bottom aligns to `targetBottomY`.
+ * @param {SVGTextElement} label
+ */
+function snapSvgTextBottomHorizontal(label, targetBottomY) {
+  let ly = Number.parseFloat(label.getAttribute("y") || "0");
+  for (let pass = 0; pass < 32; pass += 1) {
+    let box;
+    try {
+      box = label.getBBox();
+    } catch {
+      return ly;
+    }
+    const bottom = box.y + box.height;
+    const err = targetBottomY - bottom;
+    if (Math.abs(err) < 0.35) break;
+    ly += err;
+    label.setAttribute("y", String(ly));
+  }
+  return ly;
 }
 
 const FALLBACK_RANK_HEX = {
@@ -1493,16 +1746,16 @@ function renderShapeInsights(shape) {
 
 function fillShapeKeyCard(mapped, keyMode) {
   const card = document.getElementById("shape-key-card");
-  const outer = document.getElementById("shape-viz-outer");
+  const outer = document.getElementById("shape-chart-container");
   if (!card) return;
   if (!keyMode) {
     card.hidden = true;
     card.innerHTML = "";
-    if (outer) outer.classList.remove("shape-viz-outer--key");
+    if (outer) outer.classList.remove("chart-container--key");
     return;
   }
   card.hidden = false;
-  if (outer) outer.classList.add("shape-viz-outer--key");
+  if (outer) outer.classList.add("chart-container--key");
   card.innerHTML = mapped
     .map((item, i) => {
       const theme = getRankTheme(item.value);
@@ -1537,11 +1790,15 @@ function renderVisualization() {
     .filter((x) => x.value != null);
 
   const keyMode = state.shapeVizMode === "key";
-  const darkMode = document.body.classList.contains("dark");
-  const chartTitleColor = darkMode ? "#e8ecff" : "#22314f";
-  const chartLabelColor = darkMode ? "#b8c4e8" : "#33456b";
+  /** Readable over saturated bar gradients: light ink + faint halo inside dark charts; dark ink + light halo inside light charts. */
+  const chartLabelInk = document.body.classList.contains("dark")
+    ? { fill: "#f3f7ff", stroke: "rgba(4, 8, 22, 0.5)", strokeWidth: "2.25" }
+    : { fill: "#0b1326", stroke: "rgba(255, 255, 255, 0.9)", strokeWidth: "2" };
   const isMobileViz =
     typeof window.matchMedia === "function" && window.matchMedia("(max-width: 720px)").matches;
+  const isTouchViz =
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(hover: none), (pointer: coarse)").matches;
   const targetBarW = isMobileViz ? 65 : 80;
 
   const detection = detectDesignerShape(mapped);
@@ -1553,7 +1810,7 @@ function renderVisualization() {
     titleEl.textContent = shapeHeadline;
   }
   if (subEl) {
-    subEl.innerHTML = `${escapeHtml(guide.meaning)} <button type="button" class="link-btn" data-action="learn-more-shape">Learn More</button>`;
+    subEl.innerHTML = `${escapeHtml(guide.meaning)} <button type="button" class="btn-s secondary" data-action="learn-more-shape">Learn More</button>`;
     const learnBtn = subEl.querySelector('[data-action="learn-more-shape"]');
     if (learnBtn && learnBtn.dataset.bound !== "1") {
       learnBtn.dataset.bound = "1";
@@ -1574,41 +1831,103 @@ function renderVisualization() {
   }
   renderShapeInsights(detection.shape);
 
+  const displayName = parseDisplayName(state.userName);
+  const plotTitleText = displayName
+    ? `${displayName} | ${detection.shape}-Shaped Designer`
+    : `${detection.shape}-Shaped Designer`;
+  const plotTitleEl = document.getElementById("shape-chart-plot-title");
+  if (plotTitleEl) {
+    plotTitleEl.textContent = plotTitleText;
+  }
+
   svg.innerHTML = "";
   const plotW = keyMode ? Math.round(VIZ_SVG_W * 0.8) : VIZ_SVG_W;
-  const H = VIZ_SVG_H;
   const padL = keyMode ? 44 : 56;
   const padR = keyMode ? 44 : 56;
-  const titleY = 40;
-  const titleH = 26;
-  const longestLabelChars = mapped.reduce((m, item) => Math.max(m, item.name.length), 0);
-  const labelBand = keyMode
-    ? 0
-    : clamp(
-        Math.round(longestLabelChars * (isMobileViz ? 5.2 : 5.9) + (isMobileViz ? 34 : 44)),
-        isMobileViz ? 96 : 118,
-        isMobileViz ? 220 : 270
+  /** Labels mode: 14px on small viewports or touch; 13px on desktop w/ fine pointer. */
+  const chartLabelPx = isMobileViz || isTouchViz ? 14 : 13;
+  const chartLabelFontSize = chartLabelPx;
+  const labelWrapMaxPx = 150;
+  /** Gap between bottom of rotated labels and top of bars — matches LABEL_BAR_GAP_PX in Labels mode. */
+  const labelToBarGapPx = keyMode ? 12 : LABEL_BAR_GAP_PX;
+
+  let longestRunPx = 0;
+  if (mapped.length > 0) {
+    const stackLeadPx = chartLabelFontSize * chartLabelLeadingEm();
+    for (const it of mapped) {
+      const lines = wrapSkillLabelLines(it.name, labelWrapMaxPx, chartLabelFontSize);
+      const maxLineW = Math.max(
+        0,
+        ...lines.map((ln) => measureChartSkillLabelRunPx(ln, chartLabelFontSize))
       );
-  let padT = titleY + titleH + labelBand;
+      const stacked = Math.max(0, lines.length - 1) * stackLeadPx;
+      const extent = maxLineW + stacked;
+      if (extent > longestRunPx) longestRunPx = extent;
+    }
+  }
+
+  let padT;
+  let chartTop;
+  let chartH;
+  let H;
+  /** Labels mode only — bar stack height in SVG units (constant across bars). */
+  let barAreaH = 0;
+
   let padB = keyMode ? 30 : 42;
   if (isMobileViz) {
-    padT -= keyMode ? 8 : 10;
-    padB = keyMode ? 24 : 34;
+    padB = keyMode ? 24 : 32;
   }
-  const chartTop = padT;
-  let chartH = H - padT - padB;
-  if (chartH < 190) {
-    const need = 190 - chartH;
-    const trimmedLabelBand = keyMode ? 0 : Math.min(need, Math.max(0, labelBand - 52));
-    padT -= trimmedLabelBand;
-    chartH = H - padT - padB;
-  }
-  const n = mapped.length;
-  const gap = 10;
-  const innerW = plotW - padL - padR;
 
+  const n = mapped.length;
+  const maxRating =
+    n === 0 ? 0 : Math.max(...mapped.map((it) => (Number.isFinite(it.value) ? it.value : 0)));
+
+  let layoutChartTop = 0;
+
+  if (keyMode) {
+    padT = isMobileViz ? 22 : 28;
+    chartTop = padT;
+    H = VIZ_SVG_H;
+    chartH = H - padT - padB;
+  } else {
+    /* Labels are rendered in a dedicated HTML row above SVG bars (separate layout track). */
+    layoutChartTop = isMobileViz ? 14 : 18;
+    chartTop = layoutChartTop;
+    padT = chartTop;
+    let baseStackH = isMobileViz ? LABELS_BAR_STACK_HEIGHT_MOBILE : LABELS_BAR_STACK_HEIGHT_DESKTOP;
+    /* Wider .chart → larger 10/10 bar stack in user space; matches card width responsively. */
+    if (!isMobileViz) {
+      const wrap = document.querySelector("#shape-chart-container .chart.shape-chart-plot-wrap");
+      const cw = wrap?.clientWidth ?? 0;
+      if (cw > 320) {
+        const s = Math.min(1.12, Math.max(0.48, cw / VIZ_SVG_W));
+        baseStackH = Math.round(LABELS_BAR_STACK_HEIGHT_DESKTOP * s);
+      }
+    }
+    chartH = baseStackH;
+    /** Pixels from baseline (chartTop) to bottom of the tallest bar — scales with highest rating. */
+    const tallestBarPx =
+      maxRating > 0 ? (maxRating / 10) * chartH : Math.round(chartH * (n === 0 ? 0.22 : 0.18));
+    const barFloorPx = isMobileViz ? LABELS_BAR_AREA_MIN_MOBILE : LABELS_BAR_AREA_MIN_DESKTOP;
+    barAreaH = Math.max(barFloorPx, tallestBarPx);
+    H = chartTop + barAreaH + padB;
+  }
+  /** Horizontal space between bar columns — in Labels mode, flexes to fill inner width. */
+  const innerW = plotW - padL - padR;
+  let gap = 10;
   let barW = targetBarW;
-  if (n > 0) {
+
+  if (!keyMode && n > 1) {
+    if (n * barW + (n - 1) * BAR_GAP_MIN_PX > innerW) {
+      barW = Math.max(4, (innerW - (n - 1) * BAR_GAP_MIN_PX) / n);
+    }
+    gap = (innerW - n * barW) / (n - 1);
+  } else if (!keyMode && n === 1) {
+    barW = Math.max(4, innerW);
+    gap = 0;
+  } else if (n > 0) {
+    const fixedGap = 10;
+    gap = fixedGap;
     const required = n * barW + (n - 1) * gap;
     if (required > innerW) {
       barW = Math.max(4, (innerW - (n - 1) * gap) / n);
@@ -1616,8 +1935,14 @@ function renderVisualization() {
   } else {
     barW = 40;
   }
-  const totalContentW = n > 0 ? n * barW + (n - 1) * gap : 0;
-  const startX = padL + (innerW - totalContentW) / 2;
+
+  const totalContentW = n > 0 ? n * barW + Math.max(0, n - 1) * gap : 0;
+  const startX =
+    !keyMode && n > 1
+      ? padL
+      : !keyMode && n === 1
+        ? padL
+        : padL + (innerW - totalContentW) / 2;
 
   const ns = "http://www.w3.org/2000/svg";
   const bg = document.createElementNS(ns, "rect");
@@ -1651,72 +1976,104 @@ function renderVisualization() {
   });
   svg.appendChild(defs);
 
-  const title = document.createElementNS(ns, "text");
-  title.setAttribute("x", String(padL));
-  title.setAttribute("y", String(titleY));
-  title.setAttribute("fill", chartTitleColor);
-  title.setAttribute("font-size", "19");
-  title.setAttribute("font-weight", "700");
-  title.setAttribute("pointer-events", "none");
-  const displayName = parseDisplayName(state.userName);
-  title.textContent = displayName
-    ? `${displayName} | ${detection.shape}-Shaped Designer`
-    : `${detection.shape}-Shaped Designer`;
-  svg.appendChild(title);
+  const plotGroup = document.createElementNS(ns, "g");
+  plotGroup.setAttribute("class", "shape-chart-plot");
+  svg.appendChild(plotGroup);
 
-  mapped.forEach((item, i) => {
-    const slotX = startX + i * (barW + gap);
-    const x = slotX;
-    const h = (item.value / 10) * chartH;
-    const y = chartTop;
-    const theme = getRankTheme(item.value);
-    const rect = document.createElementNS(ns, "rect");
-    rect.setAttribute("x", String(x));
-    rect.setAttribute("y", String(y));
-    rect.setAttribute("width", String(barW));
-    rect.setAttribute("height", String(Math.max(2, h)));
-    rect.setAttribute("rx", "0");
-    rect.setAttribute("ry", "0");
-    rect.setAttribute("fill", `url(#tbar-grad-${i})`);
-    rect.setAttribute("stroke", theme.stroke);
-    rect.setAttribute("stroke-width", "1.5");
-    rect.setAttribute("class", "tbar");
-    rect.style.setProperty("--tbar-d", `${i * 0.04}s`);
-    rect.dataset.name = item.name;
-    rect.dataset.value = String(item.value);
-    svg.appendChild(rect);
+  const barsGroup = document.createElementNS(ns, "g");
+  barsGroup.setAttribute("class", "shape-chart-bars");
 
+  const appendBarRectsAt = (barYBase) => {
+    mapped.forEach((item, i) => {
+      const slotX = startX + i * (barW + gap);
+      const x = slotX;
+      const h = (item.value / 10) * chartH;
+      const y = barYBase;
+      const theme = getRankTheme(item.value);
+      const rect = document.createElementNS(ns, "rect");
+      rect.setAttribute("x", String(x));
+      rect.setAttribute("y", String(y));
+      rect.setAttribute("width", String(barW));
+      rect.setAttribute("height", String(Math.max(2, h)));
+      rect.setAttribute("rx", "6");
+      rect.setAttribute("ry", "6");
+      rect.setAttribute("fill", `url(#tbar-grad-${i})`);
+      rect.setAttribute("stroke", theme.stroke);
+      rect.setAttribute("stroke-width", "1.5");
+      rect.setAttribute("class", "tbar");
+      rect.style.setProperty("--tbar-d", `${i * 0.04}s`);
+      rect.dataset.name = item.name;
+      rect.dataset.value = String(item.value);
+      barsGroup.appendChild(rect);
+    });
+  };
+
+  if (keyMode) {
+    appendBarRectsAt(chartTop);
+    plotGroup.appendChild(barsGroup);
+  } else {
+    appendBarRectsAt(chartTop);
+    plotGroup.appendChild(barsGroup);
+  }
+
+  const plotWrap = document.querySelector("#shape-chart-container .shape-chart-plot-wrap");
+  if (plotWrap) {
+    const stale = plotWrap.querySelector(".shape-label-row");
+    if (stale) stale.remove();
     if (!keyMode) {
-      const label = document.createElementNS(ns, "text");
-      const lx = slotX + barW / 2;
-      const labelGap = isMobileViz ? 12 : 16;
-      let ly = chartTop - labelGap;
-      label.setAttribute("x", String(lx));
-      label.setAttribute("y", String(ly));
-      label.setAttribute("fill", chartLabelColor);
-      label.setAttribute("font-size", String(isMobileViz ? 11 : 12));
-      label.setAttribute("font-weight", "600");
-      // Anchor at the bar axis and run text away/up from the bar.
-      label.setAttribute("text-anchor", "start");
-      label.setAttribute("class", "tbar-label-vertical");
-      label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
-      label.setAttribute("pointer-events", "none");
-      label.setAttribute("dominant-baseline", "hanging");
-      label.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
-      label.textContent = item.name;
-      svg.appendChild(label);
-
-      // Hard guarantee: keep label bottom above bar top.
-      const maxBottom = chartTop - labelGap;
-      const box = label.getBBox();
-      const overlap = box.y + box.height - maxBottom;
-      if (overlap > 0) {
-        ly -= overlap + 2;
-        label.setAttribute("y", String(ly));
-        label.setAttribute("transform", `rotate(-90 ${lx} ${ly})`);
-      }
+      plotWrap.classList.add("has-html-label-row");
+      const row = document.createElement("div");
+      row.className = "shape-label-row";
+      row.style.setProperty("--shape-label-h", `${CHART_LABEL_SLOT_MIN_H_PX}px`);
+      row.style.setProperty("--shape-label-text-color", chartLabelInk.fill);
+      row.style.setProperty("--shape-label-font-size", `${chartLabelFontSize}px`);
+      mapped.forEach((item, i) => {
+        const cell = document.createElement("div");
+        cell.className = "shape-label-cell";
+        cell.style.setProperty("--tbar-d", `${i * 0.04 + 0.08}s`);
+        const cellLeftPct = ((startX + i * (barW + gap)) / plotW) * 100;
+        const cellWPct = (barW / plotW) * 100;
+        cell.style.left = `${cellLeftPct}%`;
+        cell.style.width = `${cellWPct}%`;
+        const txt = document.createElement("div");
+        txt.className = "shape-label-text";
+        txt.textContent = item.name;
+        cell.appendChild(txt);
+        row.appendChild(cell);
+      });
+      plotWrap.prepend(row);
+    } else {
+      plotWrap.classList.remove("has-html-label-row");
     }
-  });
+  }
+
+  const chartOuter = document.getElementById("shape-chart-container");
+  if (chartOuter) {
+    if (!keyMode) {
+      chartOuter.style.setProperty("--shape-chart-label-max-run", `${Math.round(longestRunPx)}px`);
+      chartOuter.style.setProperty("--shape-chart-label-band", `${Math.round(chartTop)}px`);
+      chartOuter.style.setProperty("--shape-chart-label-slot-min-h", `${CHART_LABEL_SLOT_MIN_H_PX}px`);
+      const tallestBarUserPx =
+        maxRating > 0
+          ? Math.round((maxRating / 10) * chartH)
+          : Math.round(chartH * (n === 0 ? 0.22 : 0.18));
+      chartOuter.style.setProperty("--shape-chart-tallest-bar-px", `${tallestBarUserPx}px`);
+      chartOuter.style.setProperty("--shape-chart-bar-stack-ref", `${Math.round(chartH)}px`);
+    } else {
+      chartOuter.style.removeProperty("--shape-chart-label-max-run");
+      chartOuter.style.removeProperty("--shape-chart-label-band");
+      chartOuter.style.removeProperty("--shape-chart-label-slot-min-h");
+      chartOuter.style.removeProperty("--shape-chart-tallest-bar-px");
+      chartOuter.style.removeProperty("--shape-chart-bar-stack-ref");
+    }
+  }
+
+  if (keyMode) {
+    applyTShapeChartViewBoxFit(svg, plotW, false);
+  } else {
+    svg.setAttribute("preserveAspectRatio", "xMinYMin meet");
+    svg.setAttribute("overflow", "visible");
+  }
 
   fillShapeKeyCard(mapped, keyMode);
   syncShapeVizToggle();
@@ -1820,10 +2177,11 @@ function getExportLayout() {
   const rowH = 19;
   const rowGap = 5;
   if (!keyMode) {
+    const bodyH = getCurrentShapeSvgHeight();
     return {
       totalW: chartW,
-      totalH: VIZ_SVG_H + EXPORT_FOOTER_H,
-      bodyH: VIZ_SVG_H,
+      totalH: bodyH + EXPORT_FOOTER_H,
+      bodyH,
       chartW,
       keyW: 0,
       keyX: 0,
@@ -1839,7 +2197,7 @@ function getExportLayout() {
   const n = mapped.length;
   const keyW = Math.max(225, Math.round(chartW * 0.25));
   const keyContentH = padT + n * rowH + (n - 1) * rowGap + padB;
-  const bodyH = Math.max(VIZ_SVG_H, keyContentH);
+  const bodyH = Math.max(getCurrentShapeSvgHeight(), keyContentH);
   return {
     totalW: chartW + EXPORT_KEY_GAP + keyW,
     totalH: bodyH + EXPORT_FOOTER_H,
@@ -1955,7 +2313,7 @@ function buildExportSvgString() {
   chartClone.setAttribute("x", "0");
   chartClone.setAttribute("y", "0");
   chartClone.setAttribute("width", String(layout.chartW));
-  chartClone.setAttribute("height", String(VIZ_SVG_H));
+  chartClone.setAttribute("height", String(getCurrentShapeSvgHeight()));
   outer.appendChild(chartClone);
   /** @type {any} */
   const keyLayout = layout;
@@ -2172,6 +2530,12 @@ try {
 
 export async function bootstrapTShapedApp() {
   await initThemeToggle();
+  window.addEventListener("hashchange", () => {
+    const h = (location.hash || "").toLowerCase();
+    if ((h === "#light" || h === "#dark") && state.step === 5) {
+      renderVisualization();
+    }
+  });
   if (window.TShapedTippy) TShapedTippy.initThemeToggle();
   document.documentElement.style.setProperty("--global-pulse-scale", "1");
   if (window.TShapedAnim) TShapedAnim.startGlobalPulse();

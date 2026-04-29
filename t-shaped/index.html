@@ -97,7 +97,7 @@
             </button>
             <button
               type="button"
-              class="icon-btn"
+              class="secondary icon-btn"
               data-action="selection-reset"
               data-tippy-content="Clear all selections"
               aria-label="Clear all selections"
@@ -157,7 +157,7 @@
           </label>
           <button
             type="button"
-            class="icon-btn"
+            class="secondary icon-btn"
             data-action="rate-start-over"
             data-tippy-content="Clear all scores"
             aria-label="Clear all scores"
@@ -175,16 +175,31 @@
           <h2 id="shape-result-title">You're a T-Shaped Designer</h2>
           <p class="muted" id="shape-result-sub">
             A T-shaped profile blends one area of deep expertise with broad supporting strengths.
-            <button type="button" class="link-btn" data-action="learn-more-shape">Learn More</button>
+            <button type="button" class="btn-s secondary" data-action="learn-more-shape">Learn More</button>
           </p>
-          <div class="shape-toolbar">
-            <label class="shape-toggle" for="shape-viz-toggle" aria-label="Show Labels or Key"><span class="shape-toggle__label">Labels</span><span class="shape-toggle__track"><input type="checkbox" id="shape-viz-toggle" data-action="shape-viz-toggle" /><span class="shape-toggle__thumb" aria-hidden="true"></span></span><span class="shape-toggle__label">Key</span></label>
-          </div>
-          <div class="shape-viz-outer" id="shape-viz-outer">
-            <div class="viz-wrap">
-              <svg id="t-shape-svg" viewBox="0 0 900 560" role="img" aria-label="Designer shape profile"></svg>
+          <div class="chart-container" id="shape-chart-container">
+            <div class="chart-container__head">
+              <div class="title" id="shape-chart-plot-title"></div>
+              <div class="shape-toolbar">
+                <label class="shape-toggle" for="shape-viz-toggle" aria-label="Show Labels or Key"><span class="shape-toggle__label">Labels</span><span class="shape-toggle__track"><input type="checkbox" id="shape-viz-toggle" data-action="shape-viz-toggle" /><span class="shape-toggle__thumb" aria-hidden="true"></span></span><span class="shape-toggle__label">Key</span></label>
+              </div>
             </div>
-            <aside class="shape-key-card" id="shape-key-card" hidden></aside>
+            <div class="chart-container__row">
+              <div class="column-a">
+                <div class="chart shape-chart-plot-wrap">
+                  <svg
+                    id="t-shape-svg"
+                    viewBox="0 0 900 560"
+                    preserveAspectRatio="xMidYMin meet"
+                    role="img"
+                    aria-label="Designer shape profile"
+                  ></svg>
+                </div>
+              </div>
+              <div class="column-b">
+                <aside class="key-card shape-key-card" id="shape-key-card" hidden></aside>
+              </div>
+            </div>
           </div>
           <div class="shape-email-wrap">
             <label for="shape-email" class="start-name-label">Email (Optional)</label>
@@ -203,7 +218,16 @@
             </p>
           </div>
           <div class="actions">
-            <button data-action="start-over" class="secondary">Start Over</button>
+            <button type="button" data-action="start-over" class="secondary btn-with-icon">
+              <svg class="btn-with-icon__svg" viewBox="0 0 256 256" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M135.1 31c3.9 3.9 3.8 10.3 0 14.1l-14.8 14.7h7.8c46.8 0 85 37.5 85 84.1s-38.2 84.1-85 84.1-85-37.5-85-84.1 4.5-10 10-10 10 4.5 10 10c0 35.3 29 64.1 65 64.1s65-28.8 65-64.1-29-64.1-65-64.1h-7.8l14.8 14.7c3.9 3.9 4 10.2 0 14.1-3.9 3.9-10.2 4-14.1 0l-32.1-31.8c-1.9-1.9-3-4.4-3-7.1s1.1-5.2 3-7.1l32.1-31.8c3.9-3.9 10.3-3.8 14.1 0Z"
+                />
+              </svg>
+              Start Over
+            </button>
             <button data-action="email-files" class="secondary">Email Files (ZIP)</button>
             <button data-action="download-png">Download PNG</button>
             <button data-action="download-jpeg">Download JPEG</button>

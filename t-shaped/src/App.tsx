@@ -105,7 +105,14 @@ export default function App() {
           </section>
 
           <div class="actions side-actions">
-            <button data-action="start-over" class="secondary" type="button">
+            <button data-action="start-over" class="secondary btn-with-icon" type="button">
+              <svg class="btn-with-icon__svg" viewBox="0 0 256 256" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M135.1 31c3.9 3.9 3.8 10.3 0 14.1l-14.8 14.7h7.8c46.8 0 85 37.5 85 84.1s-38.2 84.1-85 84.1-85-37.5-85-84.1 4.5-10 10-10 10 4.5 10 10c0 35.3 29 64.1 65 64.1s65-28.8 65-64.1-29-64.1-65-64.1h-7.8l14.8 14.7c3.9 3.9 4 10.2 0 14.1-3.9 3.9-10.2 4-14.1 0l-32.1-31.8c-1.9-1.9-3-4.4-3-7.1s1.1-5.2 3-7.1l32.1-31.8c3.9-3.9 10.3-3.8 14.1 0Z"
+                />
+              </svg>
               Start Over
             </button>
           </div>

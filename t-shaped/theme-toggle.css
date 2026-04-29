@@ -13,13 +13,29 @@
   --transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
   --width: 85px;
   --height: 30px;
+  --track-bg: #2e83bf;
   width: var(--width);
   height: var(--height);
   position: relative;
   overflow: hidden;
   border-radius: 100px;
-  background: #000; /* Fallback */
+  background: var(--track-bg);
   isolation: isolate;
+  /* Crisp edges on HiDPI / fractional layouts: own compositor layer + stable AA */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Softer glyph/shape edges inside the control (esp. sun/cloud curves on 1× displays). */
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#theme-toggle.toggle-button.is-dark {
+  --track-bg: #1f2234;
+}
+
+#theme-toggle.toggle-button:has(#dark:target) {
+  --track-bg: #1f2234;
 }
 
 /* Logic: Swap which link is on top based on target state */
@@ -47,41 +63,101 @@
   content: "";
   position: absolute;
   inset: 0;
-  box-shadow: inset 0px 1px 4px rgba(0, 0, 0, 0.4);
+  /* Softer inset depth — harsh spreads read jaggy on small rounded rects */
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.26),
+    inset 0 0 1px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.04);
   border-radius: 100px;
   z-index: 5;
   pointer-events: none;
+  transform: translateZ(0);
+}
+
+/* Inner rim painted in active track color: covers opposite-color subpixel seam on rounded edges. */
+#theme-toggle.toggle-button::after {
+  content: "";
+  position: absolute;
+  inset: 0.6px;
+  border-radius: 100px;
+  box-shadow: inset 0 0 0 1px var(--track-bg);
+  pointer-events: none;
+  z-index: 6;
 }
 
 #theme-toggle > .content {
   width: 100%;
   height: 100%;
-  background-color: #2e83bf;
   transition: var(--transition);
   position: relative;
+  border-radius: 100px;
+  overflow: hidden;
+  transform: translate3d(0, 0, 0);
+  /* Curve supersampling: blur-free rounding tends to alias less than overflow clips alone. */
+  clip-path: inset(0 round 100px);
+  background: transparent;
 }
 
-#theme-toggle #dark:target ~ .content,
-#theme-toggle.toggle-button.is-dark > .content { background-color: #1f2234; }
-
-/* Satellite Sizing & Even Padding (3px = ~3.5% width, 10% height) */
-#theme-toggle .satallite {
-  width: 28.23%; /* 24px / 85px */
-  height: 80%; /* 24px / 30px */
+#theme-toggle > .content::before,
+#theme-toggle > .content::after {
+  content: "";
   position: absolute;
-  top: 10%; /* 3px padding */
-  left: 3.53%; /* 3px padding */
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  transform-origin: 50% 50%;
+  transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
+  will-change: transform, opacity;
+}
+
+/* Light/day layer */
+#theme-toggle > .content::before {
+  background: #2e83bf;
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Dark/night layer (slightly inset while inactive to avoid edge peeking) */
+#theme-toggle > .content::after {
+  background: #1f2234;
+  transform: scale(0.99);
+  opacity: 0;
+}
+
+#theme-toggle #dark:target ~ .content::before,
+#theme-toggle.toggle-button.is-dark > .content::before {
+  transform: scale(0.99);
+  opacity: 0;
+}
+
+#theme-toggle #dark:target ~ .content::after,
+#theme-toggle.toggle-button.is-dark > .content::after {
+  transform: scale(1);
+  opacity: 1;
+}
+
+#theme-toggle > .content > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Knob: integer px (85×30 track, 3px inset, 24×24 knob) — avoids subpixel blur from % sizing */
+#theme-toggle .satallite {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
   border-radius: 50%;
   transition: var(--transition);
   z-index: 4;
+  transform: translate3d(0, 0, 0);
 }
 
-/* Dark position calculation: 
-  Total(100%) - Width(28.23%) - RightPadding(3.53%) = 68.24% 
-*/
 #theme-toggle #dark:target ~ .content .satallite,
 #theme-toggle.toggle-button.is-dark .content .satallite {
-  left: 68.24%;
+  left: 58px; /* 85 - 3 - 24 */
 }
 
 #theme-toggle .sun {
@@ -91,7 +167,12 @@
   border-radius: 50%;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(251, 199, 45, 0.4);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 0 8px rgba(251, 199, 45, 0.28);
+  transform: translate3d(0, 0, 0);
+  clip-path: circle(50% at 50% 50%);
 }
 
 #theme-toggle .moon {
@@ -103,13 +184,14 @@
   left: 100%;
   border-radius: 50%;
   transition: var(--transition);
-  transform: rotate(60deg);
+  transform: translate3d(0, 0, 0) rotate(60deg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
 }
 
 #theme-toggle #dark:target ~ .content .moon,
 #theme-toggle.toggle-button.is-dark .content .moon {
   left: 0;
-  transform: rotate(0deg);
+  transform: translate3d(0, 0, 0) rotate(0deg);
 }
 
 /* Interior Moon Details */
@@ -127,6 +209,7 @@
   position: absolute;
   inset: 0;
   transition: var(--transition);
+  transform: translate3d(0, 0, 0);
 }
 
 #theme-toggle .ray {
@@ -134,9 +217,14 @@
   inset: 0;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
+  transform: translate3d(0, 0, 0);
 }
-#theme-toggle .ray1 { transform: scale(1.8); }
-#theme-toggle .ray2 { transform: scale(2.5); }
+#theme-toggle .ray1 {
+  transform: translate3d(0, 0, 0) scale(1.8);
+}
+#theme-toggle .ray2 {
+  transform: translate3d(0, 0, 0) scale(2.5);
+}
 
 #theme-toggle #dark:target ~ .content .rays,
 #theme-toggle.toggle-button.is-dark .content .rays { opacity: 0; }

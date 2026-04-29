@@ -155,19 +155,17 @@
     if (view) {
       g.from(view.querySelectorAll(".card"), {
         opacity: 0,
-        scale: 0.8,
-        rotation: -5,
-        duration: 0.4,
-        ease: "power2.out",
+        y: -10,
+        duration: 0.2,
+        ease: "back.out(1.25)",
         stagger: 0.04,
         clearProps: "all",
       });
       g.from(view.querySelectorAll(".entry-subtle"), {
         opacity: 0,
-        scale: 0.8,
-        rotation: -5,
-        duration: 0.4,
-        ease: "power2.out",
+        y: -10,
+        duration: 0.2,
+        ease: "back.out(1.25)",
         stagger: 0.04,
         clearProps: "all",
       });
@@ -189,10 +187,9 @@
       sideInfo.dataset.gsapIn = "1";
       g.from(sideInfo, {
         opacity: 0,
-        scale: 0.82,
-        rotation: -4,
-        duration: 0.45,
-        ease: "power2.out",
+        y: -10,
+        duration: 0.2,
+        ease: "back.out(1.25)",
         clearProps: "all",
       });
     }
@@ -396,7 +393,9 @@
     if (!g || !svg) return;
     if (reduced()) return;
     const bars = svg.querySelectorAll(".tbar");
-    const labels = svg.querySelectorAll(".tbar-label-vertical");
+    const labels = document.querySelectorAll(
+      "#t-shape-svg .tbar-label-vertical, #shape-chart-container .shape-label-text"
+    );
     bars.forEach((rect) => {
       const d = rect.style.getPropertyValue("--tbar-d") || "0s";
       const sec = parseFloat(d) || 0;
@@ -416,7 +415,10 @@
       );
     });
     labels.forEach((el) => {
-      const d = el.style.getPropertyValue("--tbar-d") || "0s";
+      const d =
+        el.style.getPropertyValue("--tbar-d") ||
+        el.closest(".shape-label-cell")?.style.getPropertyValue("--tbar-d") ||
+        "0s";
       const sec = parseFloat(d) || 0;
       g.fromTo(
         el,

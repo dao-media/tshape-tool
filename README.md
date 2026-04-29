@@ -60,41 +60,110 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
 
 ## Install and Run
 
-### Recommended: Vite app only
+### Prerequisites (macOS and Windows)
 
-From repository root:
+- **Node.js** LTS (e.g. 20.x or newer) and **npm** — install from [https://nodejs.org](https://nodejs.org) and confirm in a terminal:
+  - `node -v`
+  - `npm -v`
+- This repo: **clone** with Git, or **download and unpack** the project ZIP so you have a folder that contains `t-shaped/` and `package.json` at the repo root.
+
+All commands below assume your **current directory is the repository root** (the folder that contains `t-shaped/`). Replace `path/to/...` with your actual project path.
+
+### T-Shaped app (Vite) — macOS (Terminal)
+
+1. Open **Terminal** (e.g. **Spotlight** → “Terminal”, or **iTerm2** if you use it).
+2. Go to the repo:
+   ```bash
+   cd /path/to/Claude\ Code
+   ```
+   (Or drag the folder onto the Terminal window after typing `cd ` to paste the path.)
+3. Install dependencies **inside the app folder** (required once, or after dependency changes):
+   ```bash
+   cd t-shaped
+   npm install
+   ```
+4. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+5. Open the URL Vite prints — typically **[http://localhost:5173](http://localhost:5173)**.
+
+To stop the server, press **Ctrl+C** in that terminal window.
+
+After `t-shaped/node_modules` exists, you can start the dev server **from the repo root** without typing `cd t-shaped` again:
 
 ```bash
-cd t-shaped
-npm install
-npm run dev
+npm run dev:shape
 ```
 
-Open the URL Vite prints (typically [http://localhost:5173](http://localhost:5173)).
+(that script runs `cd t-shaped && npm run dev`; see root `package.json`.)
+
+### T-Shaped app (Vite) — Windows (Command Prompt / PowerShell)
+
+Use **Command Prompt**, **PowerShell**, or **Windows Terminal**. Steps match macOS; only the way you open the shell and `cd` paths differ.
+
+1. Open **PowerShell** or **Command Prompt** (or **Windows Terminal** → choose a PowerShell or Cmd tab).
+2. Change to the repo root (adapt the drive and folder — examples):
+   ```powershell
+   cd C:\Users\YourName\Documents\Projects\Claude Code
+   ```
+   Paths with spaces must be quoted:
+   ```powershell
+   cd "C:\Users\YourName\My Projects\Claude Code"
+   ```
+3. Install and run the app (from **repo root**):
+   ```powershell
+   cd t-shaped
+   npm install
+   npm run dev
+   ```
+4. When Vite is ready, open **[http://localhost:5173](http://localhost:5173)** in your browser.
+
+To stop the server, focus the same window and press **Ctrl+C**. If Windows asks about the firewall for Node.js on first run, allow access for **private networks** if prompted.
+
+**Tip:** On Windows, `cd t-shaped` works the same as on macOS. You can also use forward slashes in `cd` under PowerShell, e.g. `cd C:/Users/.../t-shaped`.
 
 ### Build / serve production output
 
+From the **repository root** (after you have run `npm install` in `t-shaped/` at least once):
+
 ```bash
-# from repository root
 npm run build:shape
 npm run serve
 ```
 
-`serve` hosts `t-shaped/dist`.
+`build:shape` runs the Vite + CSS build for `t-shaped/`; `serve` serves `t-shaped/dist` (uses `npx serve` via the root `package.json` script). If the `serve` command is not found, run `npx serve t-shaped/dist` from the repo root.
+
+You can also build from inside the app:
+
+```bash
+cd t-shaped
+npm run build
+npm run preview
+```
+
+`preview` serves the production build (Vite’s static preview, not the root `serve` script).
 
 ### CSS-only build (Tailwind)
+
+From the **repository root**:
 
 ```bash
 npm run build:css
 ```
 
-Run from repository root (targets `t-shaped/styles.css`), or from `t-shaped/` run `npm run build:css`.
+This compiles `t-shaped/styles.css` → `t-shaped/styles.out.css`. Or, from `t-shaped/`:
+
+```bash
+cd t-shaped
+npm run build:css
+```
 
 > **Note:** Opening `t-shaped/index.html` as a `file://` URL is not supported; the app expects the Vite dev server or a built `dist` tree served over HTTP.
 
 ### Full stack: Netlify dev (frontend + functions)
 
-From repository root:
+From the **repository root** (installs root + function dependencies):
 
 ```bash
 npm install

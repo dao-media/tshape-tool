@@ -43,6 +43,52 @@ export function createExportManager(deps) {
 
   const EXPORT_KEY_GAP = 20;
 
+  const FOOTER_ATTRIBUTION_FS = 16;
+  const FOOTER_CARD_PAD_X = 12;
+  const FOOTER_CARD_PAD_Y = 8;
+  const FOOTER_CARD_RADIUS = 8;
+
+  /**
+   * Measure footer attribution width for SVG/card sizing (matches export font stack intent).
+   * @param {string} text
+   * @param {number} fontPx
+   */
+  function measureFooterAttributionWidthPx(text, fontPx) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return Math.ceil(text.length * fontPx * 0.62);
+    ctx.font = `500 ${fontPx}px "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace`;
+    return Math.ceil(ctx.measureText(text).width);
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
+   * @param {number} r
+   */
+  function canvasRoundRectPath(ctx, x, y, w, h, r) {
+    const rad = Math.min(r, w / 2, h / 2);
+    if (typeof ctx.roundRect === "function") {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, rad);
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + rad, y);
+    ctx.lineTo(x + w - rad, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+    ctx.lineTo(x + w, y + h - rad);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+    ctx.lineTo(x + rad, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+    ctx.lineTo(x, y + rad);
+    ctx.quadraticCurveTo(x, y, x + rad, y);
+    ctx.closePath();
+  }
+
   /** @returns {MappedItem[]} */
   function getShapeMappedForExport() {
     return state.selectedItems
@@ -102,17 +148,6 @@ export function createExportManager(deps) {
     g0.setAttribute("transform", `translate(${layout.keyX},0)`);
     g0.setAttribute("pointer-events", "none");
 
-    const panel = document.createElementNS(ns, "rect");
-    panel.setAttribute("x", "0");
-    panel.setAttribute("y", "0");
-    panel.setAttribute("width", String(layout.keyW));
-    panel.setAttribute("height", String(layout.keyContentH));
-    panel.setAttribute("rx", "8");
-    panel.setAttribute("fill", "#ffffff");
-    panel.setAttribute("stroke", "#d8e0f2");
-    panel.setAttribute("stroke-width", "1");
-    g0.appendChild(panel);
-
     const padL = 10;
     const nameMax = 26;
     const valRight = layout.keyW - padL;
@@ -151,12 +186,32 @@ export function createExportManager(deps) {
     parent.appendChild(g0);
   }
 
-  function appendAttributionText(ns, parent, y) {
+  function appendAttributionText(ns, parent, baselineY) {
+    const tw = measureFooterAttributionWidthPx(EXPORT_ATTRIBUTION, FOOTER_ATTRIBUTION_FS);
+    const cardW = tw + FOOTER_CARD_PAD_X * 2;
+    const cardH = FOOTER_ATTRIBUTION_FS + FOOTER_CARD_PAD_Y * 2;
+    const left = 20;
+    const ascent = FOOTER_ATTRIBUTION_FS * 0.78;
+    const cardTop = baselineY - ascent - FOOTER_CARD_PAD_Y * 0.65;
+
+    const card = document.createElementNS(ns, "rect");
+    card.setAttribute("x", String(left));
+    card.setAttribute("y", String(cardTop));
+    card.setAttribute("width", String(cardW));
+    card.setAttribute("height", String(cardH));
+    card.setAttribute("rx", String(FOOTER_CARD_RADIUS));
+    card.setAttribute("ry", String(FOOTER_CARD_RADIUS));
+    card.setAttribute("fill", "#ffffff");
+    card.setAttribute("stroke", "#e2e8f0");
+    card.setAttribute("stroke-width", "1");
+    card.setAttribute("pointer-events", "none");
+    parent.appendChild(card);
+
     const t = document.createElementNS(ns, "text");
-    t.setAttribute("x", "20");
-    t.setAttribute("y", String(y));
-    t.setAttribute("fill", "rgba(160, 172, 210, 0.92)");
-    t.setAttribute("font-size", "12");
+    t.setAttribute("x", String(left + FOOTER_CARD_PAD_X));
+    t.setAttribute("y", String(baselineY));
+    t.setAttribute("fill", "#64748b");
+    t.setAttribute("font-size", String(FOOTER_ATTRIBUTION_FS));
     t.setAttribute(
       "font-family",
       "\"IBM Plex Mono\", \"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"
@@ -289,8 +344,7 @@ export function createExportManager(deps) {
     parent.appendChild(labelsLayer);
   }
 
-  function buildExportSvgString(opts = {}) {
-    const transparentPng = opts.transparentPng === true;
+  function buildExportSvgString() {
     const svg = document.querySelector("#t-shape-svg");
     if (!svg) return "";
     const layout = getExportLayout();
@@ -313,8 +367,8 @@ export function createExportManager(deps) {
       appendExportLabelsAndTitle(ns, content, chartClone, layout.chartW);
       appendAttributionText(ns, content, layout.bodyH + 22);
       return wrapExportIntoSquare(ns, content, layout.totalW, layout.totalH, {
-        transparentBg: transparentPng,
-        showMainPanel: !transparentPng,
+        transparentBg: true,
+        showMainPanel: false,
       });
     }
 
@@ -343,8 +397,8 @@ export function createExportManager(deps) {
     content.appendChild(keyWrap);
     appendAttributionText(ns, content, layout.bodyH + 62);
     return wrapExportIntoSquare(ns, content, layout.totalW, layout.totalH + 40, {
-      transparentBg: transparentPng,
-      showMainPanel: !transparentPng,
+      transparentBg: true,
+      showMainPanel: false,
     });
   }
 
@@ -424,18 +478,25 @@ export function createExportManager(deps) {
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
-    const dataUrl = type === "jpeg"
-      ? await toJpeg(plotWrap, {
-        cacheBust: true,
-        quality: 0.96,
-        pixelRatio: 3,
-        backgroundColor: "#ffffff",
-      })
-      : await toPng(plotWrap, {
-        cacheBust: true,
-        pixelRatio: 3,
-        backgroundColor: "rgba(0,0,0,0)",
-      });
+    plotWrap.classList.add("tshape-export-snapshot");
+    let dataUrl;
+    try {
+      dataUrl =
+        type === "jpeg"
+          ? await toJpeg(plotWrap, {
+            cacheBust: true,
+            quality: 0.96,
+            pixelRatio: 3,
+            backgroundColor: "#ffffff",
+          })
+          : await toPng(plotWrap, {
+            cacheBust: true,
+            pixelRatio: 3,
+            backgroundColor: "rgba(0,0,0,0)",
+          });
+    } finally {
+      plotWrap.classList.remove("tshape-export-snapshot");
+    }
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -450,7 +511,7 @@ export function createExportManager(deps) {
           }
 
           if (type === "jpeg") {
-            ctx.fillStyle = "#eef2fb";
+            ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
           } else {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -475,12 +536,26 @@ export function createExportManager(deps) {
           const drawY = Math.min(EXPORT_DRAW_TOP_PX, EXPORT_SIZE_PX - EXPORT_BOTTOM_SAFE_PX - drawH);
           ctx.drawImage(img, drawX, drawY, drawW, drawH);
 
-          ctx.fillStyle = "rgba(160, 172, 210, 0.92)";
-          ctx.font =
-            "500 20px \"IBM Plex Mono\", \"JetBrains Mono\", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace";
+          const footerFont =
+            `500 ${FOOTER_ATTRIBUTION_FS}px \"IBM Plex Mono\", \"JetBrains Mono\", ui-monospace, ` +
+            "SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace";
+          ctx.font = footerFont;
           ctx.textAlign = "left";
-          ctx.textBaseline = "alphabetic";
-          ctx.fillText(EXPORT_ATTRIBUTION, 40, EXPORT_SIZE_PX - 34);
+          ctx.textBaseline = "middle";
+          const twInk = ctx.measureText(EXPORT_ATTRIBUTION).width;
+          const cardW = twInk + FOOTER_CARD_PAD_X * 2;
+          const cardH = FOOTER_ATTRIBUTION_FS + FOOTER_CARD_PAD_Y * 2;
+          const footerLeft = 20;
+          const bottomMargin = 24;
+          const cardY = EXPORT_SIZE_PX - bottomMargin - cardH;
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#e2e8f0";
+          ctx.lineWidth = 1;
+          canvasRoundRectPath(ctx, footerLeft, cardY, cardW, cardH, FOOTER_CARD_RADIUS);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = "#64748b";
+          ctx.fillText(EXPORT_ATTRIBUTION, footerLeft + FOOTER_CARD_PAD_X, cardY + cardH / 2);
 
           canvas.toBlob(
             (blob) => {
@@ -504,8 +579,8 @@ export function createExportManager(deps) {
 
   async function createExportFileBundle() {
     const svgStr = buildExportSvgString();
-    const pngSvgStr = buildExportSvgString({ transparentPng: true });
-    if (!svgStr || !pngSvgStr) throw new Error("Could not build export SVG.");
+    if (!svgStr) throw new Error("Could not build export SVG.");
+    const pngSvgStr = svgStr;
     const shapeKey = getDetectedShapeKey();
     const labelsMode = state.shapeVizMode === "labels";
     const [pngBlob, jpegBlob] = await Promise.all(
@@ -538,12 +613,7 @@ export function createExportManager(deps) {
   function downloadRaster(type) {
     const run = (type === "png" || type === "jpeg") && state.shapeVizMode === "labels"
       ? renderLabelsRasterBlobFromDom(type)
-      : renderRasterBlobFromSvgString(
-        type,
-        buildExportSvgString({ transparentPng: type === "png" }),
-        EXPORT_SIZE_PX,
-        EXPORT_SIZE_PX
-      );
+      : renderRasterBlobFromSvgString(type, buildExportSvgString(), EXPORT_SIZE_PX, EXPORT_SIZE_PX);
     return run.then((blob) => {
       const shapeKey = getDetectedShapeKey();
       triggerDownload(URL.createObjectURL(blob), buildExportFilename(type, shapeKey));

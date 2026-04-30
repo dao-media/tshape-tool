@@ -9,54 +9,119 @@ const SHAPE_GUIDE = {
   I: {
     meaning:
       "An I-shaped designer goes very deep in one domain. This shape usually forms when someone has expert-level capability in one specialty and only light coverage in adjacent skills.",
-    roles:
-      "Senior Specialist, Lead Product Designer (domain-heavy), Motion Specialist, Design Systems Specialist, Accessibility Specialist, or Visual Design Specialist on larger teams.",
-    strengths:
-      "Highest depth and craft quality in one lane, faster complex execution in that lane, strong pattern recognition, and high credibility for specialist reviews.",
-    weaknesses:
-      "Can get bottlenecked outside core expertise, lower flexibility in smaller teams, and may need stronger collaboration rituals with cross-functional partners.",
+    roles: [
+      "Senior Specialist",
+      "Lead Product Designer (domain-heavy)",
+      "Motion Specialist",
+      "Design Systems Specialist",
+      "Accessibility Specialist",
+      "Visual Design Specialist on larger teams",
+    ],
+    strengths: [
+      "Highest depth and craft quality in one lane",
+      "Faster complex execution in that lane",
+      "Strong pattern recognition",
+      "High credibility for specialist reviews",
+    ],
+    weaknesses: [
+      "Can get bottlenecked outside core expertise",
+      "Lower flexibility in smaller teams",
+      "May need stronger collaboration rituals with cross-functional partners",
+    ],
   },
   T: {
     meaning:
       "A T-shaped designer combines one strong depth area with broad working knowledge across neighboring disciplines. It is the most common high-performing shape in product teams.",
-    roles:
-      "Product Designer, UX Designer, End-to-End Designer, Design Lead in cross-functional squads, and startup teams where one designer covers discovery through delivery.",
-    strengths:
-      "Strong balance of quality and adaptability, can translate across functions, makes better trade-offs, and keeps delivery moving when context shifts.",
-    weaknesses:
-      "Depth can plateau if spread too thin, broad responsibilities can create overload, and specialist-level craft may lag in highly technical edge cases.",
+    roles: [
+      "Product Designer",
+      "UX Designer",
+      "End-to-End Designer",
+      "Design Lead in cross-functional squads",
+      "Startup teams where one designer covers discovery through delivery",
+    ],
+    strengths: [
+      "Strong balance of quality and adaptability",
+      "Can translate across functions",
+      "Makes better trade-offs",
+      "Keeps delivery moving when context shifts",
+    ],
+    weaknesses: [
+      "Depth can plateau if spread too thin",
+      "Broad responsibilities can create overload",
+      "Specialist-level craft may lag in highly technical edge cases",
+    ],
   },
   Pi: {
     meaning:
       "A Pi-shaped designer has two deep strengths supported by broader capability. This shape is powerful when work requires fluency across two heavy domains.",
-    roles:
-      "Staff Product Designer, UX + Research Hybrid, UI + Design Systems Lead, Product + Brand Crossover, or Design Manager supporting multi-track execution.",
-    strengths:
-      "Can bridge disciplines with fewer handoffs, high leverage across multiple problem types, and strong systems thinking between strategy and execution.",
-    weaknesses:
-      "Prioritization can get difficult, context switching cost is higher, and sustained growth requires intentional focus to avoid being spread across too many tracks.",
+    roles: [
+      "Staff Product Designer",
+      "UX + Research Hybrid",
+      "UI + Design Systems Lead",
+      "Product + Brand Crossover",
+      "Design Manager supporting multi-track execution",
+    ],
+    strengths: [
+      "Can bridge disciplines with fewer handoffs",
+      "High leverage across multiple problem types",
+      "Strong systems thinking between strategy and execution",
+    ],
+    weaknesses: [
+      "Prioritization can get difficult",
+      "Context switching cost is higher",
+      "Sustained growth needs intentional focus to avoid being spread across too many tracks",
+    ],
   },
   M: {
     meaning:
       "An M-shaped designer develops three or more deep peaks with strong breadth. This shape often appears in experienced designers who have built multiple expert chapters.",
-    roles:
-      "Principal Designer, Design Director in hands-on environments, Cross-Product Design Lead, Innovation/Concept Lead, or consultancy-style problem solvers.",
-    strengths:
-      "Excellent for complex ambiguous programs, can mentor across disciplines, strong pattern transfer between domains, and resilient during organizational change.",
-    weaknesses:
-      "Can be overutilized, hard to maintain depth in every peak simultaneously, and role clarity may blur without clear ownership boundaries.",
+    roles: [
+      "Principal Designer",
+      "Design Director in hands-on environments",
+      "Cross-Product Design Lead",
+      "Innovation/Concept Lead",
+      "Consultancy-style problem solver",
+    ],
+    strengths: [
+      "Excellent for complex ambiguous programs",
+      "Can mentor across disciplines",
+      "Strong pattern transfer between domains",
+      "Resilient during organizational change",
+    ],
+    weaknesses: [
+      "Can be overutilized",
+      "Hard to maintain depth in every peak simultaneously",
+      "Role clarity may blur without clear ownership boundaries",
+    ],
   },
   X: {
     meaning:
       "An X-shaped designer shows balanced high capability across many areas, often with leadership and integration ability across product, brand, and delivery.",
-    roles:
-      "Design Lead, Head of Design in lean orgs, Product Design Manager, Fractional Design Partner, or strategic IC roles connecting business and user outcomes.",
-    strengths:
-      "Strong cross-functional leadership, broad decision quality, high adaptability, and reliable execution across the full product lifecycle.",
-    weaknesses:
-      "May lack signature specialist differentiation, broad accountability can create fatigue, and impact depends on clear prioritization and delegation.",
+    roles: [
+      "Design Lead",
+      "Head of Design in lean orgs",
+      "Product Design Manager",
+      "Fractional Design Partner",
+      "Strategic IC roles connecting business and user outcomes",
+    ],
+    strengths: [
+      "Strong cross-functional leadership",
+      "Broad decision quality",
+      "High adaptability",
+      "Reliable execution across the full product lifecycle",
+    ],
+    weaknesses: [
+      "May lack signature specialist differentiation",
+      "Broad accountability can create fatigue",
+      "Impact depends on clear prioritization and delegation",
+    ],
   },
 };
+
+function guideFieldPlain(field) {
+  if (Array.isArray(field)) return field.join("; ");
+  return String(field || "");
+}
 
 function isLikelyEmail(value) {
   if (!value) return false;
@@ -116,9 +181,9 @@ function buildHtmlBody({ firstName, shapeKey, feedbackUrl, guide }) {
         <p style="margin:0 0 12px;">Since you're a <strong>${shapeKey}-shaped designer</strong>, here's some info you may find interesting:</p>
         <div style="margin:16px 0;padding:14px;border-radius:12px;background:#0f1422;border:1px solid #26314d;">
           <p style="margin:0 0 8px;"><strong>What is this shape?</strong> ${guide.meaning}</p>
-          <p style="margin:0 0 8px;"><strong>Where this shape thrives:</strong> ${guide.roles}</p>
-          <p style="margin:0 0 8px;"><strong>Strengths:</strong> ${guide.strengths}</p>
-          <p style="margin:0;"><strong>Watchouts:</strong> ${guide.weaknesses}</p>
+          <p style="margin:0 0 8px;"><strong>Where this shape thrives:</strong> ${guideFieldPlain(guide.roles)}</p>
+          <p style="margin:0 0 8px;"><strong>Strengths:</strong> ${guideFieldPlain(guide.strengths)}</p>
+          <p style="margin:0;"><strong>Blind spots:</strong> ${guideFieldPlain(guide.weaknesses)}</p>
         </div>
         <p style="margin:0 0 12px;">Again, thanks for using T-Shaped. Your files are attached to this email as a zip file.</p>
         <p style="margin:0 0 18px;">If you have any questions or issues, reach out to Dane at <a style="color:#cfe0ff;" href="mailto:hello@daneoleary.com">hello@daneoleary.com</a>. Want to provide feedback? <a style="color:#cfe0ff;" href="${feedbackUrl}" target="_blank" rel="noopener noreferrer">Click here</a>.</p>
@@ -184,9 +249,9 @@ exports.handler = async (event) => {
       `Since you're a ${shapeKey}-shaped designer, here's some info you may find interesting:`,
       "",
       `What is this shape? ${guide.meaning}`,
-      `Where this shape thrives: ${guide.roles}`,
-      `Strengths: ${guide.strengths}`,
-      `Watchouts: ${guide.weaknesses}`,
+      `Where this shape thrives: ${guideFieldPlain(guide.roles)}`,
+      `Strengths: ${guideFieldPlain(guide.strengths)}`,
+      `Blind spots: ${guideFieldPlain(guide.weaknesses)}`,
       "",
       "Again, thanks for using T-Shaped. Your files are attached to this email as a zip file.",
       "",

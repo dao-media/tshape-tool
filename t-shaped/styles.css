@@ -668,11 +668,17 @@ body:not(.dark) .shape-insight-card {
   box-shadow: 0 8px 18px rgba(29, 42, 73, 0.1);
 }
 
-body:not(.dark) .shape-insight-card h3 {
+body:not(.dark) .shape-insight-card__inner .guide-card-title {
   color: #1f2a44;
 }
 
-body:not(.dark) .shape-insight-card p.body-normal {
+body:not(.dark) .shape-insight-card__inner .body-normal {
+  color: #1f2a44;
+}
+
+body:not(.dark) .shape-insight-pill {
+  border-color: rgba(30, 45, 80, 0.15);
+  background: rgba(55, 78, 124, 0.08);
   color: #1f2a44;
 }
 
@@ -1897,6 +1903,14 @@ body:not(.dark) .thermo {
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
+/* Labels-mode raster export: strip chart card border/background for clean PNG/JPEG. */
+.chart.shape-chart-plot-wrap.tshape-export-snapshot,
+.chart-container .chart.tshape-export-snapshot {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 .chart-container:not(.chart-container--key) .chart {
   flex: 0 1 auto;
   min-height: min-content;
@@ -1956,8 +1970,12 @@ body:not(.dark) .thermo {
   gap: 32px;
 }
 
-/* Labels mode: keep a fixed gap between plot area and email capture block. */
-.shape-results-stack .card:has(.shape-chart-plot-wrap.has-html-label-row) .shape-email-wrap {
+.shape-results-stack .card .shape-email-wrap {
+  margin-top: 1.75rem;
+}
+
+/* Labels mode: wider gap between plot area and the action/export row below it. */
+.shape-results-stack .card:has(.shape-chart-plot-wrap.has-html-label-row) .actions {
   margin-top: 48px;
 }
 
@@ -2109,11 +2127,15 @@ body:not(.dark) .thermo {
   max-width: 100%;
 }
 
+/* Section head: must read above .guide-card-title (1.68rem) inside cards */
 h2.shape-insights-heading {
   margin: 0 0 0.45rem;
-  font: 600 clamp(1.1rem, 2vw, 1.4rem) / 1.25 var(--font-main);
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: clamp(1.95rem, 0.75rem + 2.6vw, 2.5rem);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
   color: #e6edff;
-  letter-spacing: -0.02em;
 }
 
 .shape-insights-subtitle {
@@ -2129,23 +2151,81 @@ h2.shape-insights-heading {
 }
 
 .shape-insight-card {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.2rem 1.25rem;
+  padding: 0;
+  overflow: hidden;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
 }
 
-.shape-insight-card h3 {
-  margin: 0 0 0.4rem;
-  font: 600 0.95rem / 1.3 var(--font-main);
-  color: #eaf0ff;
-  letter-spacing: 0.01em;
+.shape-insight-card__media {
+  display: block;
+  width: 100%;
+  height: 248px;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(15, 20, 35, 0.45);
 }
 
-.shape-insight-card p.body-normal {
+.shape-insight-card__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 248px;
+  object-fit: cover;
+  vertical-align: top;
+}
+
+.shape-insight-card__inner {
+  padding: 1.2rem 1.25rem;
+}
+
+/* Titles ≥ 1.68× body-normal (1rem) for guide interior cards */
+.shape-insight-card__inner .guide-card-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 1.68rem;
+  line-height: 1.26;
+  letter-spacing: -0.02em;
+  color: #eaf0ff;
+}
+
+.shape-insight-card__inner .body-normal {
   margin: 0;
   color: #b8c4e8;
+}
+
+.shape-insight-card__pill-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem 0.55rem;
+}
+
+.shape-insight-card__pill-list li {
+  margin: 0;
+}
+
+.shape-insight-pill {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 0.32rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #c8d4f5;
+  font-family: var(--font-main);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 /* WCAG-focused keyboard visibility and interactive spacing */

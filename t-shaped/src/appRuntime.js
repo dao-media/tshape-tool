@@ -269,54 +269,138 @@ const SHAPE_GUIDE = {
   I: {
     meaning:
       "An I-shaped designer goes very deep in one domain. This shape usually forms when someone has expert-level capability in one specialty and only light coverage in adjacent skills.",
-    roles:
-      "Senior Specialist, Lead Product Designer (domain-heavy), Motion Specialist, Design Systems Specialist, Accessibility Specialist, or Visual Design Specialist on larger teams.",
-    strengths:
-      "Highest depth and craft quality in one lane, faster complex execution in that lane, strong pattern recognition, and high credibility for specialist reviews.",
-    weaknesses:
-      "Can get bottlenecked outside core expertise, lower flexibility in smaller teams, and may need stronger collaboration rituals with cross-functional partners.",
+    roles: [
+      "Senior Specialist",
+      "Lead Product Designer (domain-heavy)",
+      "Motion Specialist",
+      "Design Systems Specialist",
+      "Accessibility Specialist",
+      "Visual Design Specialist on larger teams",
+    ],
+    strengths: [
+      "Highest depth and craft quality in one lane",
+      "Faster complex execution in that lane",
+      "Strong pattern recognition",
+      "High credibility for specialist reviews",
+    ],
+    weaknesses: [
+      "Can get bottlenecked outside core expertise",
+      "Lower flexibility in smaller teams",
+      "May need stronger collaboration rituals with cross-functional partners",
+    ],
   },
   T: {
     meaning:
       "A T-shaped designer combines one strong depth area with broad working knowledge across neighboring disciplines. It is the most common high-performing shape in product teams.",
-    roles:
-      "Product Designer, UX Designer, End-to-End Designer, Design Lead in cross-functional squads, and startup teams where one designer covers discovery through delivery.",
-    strengths:
-      "Strong balance of quality and adaptability, can translate across functions, makes better trade-offs, and keeps delivery moving when context shifts.",
-    weaknesses:
-      "Depth can plateau if spread too thin, broad responsibilities can create overload, and specialist-level craft may lag in highly technical edge cases.",
+    roles: [
+      "Product Designer",
+      "UX Designer",
+      "End-to-End Designer",
+      "Design Lead in cross-functional squads",
+      "Startup teams where one designer covers discovery through delivery",
+    ],
+    strengths: [
+      "Strong balance of quality and adaptability",
+      "Can translate across functions",
+      "Makes better trade-offs",
+      "Keeps delivery moving when context shifts",
+    ],
+    weaknesses: [
+      "Depth can plateau if spread too thin",
+      "Broad responsibilities can create overload",
+      "Specialist-level craft may lag in highly technical edge cases",
+    ],
   },
   Pi: {
     meaning:
       "A Pi-shaped designer has two deep strengths supported by broader capability. This shape is powerful when work requires fluency across two heavy domains.",
-    roles:
-      "Staff Product Designer, UX + Research Hybrid, UI + Design Systems Lead, Product + Brand Crossover, or Design Manager supporting multi-track execution.",
-    strengths:
-      "Can bridge disciplines with fewer handoffs, high leverage across multiple problem types, and strong systems thinking between strategy and execution.",
-    weaknesses:
-      "Prioritization can get difficult, context switching cost is higher, and sustained growth requires intentional focus to avoid being spread across too many tracks.",
+    roles: [
+      "Staff Product Designer",
+      "UX + Research Hybrid",
+      "UI + Design Systems Lead",
+      "Product + Brand Crossover",
+      "Design Manager supporting multi-track execution",
+    ],
+    strengths: [
+      "Can bridge disciplines with fewer handoffs",
+      "High leverage across multiple problem types",
+      "Strong systems thinking between strategy and execution",
+    ],
+    weaknesses: [
+      "Prioritization can get difficult",
+      "Context switching cost is higher",
+      "Sustained growth needs intentional focus to avoid being spread across too many tracks",
+    ],
   },
   M: {
     meaning:
       "An M-shaped designer develops three or more deep peaks with strong breadth. This shape often appears in experienced designers who have built multiple expert chapters.",
-    roles:
-      "Principal Designer, Design Director in hands-on environments, Cross-Product Design Lead, Innovation/Concept Lead, or consultancy-style problem solvers.",
-    strengths:
-      "Excellent for complex ambiguous programs, can mentor across disciplines, strong pattern transfer between domains, and resilient during organizational change.",
-    weaknesses:
-      "Can be overutilized, hard to maintain depth in every peak simultaneously, and role clarity may blur without clear ownership boundaries.",
+    roles: [
+      "Principal Designer",
+      "Design Director in hands-on environments",
+      "Cross-Product Design Lead",
+      "Innovation/Concept Lead",
+      "Consultancy-style problem solver",
+    ],
+    strengths: [
+      "Excellent for complex ambiguous programs",
+      "Can mentor across disciplines",
+      "Strong pattern transfer between domains",
+      "Resilient during organizational change",
+    ],
+    weaknesses: [
+      "Can be overutilized",
+      "Hard to maintain depth in every peak simultaneously",
+      "Role clarity may blur without clear ownership boundaries",
+    ],
   },
   X: {
     meaning:
       "An X-shaped designer shows balanced high capability across many areas, often with leadership and integration ability across product, brand, and delivery.",
-    roles:
-      "Design Lead, Head of Design in lean orgs, Product Design Manager, Fractional Design Partner, or strategic IC roles connecting business and user outcomes.",
-    strengths:
-      "Strong cross-functional leadership, broad decision quality, high adaptability, and reliable execution across the full product lifecycle.",
-    weaknesses:
-      "May lack signature specialist differentiation, broad accountability can create fatigue, and impact depends on clear prioritization and delegation.",
+    roles: [
+      "Design Lead",
+      "Head of Design in lean orgs",
+      "Product Design Manager",
+      "Fractional Design Partner",
+      "Strategic IC roles connecting business and user outcomes",
+    ],
+    strengths: [
+      "Strong cross-functional leadership",
+      "Broad decision quality",
+      "High adaptability",
+      "Reliable execution across the full product lifecycle",
+    ],
+    weaknesses: [
+      "May lack signature specialist differentiation",
+      "Broad accountability can create fatigue",
+      "Impact depends on clear prioritization and delegation",
+    ],
   },
 };
+
+/** Public default art lives under `public/shape-guide/sections/`. Override per-shape via `guideCardImages` on a guide entry. */
+const GUIDE_SECTION_FILES = /** @type {const} */ ({
+  meaning: "meaning",
+  roles: "roles",
+  strengths: "strengths",
+  weaknesses: "watchouts",
+});
+
+/**
+ * Hero image URL for a shape-guide interior card (`248px`-tall media strip).
+ * @param {keyof typeof SHAPE_GUIDE} shape
+ * @param {keyof typeof GUIDE_SECTION_FILES} section
+ */
+function guideFeatureImageSrc(shape, section) {
+  const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
+  const overrides = guide.guideCardImages;
+  const o = overrides?.[section];
+  if (typeof o === "string" && o.trim()) return o.trim();
+  const baseUrl = import.meta.env.BASE_URL ?? "/";
+  const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+  const file = GUIDE_SECTION_FILES[section];
+  return `${base}shape-guide/sections/${file}.svg`;
+}
 
 function getCurrentShapeSvgWidth() {
   const svg = document.querySelector("#t-shape-svg");
@@ -1105,9 +1189,9 @@ function buildEmailBody(shapeKey) {
     `Since you're a ${shapeKey}-shaped designer, here's some info you may find interesting:`,
     "",
     `What is this shape? ${escapeForEmailLine(guide.meaning)}`,
-    `Where this shape thrives: ${escapeForEmailLine(guide.roles)}`,
-    `Strengths: ${escapeForEmailLine(guide.strengths)}`,
-    `Watchouts: ${escapeForEmailLine(guide.weaknesses)}`,
+    `Where this shape thrives: ${escapeForEmailLine(guide.roles.join("; "))}`,
+    `Strengths: ${escapeForEmailLine(guide.strengths.join("; "))}`,
+    `Blind spots: ${escapeForEmailLine(guide.weaknesses.join("; "))}`,
     "",
     "Again, thanks for using T-Shaped. Your files are attached to this email as a zip file.",
     "",
@@ -1742,6 +1826,19 @@ function top2AreSeparated(scores) {
   return Math.abs(a.i - b.i) >= 2;
 }
 
+/**
+ * Render pill list for Roles / Strengths / Blind spots guide cards (`14px` pill text vs `16px` body).
+ * @param {readonly string[]} parts
+ */
+function renderShapeGuidePillsHtml(parts) {
+  const lis = parts
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((text) => `<li><span class="shape-insight-pill">${escapeHtml(text)}</span></li>`)
+    .join("");
+  return `<ul class="shape-insight-card__pill-list">${lis}</ul>`;
+}
+
 function renderShapeInsights(shape) {
   const host = document.getElementById("shape-insights");
   if (!host) return;
@@ -1751,20 +1848,72 @@ function renderShapeInsights(shape) {
     <p class="body-normal shape-insights-subtitle">Insight into what the shape of your skills means.</p>
     <div class="shape-insights-grid stagger-group">
       <article class="shape-insight-card">
-        <h3>What is this shape?</h3>
-        <p class="body-normal">${escapeHtml(guide.meaning)}</p>
+        <div class="shape-insight-card__media">
+          <img
+            class="shape-insight-card__img"
+            src="${escapeHtml(guideFeatureImageSrc(shape, "meaning"))}"
+            alt=""
+            width="800"
+            height="248"
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
+        <div class="shape-insight-card__inner">
+          <h3 class="guide-card-title">What is this shape?</h3>
+          <p class="body-normal">${escapeHtml(guide.meaning)}</p>
+        </div>
       </article>
       <article class="shape-insight-card">
-        <h3>Where this shape thrives</h3>
-        <p class="body-normal">${escapeHtml(guide.roles)}</p>
+        <div class="shape-insight-card__media">
+          <img
+            class="shape-insight-card__img"
+            src="${escapeHtml(guideFeatureImageSrc(shape, "roles"))}"
+            alt=""
+            width="800"
+            height="248"
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
+        <div class="shape-insight-card__inner">
+          <h3 class="guide-card-title">Where this shape thrives</h3>
+          ${renderShapeGuidePillsHtml(guide.roles)}
+        </div>
       </article>
       <article class="shape-insight-card">
-        <h3>Strengths</h3>
-        <p class="body-normal">${escapeHtml(guide.strengths)}</p>
+        <div class="shape-insight-card__media">
+          <img
+            class="shape-insight-card__img"
+            src="${escapeHtml(guideFeatureImageSrc(shape, "strengths"))}"
+            alt=""
+            width="800"
+            height="248"
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
+        <div class="shape-insight-card__inner">
+          <h3 class="guide-card-title">Strengths</h3>
+          ${renderShapeGuidePillsHtml(guide.strengths)}
+        </div>
       </article>
       <article class="shape-insight-card">
-        <h3>Watchouts</h3>
-        <p class="body-normal">${escapeHtml(guide.weaknesses)}</p>
+        <div class="shape-insight-card__media">
+          <img
+            class="shape-insight-card__img"
+            src="${escapeHtml(guideFeatureImageSrc(shape, "weaknesses"))}"
+            alt=""
+            width="800"
+            height="248"
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
+        <div class="shape-insight-card__inner">
+          <h3 class="guide-card-title">Blind spots</h3>
+          ${renderShapeGuidePillsHtml(guide.weaknesses)}
+        </div>
       </article>
     </div>
   `;

@@ -2351,6 +2351,24 @@ a.shape-insight-pill[data-tippy-content] {
   min-height: 15px;
 }
 
+/* Traced stroke segments (pathLength=100 → dash 0…100 along each axis) */
+.shape-insight-pill__arrow-seg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.35;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+@keyframes arrow-seg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Mobile / touch / reduced-motion: arrow always visible; no slide animation */
 @media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
   .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__guide-row {
@@ -2367,19 +2385,26 @@ a.shape-insight-pill[data-tippy-content] {
     transform: translate3d(0, 0, 0) scale(1);
     transition: none;
   }
+
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-seg {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
 }
 
 @keyframes shape-guide-arrow-exit {
+  /* Full arrow glides up-right and fades, then snaps to stash (no stroke “un-draw”) */
   0% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
   }
-  62% {
+  /* ~77% (was ~68%) so opacity ramps a touch slower across the glide */
+  77% {
     opacity: 0;
     transform: translate3d(0.56em, -0.58em, 0) scale(1);
   }
-  /* Hidden snap — rest at down-left stash for the next hover in */
-  63%,
+  78%,
   100% {
     opacity: 0;
     transform: translate3d(-0.5em, 0.46em, 0) scale(0.92);
@@ -2387,8 +2412,8 @@ a.shape-insight-pill[data-tippy-content] {
 }
 
 /*
- * Desktop: stash down-left (−x, +y). Enter :hover → transitions to rest (up-right from stash).
- * Leave: `--exit-phase` + JS runs keyframes — glide up-right, then snap stash + reset class.
+ * Desktop: stash down-left. Hover: svg eases in + strokes trace (shaft → head). Leave: full arrow
+ * rides svg UR + stash (exit-phase via JS); strokes stay drawn until reset on idle.
  */
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .shape-insight-pill.shape-insight-pill--guide-link {
@@ -2416,13 +2441,46 @@ a.shape-insight-pill[data-tippy-content] {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
     transition:
-      opacity 0.42s cubic-bezier(0.2, 0.85, 0.35, 1),
-      transform 0.55s cubic-bezier(0.34, 1.45, 0.52, 1);
+      opacity 0.36s cubic-bezier(0.2, 0.85, 0.35, 1),
+      transform 0.52s cubic-bezier(0.34, 1.45, 0.52, 1);
+  }
+
+  /* Draw sequence: diagonal shaft, horizontal head, vertical head */
+  .shape-insight-pill.shape-insight-pill--guide-link:hover
+    .shape-insight-pill__arrow-svg:not(.shape-insight-pill__arrow-svg--exit-phase)
+    .shape-insight-pill__arrow-seg--shaft {
+    animation: arrow-seg-draw 0.34s cubic-bezier(0.45, 0, 0.2, 1) forwards;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link:hover
+    .shape-insight-pill__arrow-svg:not(.shape-insight-pill__arrow-svg--exit-phase)
+    .shape-insight-pill__arrow-seg--head-h {
+    animation: arrow-seg-draw 0.22s cubic-bezier(0.45, 0, 0.2, 1) 0.2s forwards;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link:hover
+    .shape-insight-pill__arrow-svg:not(.shape-insight-pill__arrow-svg--exit-phase)
+    .shape-insight-pill__arrow-seg--head-v {
+    animation: arrow-seg-draw 0.22s cubic-bezier(0.45, 0, 0.2, 1) 0.36s forwards;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link
+    .shape-insight-pill__arrow-svg.shape-insight-pill__arrow-svg--exit-phase
+    .shape-insight-pill__arrow-seg {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 
   .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-svg.shape-insight-pill__arrow-svg--exit-phase {
-    animation: shape-guide-arrow-exit 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation: shape-guide-arrow-exit 0.52s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     transition: none;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link:not(:hover)
+    .shape-insight-pill__arrow-svg:not(.shape-insight-pill__arrow-svg--exit-phase)
+    .shape-insight-pill__arrow-seg {
+    animation: none;
+    stroke-dashoffset: 100;
   }
 }
 

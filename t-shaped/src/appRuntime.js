@@ -1850,8 +1850,11 @@ function renderShapeGuidePillsHtml(parts, pillModifierClass = "") {
   return `<ul class="shape-insight-card__pill-list">${lis}</ul>`;
 }
 
-/** Northeast “open external” icon: thick stroke + short corner arms for a clear arrowhead (sized via CSS ~1cap). */
-const GUIDE_TOOL_EXTERNAL_ARROW_SVG = `<svg class="shape-insight-pill__arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke="currentColor" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" d="M4 16 16 4M16 4H9M16 4v7"/></svg>`;
+/**
+ * Northeast open-external glyph: separate segments so each stroke traces on (dashoffset ↓).
+ * pathLength normalized to 100 for CSS stroke-dasharray.
+ */
+const GUIDE_TOOL_EXTERNAL_ARROW_SVG = `<svg class="shape-insight-pill__arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path class="shape-insight-pill__arrow-seg shape-insight-pill__arrow-seg--shaft" pathLength="100" d="M4 16 L16 4"/><path class="shape-insight-pill__arrow-seg shape-insight-pill__arrow-seg--head-h" pathLength="100" d="M16 4 L9 4"/><path class="shape-insight-pill__arrow-seg shape-insight-pill__arrow-seg--head-v" pathLength="100" d="M16 4 L16 11"/></svg>`;
 
 /** Escape ampersands for inclusion in quoted HTML attributes (href). */
 function escapeHrefAmp(url) {
@@ -1866,7 +1869,7 @@ const GUIDE_ARROW_EXIT_SEQ_MQ =
 const GUIDE_ARROW_EXIT_PHASE_CLASS = "shape-insight-pill__arrow-svg--exit-phase";
 
 /**
- * Plays `shape-guide-arrow-exit` on mouseleave (UR escape → snap stash); `:hover`-off snaps without it.
+ * Plays `shape-guide-arrow-exit` on mouseleave (full arrow UR escape → snap stash); `:hover`-off snaps without it.
  */
 function bindGuideArrowExitSequence(scope) {
   if (!scope || !GUIDE_ARROW_EXIT_SEQ_MQ?.matches) return;

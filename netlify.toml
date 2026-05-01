@@ -4,7 +4,8 @@
 # (or disable “Use Next.js Runtime” for this site).
 [build]
   publish = "t-shaped/dist"
-  command = "cd t-shaped && npm ci && npm run build"
+  # Root npm ci: Netlify Functions deps; t-shaped: Vite app
+  command = "npm ci && cd t-shaped && npm ci && npm run build"
   functions = "netlify/functions"
 
 [build.environment]

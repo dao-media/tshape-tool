@@ -81,6 +81,10 @@ body {
   color: var(--text);
   font-family: var(--font-main);
   line-height: 1.55;
+  /* Theme switch: smooth ink + base fill (gradients still step; avoids “hard pop”) */
+  transition:
+    background-color 0.55s cubic-bezier(0.23, 1, 0.32, 1),
+    color 0.42s ease;
 }
 
 body:not(.dark) {
@@ -2572,12 +2576,15 @@ a.shape-insight-pill[data-tippy-content] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 

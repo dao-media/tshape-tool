@@ -1,5 +1,11 @@
 import { initThemeToggle } from "./theme-toggle.js";
 import { createExportManager } from "./exportRuntime.js";
+import {
+  NEW_PROMISING_BY_SKILL,
+  TOOLS_TO_KNOW_BY_SKILL,
+  buildToolSectionsByFirstSkill,
+} from "./guideToolsData.js";
+import { resolveToolWebsiteUrl } from "./guideToolUrls.js";
 
 const DATA = {
   categories: [
@@ -384,6 +390,8 @@ const GUIDE_SECTION_FILES = /** @type {const} */ ({
   roles: "roles",
   strengths: "strengths",
   weaknesses: "watchouts",
+  toolsKnow: "tools-know",
+  newPromising: "new-promising",
 });
 
 /**
@@ -1829,20 +1837,128 @@ function top2AreSeparated(scores) {
 /**
  * Render pill list for Roles / Strengths / Blind spots guide cards (`14px` pill text vs `16px` body).
  * @param {readonly string[]} parts
+ * @param {string} [pillModifierClass] e.g. `shape-insight-pill--tools-know`
  */
-function renderShapeGuidePillsHtml(parts) {
+function renderShapeGuidePillsHtml(parts, pillModifierClass = "") {
+  const mod = pillModifierClass.trim();
+  const spanClass = mod ? `shape-insight-pill ${mod}` : "shape-insight-pill";
   const lis = parts
     .map((t) => t.trim())
     .filter(Boolean)
-    .map((text) => `<li><span class="shape-insight-pill">${escapeHtml(text)}</span></li>`)
+    .map((text) => `<li><span class="${spanClass}">${escapeHtml(text)}</span></li>`)
     .join("");
   return `<ul class="shape-insight-card__pill-list">${lis}</ul>`;
 }
 
-function renderShapeInsights(shape) {
+/** Northeast “open external” icon: thick stroke + short corner arms for a clear arrowhead (sized via CSS ~1cap). */
+const GUIDE_TOOL_EXTERNAL_ARROW_SVG = `<svg class="shape-insight-pill__arrow-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke="currentColor" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" d="M4 16 16 4M16 4H9M16 4v7"/></svg>`;
+
+/** Escape ampersands for inclusion in quoted HTML attributes (href). */
+function escapeHrefAmp(url) {
+  return String(url).replace(/&/g, "&amp;");
+}
+
+const GUIDE_ARROW_EXIT_SEQ_MQ =
+  typeof window.matchMedia === "function"
+    ? window.matchMedia("(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)")
+    : null;
+
+const GUIDE_ARROW_EXIT_PHASE_CLASS = "shape-insight-pill__arrow-svg--exit-phase";
+
+/**
+ * Plays `shape-guide-arrow-exit` on mouseleave (UR escape → snap stash); `:hover`-off snaps without it.
+ */
+function bindGuideArrowExitSequence(scope) {
+  if (!scope || !GUIDE_ARROW_EXIT_SEQ_MQ?.matches) return;
+
+  scope.querySelectorAll("a.shape-insight-pill--guide-link").forEach((pill) => {
+    if (pill.dataset.guideArrowExitSeqBound === "1") return;
+    pill.dataset.guideArrowExitSeqBound = "1";
+    /** @type {((ev: AnimationEvent) => void) | null} */
+    let onExitEnd = null;
+
+    pill.addEventListener("mouseenter", () => {
+      const svg = pill.querySelector(".shape-insight-pill__arrow-svg");
+      if (!svg) return;
+      svg.classList.remove(GUIDE_ARROW_EXIT_PHASE_CLASS);
+      if (onExitEnd) {
+        svg.removeEventListener("animationend", onExitEnd);
+        onExitEnd = null;
+      }
+    });
+
+    pill.addEventListener("mouseleave", () => {
+      if (!GUIDE_ARROW_EXIT_SEQ_MQ.matches) return;
+      const svg = pill.querySelector(".shape-insight-pill__arrow-svg");
+      if (!svg) return;
+      if (onExitEnd) {
+        svg.removeEventListener("animationend", onExitEnd);
+        onExitEnd = null;
+      }
+      svg.classList.remove(GUIDE_ARROW_EXIT_PHASE_CLASS);
+      void svg.offsetWidth;
+      svg.classList.add(GUIDE_ARROW_EXIT_PHASE_CLASS);
+      onExitEnd = (ev) => {
+        if (ev.target !== svg || ev.animationName !== "shape-guide-arrow-exit") return;
+        svg.removeEventListener("animationend", onExitEnd);
+        onExitEnd = null;
+        svg.classList.remove(GUIDE_ARROW_EXIT_PHASE_CLASS);
+      };
+      svg.addEventListener("animationend", onExitEnd);
+    });
+  });
+}
+
+/**
+ * Sectioned guide tool pills: one placement per label; tooltip lists all linked skills among selections.
+ * Each skill block: leading divider (same line as previous block’s trailing edge), label + pills.
+ */
+function renderInsightToolSections(sections, pillModifierClass, emptyFallback, groupIdPrefix) {
+  const prefix = /^[a-z0-9-]+$/i.test(groupIdPrefix) ? groupIdPrefix : "tools";
+  const mod = pillModifierClass.trim();
+  const spanClass = mod ? `shape-insight-pill ${mod}` : "shape-insight-pill";
+
+  let count = 0;
+  sections.forEach((s) => {
+    count += s.tools.length;
+  });
+  if (count === 0) {
+    return `<p class="body-normal muted shape-insight-tools-empty">${escapeHtml(emptyFallback)}</p>`;
+  }
+
+  let html = `<div class="shape-insight-tool-groups">`;
+  sections.forEach((sec, idx) => {
+    const headingId = `shape-tool-${prefix}-${idx}`;
+    html += `
+      <section class="shape-insight-tool-group" aria-labelledby="${headingId}">
+        <hr class="shape-insight-tool-group__rule" aria-hidden="true" />
+        <div class="shape-insight-tool-group__body">
+          <div class="shape-insight-tool-group__label" id="${headingId}">${escapeHtml(sec.skill)}</div>
+          <ul class="shape-insight-card__pill-list">
+          ${sec.tools
+            .map((tool) => {
+              const tip = tool.sources.join(" · ");
+              const url = resolveToolWebsiteUrl(tool.label);
+              if (url) {
+                return `<li><a class="${spanClass} shape-insight-pill--guide-link" href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${escapeHtml(tip)}" aria-label="${escapeHtml(`${tool.label} website (opens in new tab)`)}"><span class="shape-insight-pill__guide-row"><span class="shape-insight-pill__label">${escapeHtml(tool.label)}</span><span class="shape-insight-pill__arrow">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
+              }
+              return `<li><span class="${spanClass}" data-tippy-content="${escapeHtml(tip)}">${escapeHtml(tool.label)}</span></li>`;
+            })
+            .join("")}
+          </ul>
+        </div>
+      </section>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderShapeInsights(shape, selectedSkills = []) {
   const host = document.getElementById("shape-insights");
   if (!host) return;
   const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
+  const sectionsToolsKnow = buildToolSectionsByFirstSkill(selectedSkills, TOOLS_TO_KNOW_BY_SKILL);
+  const sectionsNewPromising = buildToolSectionsByFirstSkill(selectedSkills, NEW_PROMISING_BY_SKILL);
   host.innerHTML = `
     <h2 class="shape-insights-heading">What does being ${shape}-shaped mean?</h2>
     <p class="body-normal shape-insights-subtitle">Insight into what the shape of your skills means.</p>
@@ -1860,7 +1976,9 @@ function renderShapeInsights(shape) {
           />
         </div>
         <div class="shape-insight-card__inner">
-          <h3 class="guide-card-title">What is this shape?</h3>
+          <div class="shape-insight-card__title-box">
+            <h3 class="guide-card-title">What is this shape?</h3>
+          </div>
           <p class="body-normal">${escapeHtml(guide.meaning)}</p>
         </div>
       </article>
@@ -1877,7 +1995,9 @@ function renderShapeInsights(shape) {
           />
         </div>
         <div class="shape-insight-card__inner">
-          <h3 class="guide-card-title">Where this shape thrives</h3>
+          <div class="shape-insight-card__title-box">
+            <h3 class="guide-card-title">Where this shape thrives</h3>
+          </div>
           ${renderShapeGuidePillsHtml(guide.roles)}
         </div>
       </article>
@@ -1894,7 +2014,9 @@ function renderShapeInsights(shape) {
           />
         </div>
         <div class="shape-insight-card__inner">
-          <h3 class="guide-card-title">Strengths</h3>
+          <div class="shape-insight-card__title-box">
+            <h3 class="guide-card-title">Strengths</h3>
+          </div>
           ${renderShapeGuidePillsHtml(guide.strengths)}
         </div>
       </article>
@@ -1911,8 +2033,64 @@ function renderShapeInsights(shape) {
           />
         </div>
         <div class="shape-insight-card__inner">
-          <h3 class="guide-card-title">Blind spots</h3>
+          <div class="shape-insight-card__title-box">
+            <h3 class="guide-card-title">Blind spots</h3>
+          </div>
           ${renderShapeGuidePillsHtml(guide.weaknesses)}
+        </div>
+      </article>
+      <article class="shape-insight-card">
+        <div class="shape-insight-card__media">
+          <img
+            class="shape-insight-card__img"
+            src="${escapeHtml(guideFeatureImageSrc(shape, "toolsKnow"))}"
+            alt=""
+            width="800"
+            height="248"
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
+        <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
+          <div class="shape-insight-card__title-box">
+            <h3 class="guide-card-title">Tools to know</h3>
+            <p class="body-normal muted shape-guide-tools-note">Solid picks linked to categories and specialties you selected.</p>
+          </div>
+          <div class="shape-insight-card__tool-categories">
+            ${renderInsightToolSections(
+              sectionsToolsKnow,
+              "shape-insight-pill--tools-know",
+              "No curated tools mapped to your current selections.",
+              "know"
+            )}
+          </div>
+        </div>
+      </article>
+      <article class="shape-insight-card">
+        <div class="shape-insight-card__media">
+          <img
+            class="shape-insight-card__img"
+            src="${escapeHtml(guideFeatureImageSrc(shape, "newPromising"))}"
+            alt=""
+            width="800"
+            height="248"
+            decoding="async"
+            loading="lazy"
+          />
+        </div>
+        <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
+          <div class="shape-insight-card__title-box">
+            <h3 class="guide-card-title">New &amp; promising</h3>
+            <p class="body-normal muted shape-guide-tools-note">Emerging tools for the same areas—worth tracking as the space evolves.</p>
+          </div>
+          <div class="shape-insight-card__tool-categories">
+            ${renderInsightToolSections(
+              sectionsNewPromising,
+              "shape-insight-pill--new-promising",
+              "Nothing listed yet for these selections.",
+              "new"
+            )}
+          </div>
         </div>
       </article>
     </div>
@@ -2004,7 +2182,10 @@ function renderVisualization() {
       });
     }
   }
-  renderShapeInsights(detection.shape);
+  renderShapeInsights(detection.shape, state.selectedItems);
+  const guideCardRoot = document.getElementById("shape-guide-card");
+  if (guideCardRoot && window.TShapedTippy) window.TShapedTippy.initIn(guideCardRoot);
+  bindGuideArrowExitSequence(guideCardRoot);
 
   const displayName = parseDisplayName(state.userName);
   const plotTitleText = displayName

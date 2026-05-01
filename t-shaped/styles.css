@@ -682,6 +682,30 @@ body:not(.dark) .shape-insight-pill {
   color: #1f2a44;
 }
 
+body:not(.dark) .shape-insight-pill.shape-insight-pill--tools-know {
+  background: rgba(255, 246, 200, 0.78);
+  border-color: rgb(184 134 11 / 0.9); /* darker goldenrod */
+  color: #3d3514;
+}
+
+body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising {
+  background: rgba(219, 234, 254, 0.92);
+  border-color: rgb(37 99 235 / 0.92);
+  color: #1a2f52;
+}
+
+body:not(.dark) .shape-insight-card__inner .shape-guide-tools-note.body-normal.muted {
+  color: #475569;
+}
+
+body:not(.dark) .shape-insight-tool-group__label {
+  color: #4a5780;
+}
+
+body:not(.dark) .shape-insight-tool-group__rule {
+  border-top-color: rgba(30, 45, 80, 0.14);
+}
+
 .stepper {
   display: flex;
   flex-wrap: wrap;
@@ -2184,15 +2208,40 @@ h2.shape-insights-heading {
   padding: 1.2rem 1.25rem;
 }
 
+.shape-insight-card__title-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.shape-insight-card__inner:not(.shape-insight-card__inner--guide-tools) > .shape-insight-card__title-box {
+  margin-block-end: 0.5rem;
+}
+
+.shape-insight-card__inner--guide-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shape-insight-card__tool-categories {
+  min-width: 0;
+}
+
 /* Titles ≥ 1.68× body-normal (1rem) for guide interior cards */
 .shape-insight-card__inner .guide-card-title {
-  margin: 0 0 0.5rem;
+  margin: 0;
   font-family: var(--font-main);
   font-weight: 600;
   font-size: 1.68rem;
   line-height: 1.26;
   letter-spacing: -0.02em;
   color: #eaf0ff;
+}
+
+.shape-insight-card__inner .shape-insight-card__title-box .shape-guide-tools-note {
+  margin: 0;
 }
 
 .shape-insight-card__inner .body-normal {
@@ -2236,6 +2285,211 @@ h2.shape-insights-heading {
   font-size: var(--shape-guide-pill-fs);
   line-height: var(--shape-guide-pill-lh);
   overflow-wrap: anywhere;
+}
+
+a.shape-insight-pill {
+  appearance: none;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.shape-insight-pill__label {
+  min-width: 0;
+}
+
+.shape-insight-pill__label[data-tippy-content] {
+  cursor: help;
+}
+
+a.shape-insight-pill[data-tippy-content] {
+  cursor: pointer;
+}
+
+/* Guide tool pills: entire capsule is an external link; arrow hints affordance */
+.shape-insight-pill.shape-insight-pill--guide-link {
+  --guide-arrow-slot: calc(1.08em + 7px);
+  --guide-gap: 0.4em;
+  position: relative;
+  padding-inline: 0.72rem;
+  transition:
+    filter 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.shape-insight-pill.shape-insight-pill--guide-link:focus-visible {
+  outline: 3px solid #6ee7ff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(110, 231, 255, 0.22);
+}
+
+.shape-insight-pill__guide-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--guide-gap);
+}
+
+.shape-insight-pill__arrow {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--guide-arrow-slot);
+  min-inline-size: var(--guide-arrow-slot);
+  max-inline-size: var(--guide-arrow-slot);
+  line-height: 0;
+  overflow: hidden;
+}
+
+.shape-insight-pill__arrow-svg {
+  display: block;
+  width: 1.06em;
+  height: 1.06em;
+  min-width: 15px;
+  min-height: 15px;
+}
+
+/* Mobile / touch / reduced-motion: arrow always visible; no slide animation */
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__guide-row {
+    gap: var(--guide-gap);
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__label {
+    transform: none;
+    transition: none;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-svg {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    transition: none;
+  }
+}
+
+@keyframes shape-guide-arrow-exit {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  62% {
+    opacity: 0;
+    transform: translate3d(0.56em, -0.58em, 0) scale(1);
+  }
+  /* Hidden snap — rest at down-left stash for the next hover in */
+  63%,
+  100% {
+    opacity: 0;
+    transform: translate3d(-0.5em, 0.46em, 0) scale(0.92);
+  }
+}
+
+/*
+ * Desktop: stash down-left (−x, +y). Enter :hover → transitions to rest (up-right from stash).
+ * Leave: `--exit-phase` + JS runs keyframes — glide up-right, then snap stash + reset class.
+ */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .shape-insight-pill.shape-insight-pill--guide-link {
+    --guide-arrow-stash-x: -0.5em;
+    --guide-arrow-stash-y: 0.46em;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__label {
+    transform: translateX(calc((var(--guide-arrow-slot) + var(--guide-gap)) * 0.5));
+    transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link:hover .shape-insight-pill__label {
+    transform: translateX(0);
+    transition: transform 0.44s cubic-bezier(0.34, 1.35, 0.64, 1);
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-svg {
+    opacity: 0;
+    transform: translate3d(var(--guide-arrow-stash-x), var(--guide-arrow-stash-y), 0) scale(0.92);
+    transition: none;
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link:hover .shape-insight-pill__arrow-svg:not(.shape-insight-pill__arrow-svg--exit-phase) {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    transition:
+      opacity 0.42s cubic-bezier(0.2, 0.85, 0.35, 1),
+      transform 0.55s cubic-bezier(0.34, 1.45, 0.52, 1);
+  }
+
+  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-svg.shape-insight-pill__arrow-svg--exit-phase {
+    animation: shape-guide-arrow-exit 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    transition: none;
+  }
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know {
+  background: rgba(255, 237, 180, 0.18);
+  border-color: rgb(218 165 32 / 0.85); /* goldenrod */
+  color: #f8f5e4;
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising {
+  background: rgba(191, 219, 254, 0.16);
+  border-color: rgb(59 130 246 / 0.95);
+  color: #e4eeff;
+}
+
+.shape-guide-tools-note {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+}
+
+.shape-insight-tools-empty {
+  margin: 0;
+}
+
+.shape-insight-tool-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.shape-insight-tool-group__label {
+  margin: 0 0 0.45rem;
+  font: 650 0.8125rem / 1.3 var(--font-main);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8b8e6;
+}
+
+.shape-insight-tool-group__rule {
+  margin: 0 0 0.62rem;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.shape-insight-pill[data-tippy-content] {
+  cursor: help;
+  transition: filter 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know[data-tippy-content]:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 0 1px rgb(218 165 32 / 0.35), 0 4px 14px rgb(254 237 140 / 0.12);
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--guide-link:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 0 1px rgb(218 165 32 / 0.35), 0 4px 14px rgb(254 237 140 / 0.12);
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising[data-tippy-content]:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--guide-link:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
 }
 
 /* WCAG-focused keyboard visibility and interactive spacing */

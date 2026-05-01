@@ -1913,15 +1913,24 @@ h2.shape-insights-heading {
   display: inline-flex;
   align-items: center;
   max-width: 100%;
-  padding: 0.32rem 0.72rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-sizing: border-box;
+  --shape-guide-pill-fs: 14px;
+  --shape-guide-pill-lh: 1.35;
+  --shape-guide-pill-pad-y: 0.32rem;
+  --shape-guide-pill-border: 1px;
+  padding: var(--shape-guide-pill-pad-y) 0.72rem;
+  /* Half of one-line border-box height: pill on one line, subtle square on wrap */
+  border-radius: calc(
+    (2 * var(--shape-guide-pill-border) + 2 * var(--shape-guide-pill-pad-y) + var(--shape-guide-pill-fs) * var(--shape-guide-pill-lh)) /
+      2
+  );
+  border: var(--shape-guide-pill-border) solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: #c8d4f5;
   font-family: var(--font-main);
   font-weight: 500;
-  font-size: 14px;
-  line-height: 1.35;
+  font-size: var(--shape-guide-pill-fs);
+  line-height: var(--shape-guide-pill-lh);
   overflow-wrap: anywhere;
 }
 

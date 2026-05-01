@@ -39,7 +39,6 @@
 
   const cardRainbow = new WeakMap();
   const thermoTweens = new WeakMap();
-  const iconPulse = new WeakMap();
 
   function recordTween(el, key, tween) {
     if (!el) return;
@@ -242,27 +241,15 @@
 
   function killIconAnims(icon) {
     g.killTweensOf(icon);
-    const p = iconPulse.get(icon);
-    if (p) p.kill();
-    iconPulse.delete(icon);
     icon.style.removeProperty("--thermo-ico-s");
     icon.style.removeProperty("filter");
   }
 
+  /** After pop-in, icons idle on shared :root `--global-pulse-scale` (see .thermo-icon CSS). */
   function startIconPulse(icon) {
-    if (!g || !icon) return;
-    if (reduced()) return;
-    const prev = iconPulse.get(icon);
-    if (prev) prev.kill();
-    icon.style.setProperty("--thermo-ico-s", "1");
-    const tw = g.to(icon, {
-      "--thermo-ico-s": 1.08,
-      duration: 0.9,
-      yoyo: true,
-      repeat: -1,
-      ease: "sine.inOut",
-    });
-    iconPulse.set(icon, tw);
+    if (!icon) return;
+    if (g) g.killTweensOf(icon);
+    icon.style.removeProperty("--thermo-ico-s");
   }
 
   function runThermoFill(thermo) {

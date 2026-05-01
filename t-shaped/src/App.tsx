@@ -62,19 +62,19 @@ export default function App() {
 
         <section class="stepper" aria-label="Progress">
           <div class="step-pill active" data-step="1">
-            1. Start
+            Start
           </div>
           <div class="step-pill" data-step="2">
-            2. Profile
+            Step 1: Profile
           </div>
           <div class="step-pill" data-step="3">
-            3. Select
+            Step 2: Skills
           </div>
           <div class="step-pill" data-step="4">
-            4. Rank
+            Step 3: Rate
           </div>
           <div class="step-pill" data-step="5">
-            5. Shape
+            Your Shape
           </div>
         </section>
 

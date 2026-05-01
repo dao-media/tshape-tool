@@ -1912,15 +1912,177 @@ function bindGuideArrowExitSequence(scope) {
   });
 }
 
+function buildGuideToolSectionMap(sections) {
+  /** @type {Map<string, { skill: string, tools: { label: string, sources: string[] }[] }>} */
+  const m = new Map();
+  for (const s of sections) {
+    if (s && typeof s.skill === "string") m.set(s.skill, s);
+  }
+  return m;
+}
+
 /**
- * Sectioned guide tool pills: one placement per label; tooltip lists all linked skills among selections.
- * Each skill block: leading divider (same line as previous block’s trailing edge), label + pills.
+ * One skill column: label + pills (or empty placeholder).
+ * @param {{ pairCell?: boolean }} [opts]
  */
-function renderInsightToolSections(sections, pillModifierClass, emptyFallback, groupIdPrefix) {
-  const prefix = /^[a-z0-9-]+$/i.test(groupIdPrefix) ? groupIdPrefix : "tools";
+function renderInsightToolSkillCell(
+  sec,
+  skillTitle,
+  pillModifierClass,
+  groupIdPrefix,
+  idx,
+  cellEmptyNote,
+  opts = {},
+) {
+  const safePrefix = /^[a-z0-9-]+$/i.test(groupIdPrefix) ? groupIdPrefix : "tools";
   const mod = pillModifierClass.trim();
   const spanClass = mod ? `shape-insight-pill ${mod}` : "shape-insight-pill";
+  const headingId = `shape-tool-${safePrefix}-${idx}`;
+  const title = sec?.skill || skillTitle;
+  const pairCell = opts.pairCell !== false;
+  const pairCls = pairCell ? " shape-insights-tools-pair__skill" : "";
 
+  if (!sec?.tools?.length) {
+    return `
+      <section
+        class="shape-insight-tool-group${pairCls}"
+        aria-labelledby="${headingId}"
+      >
+        <hr class="shape-insight-tool-group__rule" aria-hidden="true" />
+        <div class="shape-insight-tool-group__body">
+          <div class="shape-insight-tool-group__label" id="${headingId}">${escapeHtml(title)}</div>
+          <p class="body-normal muted shape-insights-tools-pair__skill-empty">${escapeHtml(cellEmptyNote)}</p>
+        </div>
+      </section>`;
+  }
+
+  return `
+    <section class="shape-insight-tool-group${pairCls}" aria-labelledby="${headingId}">
+      <hr class="shape-insight-tool-group__rule" aria-hidden="true" />
+      <div class="shape-insight-tool-group__body">
+        <div class="shape-insight-tool-group__label" id="${headingId}">${escapeHtml(title)}</div>
+        <ul class="shape-insight-card__pill-list">
+        ${sec.tools
+          .map((tool) => {
+            const tip = tool.sources.join(" · ");
+            const url = resolveToolWebsiteUrl(tool.label);
+            if (url) {
+              return `<li><a class="${spanClass} shape-insight-pill--guide-link" href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${escapeHtml(tip)}" aria-label="${escapeHtml(`${tool.label} website (opens in new tab)`)}"><span class="shape-insight-pill__guide-row"><span class="shape-insight-pill__label">${escapeHtml(tool.label)}</span><span class="shape-insight-pill__arrow">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
+            }
+            return `<li><span class="${spanClass}" data-tippy-content="${escapeHtml(tip)}">${escapeHtml(tool.label)}</span></li>`;
+          })
+          .join("")}
+        </ul>
+      </div>
+    </section>`;
+}
+
+/**
+ * Paired “Tools to know” + “New & promising”: two columns on wide layouts (pills inside each card body);
+ * stacked on narrow viewports (see CSS).
+ */
+function renderShapeInsightsToolsPair(
+  shape,
+  sectionsToolsKnow,
+  sectionsNewPromising,
+  orderedSkills,
+  emptyFallbackKnow,
+  emptyFallbackNew,
+) {
+  const knowMap = buildGuideToolSectionMap(sectionsToolsKnow);
+  const newMap = buildGuideToolSectionMap(sectionsNewPromising);
+  const skills = orderedSkills.filter((s) => knowMap.has(s) || newMap.has(s));
+  const n = skills.length;
+
+  const cellEmptyKnow = "No tools listed here for this category.";
+  const cellEmptyNew = "No emerging picks listed for this category.";
+
+  let knowGroupsHtml = "";
+  let newGroupsHtml = "";
+  if (n === 0) {
+    knowGroupsHtml = `<p class="body-normal muted shape-insight-tools-empty">${escapeHtml(emptyFallbackKnow)}</p>`;
+    newGroupsHtml = `<p class="body-normal muted shape-insight-tools-empty">${escapeHtml(emptyFallbackNew)}</p>`;
+  } else {
+    for (let i = 0; i < n; i += 1) {
+      const sk = skills[i];
+      knowGroupsHtml += renderInsightToolSkillCell(
+        knowMap.get(sk) || null,
+        sk,
+        "shape-insight-pill--tools-know",
+        "know",
+        i,
+        cellEmptyKnow,
+      );
+      newGroupsHtml += renderInsightToolSkillCell(
+        newMap.get(sk) || null,
+        sk,
+        "shape-insight-pill--new-promising",
+        "new",
+        i,
+        cellEmptyNew,
+      );
+    }
+  }
+
+  return `
+    <div class="shape-insights-tools-pair">
+      <div class="shape-insights-tools-pair__columns">
+        <article class="shape-insight-card shape-insights-tools-pair__column shape-insights-tools-pair__column--know">
+          <div class="shape-insight-card__media">
+            <img
+              class="shape-insight-card__img"
+              src="${escapeHtml(guideFeatureImageSrc(shape, "toolsKnow"))}"
+              alt=""
+              width="800"
+              height="248"
+              decoding="async"
+              loading="lazy"
+            />
+          </div>
+          <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
+            <div class="shape-insights-tools-pair__intro">
+              <div class="shape-insight-card__title-box">
+                <h3 class="guide-card-title">Tools to know</h3>
+                <p class="body-normal muted shape-guide-tools-note">Solid picks linked to categories and specialties you selected.</p>
+              </div>
+            </div>
+            <div class="shape-insight-card__tool-categories shape-insight-tool-groups">
+              ${knowGroupsHtml}
+            </div>
+          </div>
+        </article>
+        <article class="shape-insight-card shape-insights-tools-pair__column shape-insights-tools-pair__column--new">
+          <div class="shape-insight-card__media">
+            <img
+              class="shape-insight-card__img"
+              src="${escapeHtml(guideFeatureImageSrc(shape, "newPromising"))}"
+              alt=""
+              width="800"
+              height="248"
+              decoding="async"
+              loading="lazy"
+            />
+          </div>
+          <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
+            <div class="shape-insights-tools-pair__intro">
+              <div class="shape-insight-card__title-box">
+                <h3 class="guide-card-title">New &amp; promising</h3>
+                <p class="body-normal muted shape-guide-tools-note">Emerging tools for the same areas—worth tracking as the space evolves.</p>
+              </div>
+            </div>
+            <div class="shape-insight-card__tool-categories shape-insight-tool-groups">
+              ${newGroupsHtml}
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>`;
+}
+
+/**
+ * Sectioned guide tool pills: one placement per label; tooltip lists all linked skills among selections.
+ */
+function renderInsightToolSections(sections, pillModifierClass, emptyFallback, groupIdPrefix) {
   let count = 0;
   sections.forEach((s) => {
     count += s.tools.length;
@@ -1931,29 +2093,34 @@ function renderInsightToolSections(sections, pillModifierClass, emptyFallback, g
 
   let html = `<div class="shape-insight-tool-groups">`;
   sections.forEach((sec, idx) => {
-    const headingId = `shape-tool-${prefix}-${idx}`;
-    html += `
-      <section class="shape-insight-tool-group" aria-labelledby="${headingId}">
-        <hr class="shape-insight-tool-group__rule" aria-hidden="true" />
-        <div class="shape-insight-tool-group__body">
-          <div class="shape-insight-tool-group__label" id="${headingId}">${escapeHtml(sec.skill)}</div>
-          <ul class="shape-insight-card__pill-list">
-          ${sec.tools
-            .map((tool) => {
-              const tip = tool.sources.join(" · ");
-              const url = resolveToolWebsiteUrl(tool.label);
-              if (url) {
-                return `<li><a class="${spanClass} shape-insight-pill--guide-link" href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${escapeHtml(tip)}" aria-label="${escapeHtml(`${tool.label} website (opens in new tab)`)}"><span class="shape-insight-pill__guide-row"><span class="shape-insight-pill__label">${escapeHtml(tool.label)}</span><span class="shape-insight-pill__arrow">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
-              }
-              return `<li><span class="${spanClass}" data-tippy-content="${escapeHtml(tip)}">${escapeHtml(tool.label)}</span></li>`;
-            })
-            .join("")}
-          </ul>
-        </div>
-      </section>`;
+    html += renderInsightToolSkillCell(sec, sec.skill, pillModifierClass, groupIdPrefix, idx, "", {
+      pairCell: false,
+    });
   });
   html += `</div>`;
   return html;
+}
+
+/**
+ * Order skills for the shape guide tool lists: highest rating first, then lower, then unrated.
+ * Ties keep the user’s original selection order.
+ */
+function sortSelectedSkillsByRankDesc(selectedItems, assignments) {
+  if (!Array.isArray(selectedItems) || selectedItems.length === 0) return [];
+  return selectedItems
+    .map((name, idx) => ({
+      name,
+      idx,
+      rank: normalizeRankValue(assignments[name]),
+    }))
+    .sort((a, b) => {
+      if (a.rank == null && b.rank == null) return a.idx - b.idx;
+      if (a.rank == null) return 1;
+      if (b.rank == null) return -1;
+      if (b.rank !== a.rank) return b.rank - a.rank;
+      return a.idx - b.idx;
+    })
+    .map((x) => x.name);
 }
 
 function renderShapeInsights(shape, selectedSkills = []) {
@@ -2042,60 +2209,14 @@ function renderShapeInsights(shape, selectedSkills = []) {
           ${renderShapeGuidePillsHtml(guide.weaknesses)}
         </div>
       </article>
-      <article class="shape-insight-card">
-        <div class="shape-insight-card__media">
-          <img
-            class="shape-insight-card__img"
-            src="${escapeHtml(guideFeatureImageSrc(shape, "toolsKnow"))}"
-            alt=""
-            width="800"
-            height="248"
-            decoding="async"
-            loading="lazy"
-          />
-        </div>
-        <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
-          <div class="shape-insight-card__title-box">
-            <h3 class="guide-card-title">Tools to know</h3>
-            <p class="body-normal muted shape-guide-tools-note">Solid picks linked to categories and specialties you selected.</p>
-          </div>
-          <div class="shape-insight-card__tool-categories">
-            ${renderInsightToolSections(
-              sectionsToolsKnow,
-              "shape-insight-pill--tools-know",
-              "No curated tools mapped to your current selections.",
-              "know"
-            )}
-          </div>
-        </div>
-      </article>
-      <article class="shape-insight-card">
-        <div class="shape-insight-card__media">
-          <img
-            class="shape-insight-card__img"
-            src="${escapeHtml(guideFeatureImageSrc(shape, "newPromising"))}"
-            alt=""
-            width="800"
-            height="248"
-            decoding="async"
-            loading="lazy"
-          />
-        </div>
-        <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
-          <div class="shape-insight-card__title-box">
-            <h3 class="guide-card-title">New &amp; promising</h3>
-            <p class="body-normal muted shape-guide-tools-note">Emerging tools for the same areas—worth tracking as the space evolves.</p>
-          </div>
-          <div class="shape-insight-card__tool-categories">
-            ${renderInsightToolSections(
-              sectionsNewPromising,
-              "shape-insight-pill--new-promising",
-              "Nothing listed yet for these selections.",
-              "new"
-            )}
-          </div>
-        </div>
-      </article>
+      ${renderShapeInsightsToolsPair(
+        shape,
+        sectionsToolsKnow,
+        sectionsNewPromising,
+        selectedSkills,
+        "No curated tools mapped to your current selections.",
+        "Nothing listed yet for these selections.",
+      )}
     </div>
   `;
 }
@@ -2185,7 +2306,10 @@ function renderVisualization() {
       });
     }
   }
-  renderShapeInsights(detection.shape, state.selectedItems);
+  renderShapeInsights(
+    detection.shape,
+    sortSelectedSkillsByRankDesc(state.selectedItems, state.assignments),
+  );
   const guideCardRoot = document.getElementById("shape-guide-card");
   if (guideCardRoot && window.TShapedTippy) window.TShapedTippy.initIn(guideCardRoot);
   bindGuideArrowExitSequence(guideCardRoot);

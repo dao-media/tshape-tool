@@ -2233,6 +2233,44 @@ h2.shape-insights-heading {
   min-width: 0;
 }
 
+/* Pair block spans full insights grid width; each column is one card (hero + tool groups inside) */
+.shape-insights-tools-pair {
+  grid-column: 1 / -1;
+  min-width: 0;
+  /* Shared floor for title + note so tool sections start on the same row across both cards */
+  --tools-pair-intro-min-h: 115px;
+}
+
+.shape-insights-tools-pair__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.shape-insights-tools-pair__column.shape-insight-card {
+  margin: 0;
+  height: 100%;
+}
+
+@media (max-width: 720px) {
+  .shape-insights-tools-pair__columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 721px) {
+  .shape-insights-tools-pair__intro {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    min-height: var(--tools-pair-intro-min-h);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+}
+
 /* Titles ≥ 1.68× body-normal (1rem) for guide interior cards */
 .shape-insight-card__inner .guide-card-title {
   margin: 0;

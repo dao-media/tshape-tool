@@ -124,8 +124,8 @@ export function aggregateToolsFromSelections(selectedSkills, bySkillTable) {
 }
 
 /**
- * One row per tool: rendered under the first selected skill (in user's order) whose list contains it.
- * `sources` is every selected skill that lists this tool — for tooltips without duplicate pills.
+ * One row per tool: rendered under the first skill in `selectedSkills` whose list contains it.
+ * Shape insights pass skills sorted by rating (highest first); `sources` lists all contributing skills for tooltips.
  * @returns {{ skill: string, tools: { label: string, sources: string[] }[]}[]}
  */
 export function buildToolSectionsByFirstSkill(selectedSkills, bySkillTable) {

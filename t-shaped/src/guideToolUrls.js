@@ -119,7 +119,7 @@ export const TOOL_WEBSITE_BY_LABEL = Object.freeze({
   "LottieLab": "https://www.lottie.com/products/lottie-lab",
   "Lucidchart": "https://www.lucidchart.com/",
   "Lyssna": "https://www.lyssna.com/",
-  "Magician": "https://magician.design/",
+  "Magician": "https://www.figma.com/community/file/1184069065763242572",
   "Maglr": "https://www.maglr.com/",
   "Magma": "https://magma.com/",
   "Magnific AI": "https://magnific.ai/",

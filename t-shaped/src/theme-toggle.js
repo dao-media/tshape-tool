@@ -41,7 +41,10 @@ function setThemeHashNoScroll(nextHash) {
   }
   const sx = window.scrollX;
   const sy = window.scrollY;
-  location.hash = want;
+  /** replaceState updates the fragment (and :target) without firing hashchange — avoids double syncBodyFromHash + style thrash. */
+  const url = new URL(window.location.href);
+  url.hash = want;
+  history.replaceState(history.state, "", url.toString());
   syncBodyFromHash();
   const restore = () => {
     if (window.scrollX !== sx || window.scrollY !== sy) {

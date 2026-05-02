@@ -132,10 +132,10 @@ body {
   color: var(--text);
   font-family: var(--font-main);
   line-height: 1.55;
-  /* Theme switch: smooth ink + base fill (gradients still step; avoids “hard pop”) */
+  /* Theme switch: smooth ink + base fill (gradients still step; easings match theme-toggle.css) */
   transition:
-    background-color 0.55s cubic-bezier(0.23, 1, 0.32, 1),
-    color 0.42s ease;
+    background-color 0.48s cubic-bezier(0.23, 1, 0.32, 1),
+    color 0.4s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 body:not(.dark) {
@@ -546,7 +546,6 @@ body:not(.dark) button.secondary:active {
   border-color: theme(--color-atlas-neutral-700);
 }
 
-
 body:not(.dark) .rate-all-preset-wrap {
   background: theme(--color-atlas-neutral-200);
   color: theme(--color-atlas-neutral-1100);
@@ -755,7 +754,7 @@ body:not(.dark) .shape-insight-card__inner .body-normal {
   color: theme(--color-atlas-neutral-1100);
 }
 
-/* Non-tool pills (roles/strengths): flat neutral, hover = slightly lighter wash */
+/* Non-tool pills (roles/strengths): light = grey chip; hover darkens vs page wash. Tools vary below. */
 body:not(.dark)
   .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising) {
   border-color: transparent;
@@ -766,11 +765,12 @@ body:not(.dark)
 
 body:not(.dark)
   .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):hover {
-  background: color-mix(in srgb, theme(--color-atlas-neutral-0) 52%, theme(--color-atlas-neutral-200));
+  background: color-mix(in srgb, theme(--color-atlas-neutral-300) 72%, theme(--color-atlas-neutral-500) 28%);
 }
 
 body:not(.dark)
   .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):focus-visible {
+  background: color-mix(in srgb, theme(--color-atlas-neutral-300) 72%, theme(--color-atlas-neutral-500) 28%);
   outline: 2px solid theme(--color-atlas-information-bold);
   outline-offset: 2px;
 }
@@ -795,6 +795,17 @@ body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising {
 
 body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising:hover,
 body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising:focus-visible {
+  border-style: solid;
+  border-color: color-mix(in srgb, theme(--color-atlas-information-bold) 55%, transparent);
+}
+
+/** Duplicate tool pills: mirrors get hover-like border/bg only (guide-link arrow stays :hover-only). */
+body:not(.dark) .shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--tool-dup-mirror-hover {
+  border-style: solid;
+  border-color: color-mix(in srgb, theme(--color-atlas-warning-bold) 72%, transparent);
+}
+
+body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--tool-dup-mirror-hover {
   border-style: solid;
   border-color: color-mix(in srgb, theme(--color-atlas-information-bold) 55%, transparent);
 }
@@ -2399,7 +2410,7 @@ h2.shape-insights-heading {
       2
   );
   border: none;
-  /** Default — non-tool (roles/strengths/blind spots): quiet surface, hover only lifts fill */
+  /** Default — non-tool (roles/strengths/blind spots): subtle raised wash; dark hover = slightly lighter */
   background: color-mix(in srgb, var(--text-main) 9%, transparent);
   color: var(--text-main);
   font-family: var(--font-main);
@@ -2410,8 +2421,13 @@ h2.shape-insights-heading {
   transition: var(--pill-surface-transition);
 }
 
-.shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):hover {
-  background: color-mix(in srgb, var(--text-main) 14%, transparent);
+.shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):hover,
+.shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):focus-visible {
+  background: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--text-main) 9%, transparent) 40%,
+    var(--panel-elevated) 60%
+  );
 }
 
 .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):focus-visible {
@@ -2725,6 +2741,16 @@ a.shape-insight-pill[data-tippy-content] {
 
 .shape-insight-pill.shape-insight-pill--new-promising:hover,
 .shape-insight-pill.shape-insight-pill--new-promising:focus-visible {
+  border-color: color-mix(in srgb, theme(--color-atlas-information) 55%, transparent);
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--tool-dup-mirror-hover {
+  background: color-mix(in srgb, theme(--color-atlas-warning) 38%, var(--panel-elevated));
+  border-color: color-mix(in srgb, theme(--color-atlas-warning) 65%, transparent);
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--tool-dup-mirror-hover {
+  background: color-mix(in srgb, theme(--color-atlas-information) 32%, var(--panel-elevated));
   border-color: color-mix(in srgb, theme(--color-atlas-information) 55%, transparent);
 }
 

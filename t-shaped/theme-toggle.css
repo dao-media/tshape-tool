@@ -10,7 +10,9 @@
 }
 
 #theme-toggle.toggle-button {
-  --transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  /** One timing curve for the control; avoid `transition: all` (layout + stray properties = jank). */
+  --toggle-dur: 0.48s;
+  --toggle-ease: cubic-bezier(0.23, 1, 0.32, 1);
   --width: 85px;
   --height: 30px;
   /* Sky-like information tint (lighter / less saturated than Atlas bold blue) */
@@ -89,7 +91,6 @@
 #theme-toggle > .content {
   width: 100%;
   height: 100%;
-  transition: var(--transition);
   position: relative;
   border-radius: 100px;
   overflow: hidden;
@@ -108,8 +109,9 @@
   pointer-events: none;
   z-index: 0;
   transform-origin: 50% 50%;
-  transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
-  will-change: transform, opacity;
+  transition:
+    transform var(--toggle-dur) var(--toggle-ease),
+    opacity calc(var(--toggle-dur) * 0.85) ease;
 }
 
 /* Light/day layer */
@@ -151,16 +153,16 @@
   top: 3px;
   left: 3px;
   border-radius: 50%;
-  transition: var(--transition);
+  transition: transform var(--toggle-dur) var(--toggle-ease);
   z-index: 4;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
-  will-change: left, transform;
 }
 
+/* 55px = track width − inset − knob − inset (composite-only; avoids animating `left`) */
 #theme-toggle #dark:target ~ .content .satallite,
 #theme-toggle.toggle-button.is-dark .content .satallite {
-  left: 58px; /* 85 - 3 - 24 */
+  transform: translate3d(55px, 0, 0);
 }
 
 #theme-toggle .sun {
@@ -184,18 +186,16 @@
   background-color: #cccfd9;
   position: absolute;
   top: 0;
-  left: 100%;
+  left: 0;
   border-radius: 50%;
-  transition: var(--transition);
-  transform: translate3d(0, 0, 0) rotate(60deg);
+  transition: transform var(--toggle-dur) var(--toggle-ease);
+  transform: translate3d(100%, 0, 0) rotate(60deg);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
   backface-visibility: hidden;
-  will-change: left, transform;
 }
 
 #theme-toggle #dark:target ~ .content .moon,
 #theme-toggle.toggle-button.is-dark .content .moon {
-  left: 0;
   transform: translate3d(0, 0, 0) rotate(0deg);
 }
 
@@ -213,7 +213,8 @@
 #theme-toggle .rays {
   position: absolute;
   inset: 0;
-  transition: var(--transition);
+  opacity: 1;
+  transition: opacity calc(var(--toggle-dur) * 0.9) ease;
   transform: translate3d(0, 0, 0);
 }
 
@@ -239,12 +240,15 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  top: -100%;
-  transition: var(--transition);
+  top: 0;
+  transition: transform var(--toggle-dur) var(--toggle-ease);
+  transform: translateY(-100%);
 }
 
 #theme-toggle #dark:target ~ .content .stars,
-#theme-toggle.toggle-button.is-dark .content .stars { top: 0; }
+#theme-toggle.toggle-button.is-dark .content .stars {
+  transform: translateY(0);
+}
 
 #theme-toggle .star {
   position: absolute;
@@ -266,7 +270,8 @@
   width: 100%;
   height: 100%;
   bottom: 0;
-  transition: var(--transition);
+  transform: translateY(0);
+  transition: transform var(--toggle-dur) var(--toggle-ease);
 }
 
 #theme-toggle #dark:target ~ .content .clouds,
@@ -459,8 +464,13 @@
     will-change: auto !important;
   }
 
+  #theme-toggle > .content::before,
+  #theme-toggle > .content::after,
   #theme-toggle .satallite,
-  #theme-toggle .moon {
-    will-change: auto !important;
+  #theme-toggle .moon,
+  #theme-toggle .rays,
+  #theme-toggle .stars,
+  #theme-toggle .clouds {
+    transition-duration: 0.01ms !important;
   }
 }

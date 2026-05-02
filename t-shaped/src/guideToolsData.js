@@ -39,7 +39,7 @@ export const TOOLS_TO_KNOW_BY_SKILL = {
   "User Research & Testing": ["UserTesting", "Hotjar", "CrazyEgg", "Maze", "Dovetail", "Lookback"],
   "Prototyping & Wireframing": ["Figma", "Axure RP", "Balsamiq", "ProtoPie"],
   "Micro-Interactions & UI Animation": ["LottieFiles", "Jitter", "Rive", "ProtoPie"],
-  "Component Architecture": ["Figma", "Storybook", "Zeplin", "React / Vue (Frameworks)"],
+  "Component Architecture": ["Figma", "Storybook", "Zeplin", "React", "Vue"],
   DesignOps: ["Notion", "Jira", "Asana", "Airtable", "Figma"],
   "Conversion Rate Optimization (CRO)": [
     "Hotjar",

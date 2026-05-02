@@ -1987,6 +1987,47 @@ function buildGuideToolSectionMap(sections) {
   return m;
 }
 
+function shapeInsightToolKeyForAttr(label) {
+  const s = String(label ?? "").trim();
+  if (!s) return "";
+  try {
+    return encodeURIComponent(s);
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Hover on one duplicated tool highlights others with the same key (surface only; arrow stays pointer-only via :hover).
+ */
+function bindShapeInsightToolDupMirrorHover(pairEl) {
+  if (!pairEl) return;
+  const mir = "shape-insight-pill--tool-dup-mirror-hover";
+  const pills = [...pairEl.querySelectorAll("[data-shape-insight-tool-key].shape-insight-pill")];
+  const byKey = new Map();
+  for (const pill of pills) {
+    const k = pill.getAttribute("data-shape-insight-tool-key");
+    if (!k) continue;
+    if (!byKey.has(k)) byKey.set(k, []);
+    byKey.get(k).push(pill);
+  }
+  const groups = [...byKey.values()].filter((g) => g.length > 1);
+  for (const group of groups) {
+    for (const pill of group) {
+      pill.addEventListener("mouseenter", () => {
+        group.forEach((el) => {
+          if (el !== pill) el.classList.add(mir);
+        });
+      });
+      pill.addEventListener("mouseleave", () => {
+        group.forEach((el) => {
+          if (el !== pill) el.classList.remove(mir);
+        });
+      });
+    }
+  }
+}
+
 /**
  * One skill column: label + pills (or empty placeholder).
  * @param {{ pairCell?: boolean, idSuffix?: string }} [opts]
@@ -2036,12 +2077,14 @@ function renderInsightToolSkillCell(
             const dupBadge = shapeInsightDupCountBadge(tool.sources);
             const url = resolveToolWebsiteUrl(tool.label);
             const labelVis = escapeHtml(String(tool.label || "").trim() || "Unknown tool");
+            const tk = shapeInsightToolKeyForAttr(tool.label);
+            const tkAttr = tk ? ` data-shape-insight-tool-key="${tk}"` : "";
             if (url) {
               const aName = escapeHtml(toolLinkAccessibleName(tool));
-              return `<li><a class="${spanClass} shape-insight-pill--guide-link" href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${tipEsc}" aria-label="${aName}">${dupBadge}<span class="shape-insight-pill__guide-row" aria-hidden="true"><span class="shape-insight-pill__label">${labelVis}</span><span class="shape-insight-pill__arrow" aria-hidden="true">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
+              return `<li><a class="${spanClass} shape-insight-pill--guide-link"${tkAttr} href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${tipEsc}" aria-label="${aName}">${dupBadge}<span class="shape-insight-pill__guide-row" aria-hidden="true"><span class="shape-insight-pill__label">${labelVis}</span><span class="shape-insight-pill__arrow" aria-hidden="true">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
             }
             const btnName = escapeHtml(toolNoUrlAccessibleName(tool, tipPlain));
-            return `<li><button type="button" class="${spanClass} shape-insight-pill--no-url" data-tippy-content="${tipEsc}" aria-label="${btnName}">${dupBadge}<span class="shape-insight-pill__label" aria-hidden="true">${labelVis}</span></button></li>`;
+            return `<li><button type="button" class="${spanClass} shape-insight-pill--no-url"${tkAttr} data-tippy-content="${tipEsc}" aria-label="${btnName}">${dupBadge}<span class="shape-insight-pill__label" aria-hidden="true">${labelVis}</span></button></li>`;
           })
           .join("")}
         </ul>
@@ -2351,6 +2394,7 @@ function renderShapeInsights(shape, selectedSkills = []) {
   const pair = host.querySelector(".shape-insights-tools-pair");
   if (pair) {
     pair._toolsPairRowSyncCleanup = bindShapeToolsPairRowHeightSync(pair);
+    bindShapeInsightToolDupMirrorHover(pair);
   }
 }
 

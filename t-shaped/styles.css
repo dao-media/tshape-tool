@@ -2470,7 +2470,7 @@ a.shape-insight-pill[data-tippy-content] {
 
   .shape-insight-pill.shape-insight-pill--guide-link:hover .shape-insight-pill__label {
     transform: translateX(0);
-    transition: transform 0.44s cubic-bezier(0.34, 1.35, 0.64, 1);
+    transition: transform 0.44s var(--ease-out);
   }
 
   .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-svg {

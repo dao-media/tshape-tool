@@ -698,6 +698,13 @@ body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising {
   color: #1a2f52;
 }
 
+body:not(.dark) .shape-insight-pill__dup-count {
+  color: #fff;
+  background: linear-gradient(145deg, #4f46e5 0%, #4338ca 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+}
+
 body:not(.dark) .shape-insight-card__inner .shape-guide-tools-note.body-normal.muted {
   color: #475569;
 }
@@ -2233,25 +2240,24 @@ h2.shape-insights-heading {
   min-width: 0;
 }
 
-/* Pair block spans full insights grid width; each column is one card (hero + tool groups inside) */
+/* Pair block: two real cards; align-items:start avoids equal-height stretch dead space */
 .shape-insights-tools-pair {
   grid-column: 1 / -1;
   min-width: 0;
-  /* Shared floor for title + note so tool sections start on the same row across both cards */
-  --tools-pair-intro-min-h: 115px;
+  /* Light sync for where the pill lists start (tighter than before to limit blank band) */
+  --tools-pair-intro-min-h: 96px;
 }
 
 .shape-insights-tools-pair__columns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.1rem;
-  align-items: stretch;
+  align-items: start;
   min-width: 0;
 }
 
 .shape-insights-tools-pair__column.shape-insight-card {
   margin: 0;
-  height: 100%;
 }
 
 @media (max-width: 720px) {
@@ -2305,6 +2311,7 @@ h2.shape-insights-heading {
 }
 
 .shape-insight-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
   max-width: 100%;
@@ -2336,6 +2343,28 @@ a.shape-insight-pill {
   cursor: pointer;
 }
 
+/* Tooltip-only tool pills (no URL in guide): native button = keyboard + SR-friendly name via aria-label */
+button.shape-insight-pill.shape-insight-pill--no-url {
+  appearance: none;
+  margin: 0;
+  box-sizing: border-box;
+  border-style: solid;
+  font: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  color: inherit;
+  cursor: help;
+}
+
+button.shape-insight-pill.shape-insight-pill--no-url::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
 .shape-insight-pill__label {
   min-width: 0;
 }
@@ -2348,11 +2377,34 @@ a.shape-insight-pill[data-tippy-content] {
   cursor: pointer;
 }
 
+/* Dup-count bubble: tools listed under multiple selected categories */
+.shape-insight-pill__dup-count {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  z-index: 3;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  font-family: var(--font-main);
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 15px;
+  text-align: center;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+  color: #f4f6ff;
+  background: linear-gradient(145deg, #7c6fff 0%, #5b4bdb 100%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
 /* Guide tool pills: entire capsule is an external link; arrow hints affordance */
 .shape-insight-pill.shape-insight-pill--guide-link {
   --guide-arrow-slot: calc(1.08em + 7px);
   --guide-gap: 0.4em;
-  position: relative;
   padding-inline: 0.72rem;
   transition:
     filter 0.16s ease,
@@ -2397,7 +2449,7 @@ a.shape-insight-pill[data-tippy-content] {
 .shape-insight-pill__arrow-seg {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.35;
+  stroke-width: 1.88;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -2473,7 +2525,9 @@ a.shape-insight-pill[data-tippy-content] {
     transition: transform 0.44s var(--ease-out);
   }
 
-  .shape-insight-pill.shape-insight-pill--guide-link .shape-insight-pill__arrow-svg {
+  /* Stash only when not hovering and not playing exit glide (avoid one-frame blink on mouseleave). */
+  .shape-insight-pill.shape-insight-pill--guide-link:not(:hover)
+    .shape-insight-pill__arrow-svg:not(.shape-insight-pill__arrow-svg--exit-phase) {
     opacity: 0;
     transform: translate3d(var(--guide-arrow-stash-x), var(--guide-arrow-stash-y), 0) scale(0.92);
     transition: none;
@@ -2588,6 +2642,18 @@ a.shape-insight-pill[data-tippy-content] {
 }
 
 .shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--guide-link:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--no-url:hover,
+.shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--no-url:focus-visible {
+  filter: brightness(1.1);
+  box-shadow: 0 0 0 1px rgb(218 165 32 / 0.35), 0 4px 14px rgb(254 237 140 / 0.12);
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--no-url:hover,
+.shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--no-url:focus-visible {
   filter: brightness(1.08);
   box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
 }

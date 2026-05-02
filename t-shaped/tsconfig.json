@@ -9,10 +9,10 @@
     "noEmit": true,
     "isolatedModules": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "@playwright/test"],
     "allowJs": true,
     "checkJs": false,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "vite.config.ts"]
+  "include": ["src/**/*", "vite.config.ts", "playwright.config.ts", "tests/e2e/**/*.ts"]
 }

@@ -124,8 +124,8 @@ export function aggregateToolsFromSelections(selectedSkills, bySkillTable) {
 }
 
 /**
- * One row per tool: rendered under the first skill in `selectedSkills` whose list contains it.
- * Shape insights pass skills sorted by rating (highest first); `sources` lists all contributing skills for tooltips.
+ * One section per selected skill; each tool appears under every category whose mapping lists it.
+ * `sources` lists all selected skills that map to this tool (for tooltips and dup-count badge).
  * @returns {{ skill: string, tools: { label: string, sources: string[] }[]}[]}
  */
 export function buildToolSectionsByFirstSkill(selectedSkills, bySkillTable) {
@@ -161,7 +161,7 @@ export function buildToolSectionsByFirstSkill(selectedSkills, bySkillTable) {
       if (!label || seenInSkill.has(label)) continue;
       seenInSkill.add(label);
       const contrib = sourcesByTool.get(label);
-      if (!contrib?.length || contrib[0] !== skill) continue;
+      if (!contrib?.length) continue;
       tools.push({ label, sources: contrib.slice() });
     }
     if (tools.length) sections.push({ skill, tools });

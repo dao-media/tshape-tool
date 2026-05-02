@@ -1884,6 +1884,7 @@ function bindGuideArrowExitSequence(scope) {
       const svg = pill.querySelector(".shape-insight-pill__arrow-svg");
       if (!svg) return;
       svg.classList.remove(GUIDE_ARROW_EXIT_PHASE_CLASS);
+      svg.style.removeProperty("animation");
       if (onExitEnd) {
         svg.removeEventListener("animationend", onExitEnd);
         onExitEnd = null;
@@ -1898,9 +1899,15 @@ function bindGuideArrowExitSequence(scope) {
         svg.removeEventListener("animationend", onExitEnd);
         onExitEnd = null;
       }
-      svg.classList.remove(GUIDE_ARROW_EXIT_PHASE_CLASS);
-      void svg.offsetWidth;
+      /*
+       * Do NOT briefly remove `--exit-phase` here: without :hover that instantly applies the
+       * stashed SVG rule (opacity 0) → visible “blink”. Keep the class on and replay keyframes instead.
+       */
       svg.classList.add(GUIDE_ARROW_EXIT_PHASE_CLASS);
+      svg.style.animation = "none";
+      void svg.offsetWidth;
+      svg.style.removeProperty("animation");
+
       onExitEnd = (ev) => {
         if (ev.target !== svg || ev.animationName !== "shape-guide-arrow-exit") return;
         svg.removeEventListener("animationend", onExitEnd);
@@ -1910,6 +1917,55 @@ function bindGuideArrowExitSequence(scope) {
       svg.addEventListener("animationend", onExitEnd);
     });
   });
+}
+
+/** Mini notification count when a tool is listed under more than one selected category. */
+function shapeInsightDupCountBadge(sources) {
+  const n = Array.isArray(sources) ? sources.length : 0;
+  if (n <= 1) return "";
+  return `<span class="shape-insight-pill__dup-count" aria-hidden="true">${String(n)}</span>`;
+}
+
+/** Max length for `data-tippy-content` and similar (avoids huge attribute / layout edge cases). */
+const GUIDE_TOOL_TIP_MAX_CHARS = 4000;
+/** Keep computed `aria-label` strings from growing without bound. */
+const GUIDE_TOOL_ARIA_MAX_CHARS = 500;
+
+function clampGuideTooltipText(text, max = GUIDE_TOOL_TIP_MAX_CHARS) {
+  const t = String(text).replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  return t.length <= max ? t : `${t.slice(0, max - 1)}…`;
+}
+
+function clampAriaLabelText(text, max = GUIDE_TOOL_ARIA_MAX_CHARS) {
+  const t = String(text).replace(/\s+/g, " ").trim();
+  if (!t) return "";
+  return t.length <= max ? t : `${t.slice(0, max - 1)}…`;
+}
+
+/**
+ * @param {{ label: string, sources: string[] }} tool
+ */
+function toolLinkAccessibleName(tool) {
+  const name = String(tool.label || "").trim() || "Tool";
+  const n = Array.isArray(tool.sources) ? tool.sources.length : 0;
+  let s = `${name} website (opens in new tab)`;
+  if (n > 1) s += `. Listed in ${n} of your selected categories.`;
+  return clampAriaLabelText(s);
+}
+
+/**
+ * @param {{ label: string, sources: string[] }} tool
+ * @param {string} tipPlain clamped category string
+ */
+function toolNoUrlAccessibleName(tool, tipPlain) {
+  const name = String(tool.label || "").trim() || "Tool";
+  const n = Array.isArray(tool.sources) ? tool.sources.length : 0;
+  const cats = clampGuideTooltipText(tipPlain, 360);
+  let s = `${name}. Linked categories: ${cats}.`;
+  if (n > 1) s += ` Listed in ${n} of your selected categories.`;
+  s += " No external URL in this guide; keyboard focus shows category details in a tooltip.";
+  return clampAriaLabelText(s);
 }
 
 function buildGuideToolSectionMap(sections) {
@@ -1923,7 +1979,7 @@ function buildGuideToolSectionMap(sections) {
 
 /**
  * One skill column: label + pills (or empty placeholder).
- * @param {{ pairCell?: boolean }} [opts]
+ * @param {{ pairCell?: boolean, idSuffix?: string }} [opts]
  */
 function renderInsightToolSkillCell(
   sec,
@@ -1937,7 +1993,8 @@ function renderInsightToolSkillCell(
   const safePrefix = /^[a-z0-9-]+$/i.test(groupIdPrefix) ? groupIdPrefix : "tools";
   const mod = pillModifierClass.trim();
   const spanClass = mod ? `shape-insight-pill ${mod}` : "shape-insight-pill";
-  const headingId = `shape-tool-${safePrefix}-${idx}`;
+  const idSuffix = typeof opts.idSuffix === "string" ? opts.idSuffix : "";
+  const headingId = `shape-tool-${safePrefix}-${idx}${idSuffix}`;
   const title = sec?.skill || skillTitle;
   const pairCell = opts.pairCell !== false;
   const pairCls = pairCell ? " shape-insights-tools-pair__skill" : "";
@@ -1964,12 +2021,17 @@ function renderInsightToolSkillCell(
         <ul class="shape-insight-card__pill-list">
         ${sec.tools
           .map((tool) => {
-            const tip = tool.sources.join(" · ");
+            const tipPlain = clampGuideTooltipText(tool.sources.join(" · "));
+            const tipEsc = escapeHtml(tipPlain);
+            const dupBadge = shapeInsightDupCountBadge(tool.sources);
             const url = resolveToolWebsiteUrl(tool.label);
+            const labelVis = escapeHtml(String(tool.label || "").trim() || "Unknown tool");
             if (url) {
-              return `<li><a class="${spanClass} shape-insight-pill--guide-link" href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${escapeHtml(tip)}" aria-label="${escapeHtml(`${tool.label} website (opens in new tab)`)}"><span class="shape-insight-pill__guide-row"><span class="shape-insight-pill__label">${escapeHtml(tool.label)}</span><span class="shape-insight-pill__arrow">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
+              const aName = escapeHtml(toolLinkAccessibleName(tool));
+              return `<li><a class="${spanClass} shape-insight-pill--guide-link" href="${escapeHrefAmp(url)}" target="_blank" rel="noopener noreferrer" data-tippy-content="${tipEsc}" aria-label="${aName}">${dupBadge}<span class="shape-insight-pill__guide-row" aria-hidden="true"><span class="shape-insight-pill__label">${labelVis}</span><span class="shape-insight-pill__arrow" aria-hidden="true">${GUIDE_TOOL_EXTERNAL_ARROW_SVG}</span></span></a></li>`;
             }
-            return `<li><span class="${spanClass}" data-tippy-content="${escapeHtml(tip)}">${escapeHtml(tool.label)}</span></li>`;
+            const btnName = escapeHtml(toolNoUrlAccessibleName(tool, tipPlain));
+            return `<li><button type="button" class="${spanClass} shape-insight-pill--no-url" data-tippy-content="${tipEsc}" aria-label="${btnName}">${dupBadge}<span class="shape-insight-pill__label" aria-hidden="true">${labelVis}</span></button></li>`;
           })
           .join("")}
         </ul>
@@ -1978,8 +2040,7 @@ function renderInsightToolSkillCell(
 }
 
 /**
- * Paired “Tools to know” + “New & promising”: two columns on wide layouts (pills inside each card body);
- * stacked on narrow viewports (see CSS).
+ * Paired “Tools to know” + “New & promising”: two separate cards side by side (wide) or stacked (narrow).
  */
 function renderShapeInsightsToolsPair(
   shape,
@@ -2027,7 +2088,7 @@ function renderShapeInsightsToolsPair(
   return `
     <div class="shape-insights-tools-pair">
       <div class="shape-insights-tools-pair__columns">
-        <article class="shape-insight-card shape-insights-tools-pair__column shape-insights-tools-pair__column--know">
+        <article class="shape-insight-card shape-insights-tools-pair__column shape-insights-tools-pair__column--know" aria-labelledby="guide-card-heading-tools-know">
           <div class="shape-insight-card__media">
             <img
               class="shape-insight-card__img"
@@ -2042,7 +2103,7 @@ function renderShapeInsightsToolsPair(
           <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
             <div class="shape-insights-tools-pair__intro">
               <div class="shape-insight-card__title-box">
-                <h3 class="guide-card-title">Tools to know</h3>
+                <h3 class="guide-card-title" id="guide-card-heading-tools-know">Tools to know</h3>
                 <p class="body-normal muted shape-guide-tools-note">Solid picks linked to categories and specialties you selected.</p>
               </div>
             </div>
@@ -2051,7 +2112,7 @@ function renderShapeInsightsToolsPair(
             </div>
           </div>
         </article>
-        <article class="shape-insight-card shape-insights-tools-pair__column shape-insights-tools-pair__column--new">
+        <article class="shape-insight-card shape-insights-tools-pair__column shape-insights-tools-pair__column--new" aria-labelledby="guide-card-heading-new-promising">
           <div class="shape-insight-card__media">
             <img
               class="shape-insight-card__img"
@@ -2066,7 +2127,7 @@ function renderShapeInsightsToolsPair(
           <div class="shape-insight-card__inner shape-insight-card__inner--guide-tools">
             <div class="shape-insights-tools-pair__intro">
               <div class="shape-insight-card__title-box">
-                <h3 class="guide-card-title">New &amp; promising</h3>
+                <h3 class="guide-card-title" id="guide-card-heading-new-promising">New &amp; promising</h3>
                 <p class="body-normal muted shape-guide-tools-note">Emerging tools for the same areas—worth tracking as the space evolves.</p>
               </div>
             </div>
@@ -2123,9 +2184,67 @@ function sortSelectedSkillsByRankDesc(selectedItems, assignments) {
     .map((x) => x.name);
 }
 
+/** Sync each “New & promising” skill block height to the matching “Tools to know” row (desktop only). */
+function syncShapeToolsPairRowHeights(pairEl) {
+  if (!pairEl) return;
+  const wide =
+    typeof window.matchMedia !== "function" || window.matchMedia("(min-width: 721px)").matches;
+  const knowCol = pairEl.querySelector(".shape-insights-tools-pair__column--know");
+  const newCol = pairEl.querySelector(".shape-insights-tools-pair__column--new");
+  if (!knowCol || !newCol) return;
+  const knowGroups = knowCol.querySelectorAll(".shape-insight-tool-group");
+  const newGroups = newCol.querySelectorAll(".shape-insight-tool-group");
+  if (!wide) {
+    newGroups.forEach((el) => {
+      el.style.minHeight = "";
+    });
+    return;
+  }
+  const n = Math.min(knowGroups.length, newGroups.length);
+  for (let i = 0; i < n; i += 1) {
+    const h = knowGroups[i].getBoundingClientRect().height;
+    newGroups[i].style.minHeight = `${Math.ceil(h)}px`;
+  }
+  for (let i = n; i < newGroups.length; i += 1) {
+    newGroups[i].style.minHeight = "";
+  }
+}
+
+/**
+ * Keep paired skill rows aligned while both columns stay independent cards.
+ * Re-run when the know column layout changes or the viewport crosses the paired breakpoint.
+ */
+function bindShapeToolsPairRowHeightSync(pairEl) {
+  if (!pairEl) return () => {};
+  const sync = () => syncShapeToolsPairRowHeights(pairEl);
+  let ro = null;
+  if (typeof ResizeObserver !== "undefined") {
+    ro = new ResizeObserver(sync);
+    const knowCol = pairEl.querySelector(".shape-insights-tools-pair__column--know");
+    if (knowCol) ro.observe(knowCol);
+  }
+  const mq = window.matchMedia("(min-width: 721px)");
+  const onMq = () => sync();
+  mq.addEventListener("change", onMq);
+  window.addEventListener("resize", sync);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(sync);
+  });
+  sync();
+  return () => {
+    if (ro) ro.disconnect();
+    mq.removeEventListener("change", onMq);
+    window.removeEventListener("resize", sync);
+  };
+}
+
 function renderShapeInsights(shape, selectedSkills = []) {
   const host = document.getElementById("shape-insights");
   if (!host) return;
+  const prevPair = host.querySelector(".shape-insights-tools-pair");
+  if (prevPair && typeof prevPair._toolsPairRowSyncCleanup === "function") {
+    prevPair._toolsPairRowSyncCleanup();
+  }
   const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
   const sectionsToolsKnow = buildToolSectionsByFirstSkill(selectedSkills, TOOLS_TO_KNOW_BY_SKILL);
   const sectionsNewPromising = buildToolSectionsByFirstSkill(selectedSkills, NEW_PROMISING_BY_SKILL);
@@ -2219,6 +2338,10 @@ function renderShapeInsights(shape, selectedSkills = []) {
       )}
     </div>
   `;
+  const pair = host.querySelector(".shape-insights-tools-pair");
+  if (pair) {
+    pair._toolsPairRowSyncCleanup = bindShapeToolsPairRowHeightSync(pair);
+  }
 }
 
 function fillShapeKeyCard(mapped, keyMode) {
@@ -2313,6 +2436,8 @@ function renderVisualization() {
   const guideCardRoot = document.getElementById("shape-guide-card");
   if (guideCardRoot && window.TShapedTippy) window.TShapedTippy.initIn(guideCardRoot);
   bindGuideArrowExitSequence(guideCardRoot);
+  const toolsPairAfterTippy = document.querySelector("#shape-insights .shape-insights-tools-pair");
+  if (toolsPairAfterTippy) syncShapeToolsPairRowHeights(toolsPairAfterTippy);
 
   const displayName = parseDisplayName(state.userName);
   const plotTitleText = displayName

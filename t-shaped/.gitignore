@@ -3,3 +3,6 @@ dist
 .DS_Store
 .vercel
 .env*.local
+playwright-report
+test-results
+playwright/.cache

@@ -17,9 +17,13 @@
     duration: [200, 160],
     animation: "shift-away",
     zIndex: 3000,
-    touch: false,
+    /* Touch: show on tap; keyboard: show on focus (see trigger). */
+    touch: true,
     appendTo: () => document.body,
     allowHTML: false,
+    trigger: "mouseenter focus",
+    /* Dismiss on tap outside / after opening via touch (keeps tooltips from sticking on mobile). */
+    hideOnClick: true,
   });
 
   function initIn(root) {

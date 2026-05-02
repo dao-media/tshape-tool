@@ -37,7 +37,6 @@
     });
   }
 
-  const cardRainbow = new WeakMap();
   const thermoTweens = new WeakMap();
 
   function recordTween(el, key, tween) {
@@ -112,39 +111,8 @@
     });
   }
 
-  function bindCardRainbow() {
-    if (!g) return;
-    document.querySelectorAll(".card:not(.tool-card)").forEach((card) => {
-      if (card.dataset.gsapRainbow === "1") return;
-      card.dataset.gsapRainbow = "1";
-      card.style.setProperty("--card-rainbow-bp", "0%");
-      const run = (active) => {
-        if (reduced()) return;
-        const prev = cardRainbow.get(card);
-        if (prev) prev.kill();
-        if (!active) {
-          cardRainbow.delete(card);
-          card.style.setProperty("--card-rainbow-bp", "0%");
-          return;
-        }
-        const tw = g.to(card, {
-          "--card-rainbow-bp": "100%",
-          duration: 1.6,
-          ease: "none",
-          repeat: -1,
-          yoyo: true,
-        });
-        cardRainbow.set(card, tw);
-      };
-      card.addEventListener("mouseenter", () => run(true));
-      card.addEventListener("mouseleave", () => run(false));
-      const mo = new MutationObserver(() => {
-        if (card.classList.contains("active")) run(true);
-        else if (!card.matches(":hover")) run(false);
-      });
-      mo.observe(card, { attributes: true, attributeFilter: ["class"] });
-    });
-  }
+  /** Card halo/rainbow removed — interaction states are CSS-only (Atlas-aligned). */
+  const bindCardRainbow = noop;
 
   function afterRender({ view, sideInfo }) {
     if (!g) return;

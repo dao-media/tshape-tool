@@ -765,12 +765,13 @@ body:not(.dark)
 
 body:not(.dark)
   .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):hover {
-  background: color-mix(in srgb, theme(--color-atlas-neutral-300) 72%, theme(--color-atlas-neutral-500) 28%);
+  /** ~20% apparent brightness delta vs resting N200 (oklch mix toward N300 only—no slab gray). */
+  background: color-mix(in oklch, theme(--color-atlas-neutral-200) 60%, theme(--color-atlas-neutral-300) 40%);
 }
 
 body:not(.dark)
   .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):focus-visible {
-  background: color-mix(in srgb, theme(--color-atlas-neutral-300) 72%, theme(--color-atlas-neutral-500) 28%);
+  background: color-mix(in oklch, theme(--color-atlas-neutral-200) 60%, theme(--color-atlas-neutral-300) 40%);
   outline: 2px solid theme(--color-atlas-information-bold);
   outline-offset: 2px;
 }
@@ -2423,10 +2424,11 @@ h2.shape-insights-heading {
 
 .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):hover,
 .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):focus-visible {
+  /** ~20% apparent brightness lift vs resting wash (scaled from prior 12% panel blend). */
   background: color-mix(
-    in srgb,
-    color-mix(in srgb, var(--text-main) 9%, transparent) 40%,
-    var(--panel-elevated) 60%
+    in oklch,
+    color-mix(in srgb, var(--text-main) 9%, transparent) 76%,
+    var(--panel-elevated) 24%
   );
 }
 

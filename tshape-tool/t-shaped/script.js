@@ -645,10 +645,20 @@ function syncProfileRadios() {
 
 function wireStepHandlers() {
   view.querySelectorAll("[data-action]").forEach((el) => {
-    el.addEventListener("click", (event) => {
-      const action = event.currentTarget.dataset.action;
-      handleAction(action);
-    });
+    const action = el.dataset.action;
+    if (!action) return;
+    /** Checkboxes: native Enter does not toggle; Space/mouse do. Drive state from `change` + Enter → click(). */
+    if (el instanceof HTMLInputElement && el.type === "checkbox") {
+      el.addEventListener("change", () => handleAction(action));
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          el.click();
+        }
+      });
+      return;
+    }
+    el.addEventListener("click", () => handleAction(action));
   });
 }
 

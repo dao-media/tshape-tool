@@ -681,21 +681,34 @@ body:not(.dark) .shape-insight-card__inner .body-normal {
 }
 
 body:not(.dark) .shape-insight-pill {
-  border-color: rgba(30, 45, 80, 0.15);
+  border-color: transparent;
   background: rgba(55, 78, 124, 0.08);
   color: #1f2a44;
 }
 
+body:not(.dark) .shape-insight-pill:hover,
+body:not(.dark) .shape-insight-pill:focus-visible {
+  border-color: rgba(30, 45, 80, 0.22);
+}
+
 body:not(.dark) .shape-insight-pill.shape-insight-pill--tools-know {
   background: rgba(255, 246, 200, 0.78);
-  border-color: rgb(184 134 11 / 0.9); /* darker goldenrod */
   color: #3d3514;
+}
+
+body:not(.dark) .shape-insight-pill.shape-insight-pill--tools-know:hover,
+body:not(.dark) .shape-insight-pill.shape-insight-pill--tools-know:focus-visible {
+  border-color: rgb(184 134 11 / 0.9); /* darker goldenrod */
 }
 
 body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising {
   background: rgba(219, 234, 254, 0.92);
-  border-color: rgb(37 99 235 / 0.92);
   color: #1a2f52;
+}
+
+body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising:hover,
+body:not(.dark) .shape-insight-pill.shape-insight-pill--new-promising:focus-visible {
+  border-color: rgb(37 99 235 / 0.92);
 }
 
 body:not(.dark) .shape-insight-pill__dup-count {
@@ -2326,7 +2339,7 @@ h2.shape-insights-heading {
     (2 * var(--shape-guide-pill-border) + 2 * var(--shape-guide-pill-pad-y) + var(--shape-guide-pill-fs) * var(--shape-guide-pill-lh)) /
       2
   );
-  border: var(--shape-guide-pill-border) solid rgba(255, 255, 255, 0.12);
+  border: var(--shape-guide-pill-border) solid transparent;
   background: rgba(255, 255, 255, 0.05);
   color: #c8d4f5;
   font-family: var(--font-main);
@@ -2334,6 +2347,7 @@ h2.shape-insights-heading {
   font-size: var(--shape-guide-pill-fs);
   line-height: var(--shape-guide-pill-lh);
   overflow-wrap: anywhere;
+  transition: border-color 0.18s ease;
 }
 
 a.shape-insight-pill {
@@ -2582,14 +2596,28 @@ a.shape-insight-pill[data-tippy-content] {
 
 .shape-insight-pill.shape-insight-pill--tools-know {
   background: rgba(255, 237, 180, 0.18);
-  border-color: rgb(218 165 32 / 0.85); /* goldenrod */
   color: #f8f5e4;
 }
 
 .shape-insight-pill.shape-insight-pill--new-promising {
   background: rgba(191, 219, 254, 0.16);
-  border-color: rgb(59 130 246 / 0.95);
   color: #e4eeff;
+}
+
+/* Outline-style border only while hovered or keyboard-focused (pill width unchanged: transparent baseline). */
+.shape-insight-pill:hover,
+.shape-insight-pill:focus-visible {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know:hover,
+.shape-insight-pill.shape-insight-pill--tools-know:focus-visible {
+  border-color: rgb(218 165 32 / 0.85); /* goldenrod */
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising:hover,
+.shape-insight-pill.shape-insight-pill--new-promising:focus-visible {
+  border-color: rgb(59 130 246 / 0.95);
 }
 
 .shape-guide-tools-note {
@@ -2628,34 +2656,44 @@ a.shape-insight-pill[data-tippy-content] {
 
 .shape-insight-pill.shape-insight-pill--tools-know[data-tippy-content]:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 0 1px rgb(218 165 32 / 0.35), 0 4px 14px rgb(254 237 140 / 0.12);
+  box-shadow: 0 4px 14px rgb(254 237 140 / 0.12);
 }
 
 .shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--guide-link:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 0 1px rgb(218 165 32 / 0.35), 0 4px 14px rgb(254 237 140 / 0.12);
+  box-shadow: 0 4px 14px rgb(254 237 140 / 0.12);
+}
+
+.shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--guide-link:focus-visible {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 14px rgb(254 237 140 / 0.12);
 }
 
 .shape-insight-pill.shape-insight-pill--new-promising[data-tippy-content]:hover {
   filter: brightness(1.08);
-  box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
+  box-shadow: 0 4px 14px rgb(147 197 253 / 0.18);
 }
 
 .shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--guide-link:hover {
   filter: brightness(1.08);
-  box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
+  box-shadow: 0 4px 14px rgb(147 197 253 / 0.18);
+}
+
+.shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--guide-link:focus-visible {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 14px rgb(147 197 253 / 0.18);
 }
 
 .shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--no-url:hover,
 .shape-insight-pill.shape-insight-pill--tools-know.shape-insight-pill--no-url:focus-visible {
   filter: brightness(1.1);
-  box-shadow: 0 0 0 1px rgb(218 165 32 / 0.35), 0 4px 14px rgb(254 237 140 / 0.12);
+  box-shadow: 0 4px 14px rgb(254 237 140 / 0.12);
 }
 
 .shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--no-url:hover,
 .shape-insight-pill.shape-insight-pill--new-promising.shape-insight-pill--no-url:focus-visible {
   filter: brightness(1.08);
-  box-shadow: 0 0 0 1px rgb(59 130 246 / 0.42), 0 4px 14px rgb(147 197 253 / 0.18);
+  box-shadow: 0 4px 14px rgb(147 197 253 / 0.18);
 }
 
 /* WCAG-focused keyboard visibility and interactive spacing */

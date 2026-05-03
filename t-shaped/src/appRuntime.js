@@ -2412,7 +2412,6 @@ function renderShapeInsights(shape, selectedSkills = []) {
     pair._toolsPairRowSyncCleanup = bindShapeToolsPairRowHeightSync(pair);
     bindShapeInsightToolDupMirrorHover(pair);
   }
-  bindShapeMeaningExpand(host);
 }
 
 function fillShapeKeyCard(mapped, keyMode) {
@@ -2911,20 +2910,23 @@ function renderGuideMeaningBodyHtml(meaning) {
   return `<div class="shape-insight-meaning" data-shape-meaning-collapsible="1">
     <p class="body-normal">${escapeHtml(first)}</p>
     <div class="shape-insight-meaning__rest" id="shape-insight-meaning-rest" hidden>${restHtml}</div>
-    <button type="button" class="shape-insight-meaning__toggle" data-action="shape-meaning-more" aria-expanded="false" aria-controls="shape-insight-meaning-rest">Show more</button>
+    <button type="button" class="shape-insight-meaning__toggle" aria-expanded="false" aria-controls="shape-insight-meaning-rest">Show more</button>
   </div>`;
 }
 
-function bindShapeMeaningExpand(host) {
-  if (!host || host.dataset.meaningExpandBound === "1") return;
-  host.dataset.meaningExpandBound = "1";
-  host.addEventListener("click", (e) => {
-    const btn = e.target.closest('[data-action="shape-meaning-more"]');
-    if (!btn || !host.contains(btn)) return;
-    e.preventDefault();
-    const wrap = btn.closest(".shape-insight-meaning");
-    const rest = wrap?.querySelector(".shape-insight-meaning__rest");
+/** One delegated listener — survives #shape-insights innerHTML swaps and step remounts. */
+function installShapeMeaningToggleDelegation() {
+  if (typeof document === "undefined") return;
+  if (document.documentElement.dataset.shapeMeaningToggleDelegation === "1") return;
+  document.documentElement.dataset.shapeMeaningToggleDelegation = "1";
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".shape-insight-meaning__toggle");
+    if (!(btn instanceof HTMLButtonElement)) return;
+    const wrap = btn.closest(".shape-insight-meaning[data-shape-meaning-collapsible]");
+    if (!wrap) return;
+    const rest = wrap.querySelector(".shape-insight-meaning__rest");
     if (!rest) return;
+    e.preventDefault();
     const expanded = btn.getAttribute("aria-expanded") === "true";
     const nextOpen = !expanded;
     btn.setAttribute("aria-expanded", nextOpen ? "true" : "false");
@@ -3074,6 +3076,7 @@ try {
 }
 
 export async function bootstrapTShapedApp() {
+  installShapeMeaningToggleDelegation();
   const refreshStep5AfterTheme = () => {
     if (state.step === 5) renderVisualization();
   };

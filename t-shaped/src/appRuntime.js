@@ -2412,6 +2412,7 @@ function renderShapeInsights(shape, selectedSkills = []) {
     pair._toolsPairRowSyncCleanup = bindShapeToolsPairRowHeightSync(pair);
     bindShapeInsightToolDupMirrorHover(pair);
   }
+  bindShapeMeaningExpand(host);
 }
 
 function fillShapeKeyCard(mapped, keyMode) {
@@ -2898,13 +2899,38 @@ function guideMeaningParagraphs(meaning) {
     .filter(Boolean);
 }
 
-/** Escaped HTML: one <p> per paragraph for the What is this shape? card body. */
+/** Escaped HTML: paragraphs for the What is this shape? card; extra paragraphs behind Show more. */
 function renderGuideMeaningBodyHtml(meaning) {
   const paras = guideMeaningParagraphs(meaning);
   if (!paras.length) return `<p class="body-normal"></p>`;
-  return `<div class="shape-insight-meaning">${paras
-    .map((p) => `<p class="body-normal">${escapeHtml(p)}</p>`)
-    .join("")}</div>`;
+  if (paras.length === 1) {
+    return `<div class="shape-insight-meaning"><p class="body-normal">${escapeHtml(paras[0])}</p></div>`;
+  }
+  const [first, ...rest] = paras;
+  const restHtml = rest.map((p) => `<p class="body-normal">${escapeHtml(p)}</p>`).join("");
+  return `<div class="shape-insight-meaning" data-shape-meaning-collapsible="1">
+    <p class="body-normal">${escapeHtml(first)}</p>
+    <div class="shape-insight-meaning__rest" id="shape-insight-meaning-rest" hidden>${restHtml}</div>
+    <button type="button" class="shape-insight-meaning__toggle" data-action="shape-meaning-more" aria-expanded="false" aria-controls="shape-insight-meaning-rest">Show more</button>
+  </div>`;
+}
+
+function bindShapeMeaningExpand(host) {
+  if (!host || host.dataset.meaningExpandBound === "1") return;
+  host.dataset.meaningExpandBound = "1";
+  host.addEventListener("click", (e) => {
+    const btn = e.target.closest('[data-action="shape-meaning-more"]');
+    if (!btn || !host.contains(btn)) return;
+    e.preventDefault();
+    const wrap = btn.closest(".shape-insight-meaning");
+    const rest = wrap?.querySelector(".shape-insight-meaning__rest");
+    if (!rest) return;
+    const expanded = btn.getAttribute("aria-expanded") === "true";
+    const nextOpen = !expanded;
+    btn.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+    rest.hidden = !nextOpen;
+    btn.textContent = nextOpen ? "Show less" : "Show more";
+  });
 }
 
 function escapeHtml(s) {

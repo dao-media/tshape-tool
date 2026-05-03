@@ -1124,6 +1124,38 @@ h3 {
   margin: 0;
 }
 
+.shape-insight-meaning__rest {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.shape-insight-meaning__toggle {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.35rem 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--accent);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.shape-insight-meaning__toggle:hover {
+  color: color-mix(in srgb, var(--accent) 88%, var(--text-main));
+}
+
+.shape-insight-meaning__toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Learn More on its own line below step 5 subtitle copy */
 button[data-action="learn-more-shape"] {
   display: flex;

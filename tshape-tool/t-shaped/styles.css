@@ -1896,6 +1896,48 @@ h2.shape-insights-heading {
   color: #b8c4e8;
 }
 
+.shape-insight-meaning {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.shape-insight-meaning .body-normal {
+  margin: 0;
+}
+
+.shape-insight-meaning__rest {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.shape-insight-meaning__toggle {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0.35rem 0;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--accent);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.shape-insight-meaning__toggle:hover {
+  color: color-mix(in srgb, var(--accent) 82%, #eaf0ff);
+}
+
+.shape-insight-meaning__toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .shape-insight-card__pill-list {
   list-style: none;
   margin: 0;

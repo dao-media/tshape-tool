@@ -75,6 +75,10 @@
   --ease-out-back: theme(--ease-atlas-emphasized-out);
   --ease-out: theme(--ease-atlas-standard);
 
+  /** Full-document theme tint (paired with theme-toggle VT + prefers-reduced-motion) */
+  --theme-surface-crossfade-duration: 0.55s;
+  --theme-surface-crossfade-ease: cubic-bezier(0.23, 1, 0.32, 1);
+
   /** Hover / elevation: emphasized decelerate; press keeps standard for snappy feedback */
   --btn-transition: background-color 0.26s var(--ease-out-back), border-color 0.26s var(--ease-out-back),
     box-shadow 0.26s var(--ease-out-back), color 0.26s var(--ease-out-back), transform 0.16s var(--ease-out);
@@ -132,10 +136,22 @@ body {
   color: var(--text);
   font-family: var(--font-main);
   line-height: 1.55;
-  /* Theme switch: smooth ink + base fill (gradients still step; easings match theme-toggle.css) */
+  /* Fallback when View Transitions are unsupported: interpolate solid fill + ink (`background-image` still swaps). */
   transition:
-    background-color 0.48s cubic-bezier(0.23, 1, 0.32, 1),
-    color 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    background-color var(--theme-surface-crossfade-duration) var(--theme-surface-crossfade-ease),
+    color calc(var(--theme-surface-crossfade-duration) * 0.88) var(--theme-surface-crossfade-ease);
+}
+
+/**
+ * Smooth light↔dark: crossfade the whole snapshot (captures abrupt `background-image` + subtree).
+ * Driven by `document.startViewTransition` in theme-toggle.js; easings aligned with `--theme-*`.
+ */
+@supports (view-transition-name: none) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--theme-surface-crossfade-duration);
+    animation-timing-function: var(--theme-surface-crossfade-ease);
+  }
 }
 
 body:not(.dark) {
@@ -2817,6 +2833,13 @@ button.shape-insight-pill[data-tippy-content] {
 @media (prefers-reduced-motion: reduce) {
   body {
     transition: none;
+  }
+
+  @supports (view-transition-name: none) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation-duration: 1ms !important;
+    }
   }
 
   *,

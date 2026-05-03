@@ -1,5 +1,8 @@
 const THEME_STORAGE_KEY = "tshaped-theme";
 
+/** After initial paint — avoids animating theme on cold load via startViewTransition. */
+let themeCrossfadeReady = false;
+
 function syncToggleVisualMode(isLight) {
   const root = document.getElementById("theme-toggle");
   if (!root) return;
@@ -45,7 +48,7 @@ function setThemeHashNoScroll(nextHash) {
   const url = new URL(window.location.href);
   url.hash = want;
   history.replaceState(history.state, "", url.toString());
-  syncBodyFromHash();
+  flushBodyThemeWithOptionalCrossfade();
   const restore = () => {
     if (window.scrollX !== sx || window.scrollY !== sy) {
       window.scrollTo(sx, sy);
@@ -81,6 +84,10 @@ export async function initThemeToggle() {
   host.innerHTML = await res.text();
   forceRetargetCurrentHash();
 
+  queueMicrotask(() => {
+    themeCrossfadeReady = true;
+  });
+
   let stored = "dark";
   try {
     stored = localStorage.getItem(THEME_STORAGE_KEY) || "dark";
@@ -98,7 +105,7 @@ export async function initThemeToggle() {
   if (!root) return;
   if (root.dataset.hashBound === "1") return;
   root.dataset.hashBound = "1";
-  window.addEventListener("hashchange", syncBodyFromHash, false);
+  window.addEventListener("hashchange", flushBodyThemeWithOptionalCrossfade, false);
   root.addEventListener(
     "click",
     (e) => {

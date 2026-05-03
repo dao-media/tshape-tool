@@ -747,6 +747,20 @@ function isLikelyEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function readShapeEmailForFilesButton() {
+  const el = document.getElementById("shape-email");
+  if (el && "value" in el) return String(el.value || "").trim();
+  return String(state.userEmail || "").trim();
+}
+
+function syncEmailFilesButtonState() {
+  const btn = document.querySelector('[data-action="email-files"]');
+  if (!btn) return;
+  const ok = isLikelyEmail(readShapeEmailForFilesButton());
+  btn.disabled = !ok;
+  btn.title = ok ? "" : "Enter a valid email address below to enable.";
+}
+
 function getDetectedShapeKey() {
   if (state.detectedShape?.shape) return state.detectedShape.shape;
   const mapped = state.selectedItems
@@ -1521,8 +1535,12 @@ function renderVisualization() {
       step5EmailInput.dataset.bound = "1";
       step5EmailInput.addEventListener("input", () => {
         state.userEmail = String(step5EmailInput.value || "").trim();
+        syncEmailFilesButtonState();
       });
     }
+    syncEmailFilesButtonState();
+  } else {
+    syncEmailFilesButtonState();
   }
   renderShapeInsights(detection.shape);
 
@@ -1673,7 +1691,10 @@ function renderVisualization() {
 
   // Tooltip pill (desktop hover follows cursor; mobile tap toggles)
   const wrap = svg.closest(".viz-wrap");
-  if (!wrap) return;
+  if (!wrap) {
+    syncEmailFilesButtonState();
+    return;
+  }
   wrap.style.position = "relative";
   let tip = wrap.querySelector(".viz-pill");
   if (!tip) {
@@ -1718,6 +1739,7 @@ function renderVisualization() {
     if (mobileOn) setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
     else tip.classList.add("hidden");
   };
+  syncEmailFilesButtonState();
 }
 
 function truncate(str, max) {

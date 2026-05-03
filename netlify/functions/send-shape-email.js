@@ -8,7 +8,7 @@ const { PassThrough } = require("stream");
 const SHAPE_GUIDE = {
   I: {
     meaning:
-      "The I-shape is the foundational archetype—a designer defined by exceptional depth in a single discipline, with limited breadth across adjacent fields. The vertical bar of the \"I\" represents mastery: years of focused investment in one craft, whether that's motion design, UX research, typography, front-end development, or illustration. Morten T. Hansen, co-author of Great by Choice, famously called this the \"lone star\" profile—someone who performs at the highest level within their lane, largely under their own power. The I-shaped designer is a true specialist, and in the right environment, that specialization is enormously valuable.",
+      "The I-shape is the foundational archetype—a designer defined by exceptional depth in a single discipline, with limited breadth across adjacent fields. The vertical bar of the \"I\" represents mastery: years of focused investment in one craft, whether that's motion design, UX research, typography, front-end development, or illustration.\n\nMorten T. Hansen, co-author of Great by Choice, famously called this the \"lone star\" profile—someone who performs at the highest level within their lane, largely under their own power.\n\nThe I-shaped designer is a true specialist, and in the right environment, that specialization is enormously valuable.",
     roles: [
       "Motion Designer",
       "Brand Identity Designer",
@@ -32,7 +32,7 @@ const SHAPE_GUIDE = {
   },
   T: {
     meaning:
-      "Popularized by IDEO CEO Tim Brown and traceable to McKinsey & Company's internal hiring frameworks in the 1980s, the T-shaped designer combines one deep area of expertise—the vertical stroke—with a broad working fluency across related disciplines—the horizontal bar. The T-shape is arguably the most widely recognized and discussed model in modern design practice. That horizontal bar isn't just about skills. Brown emphasized that it's fundamentally about empathy: the capacity to understand and genuinely engage with other people's disciplines, enough to collaborate productively across functions. A T-shaped designer doesn't need to be the best researcher, writer, or engineer in the room—but they need to understand what those people are doing well enough so they're better able to build with them.",
+      "Popularized by IDEO CEO Tim Brown and traceable to McKinsey & Company's internal hiring frameworks in the 1980s, the T-shaped designer combines one deep area of expertise—the vertical stroke—with a broad working fluency across related disciplines—the horizontal bar. The T-shape is arguably the most widely recognized and discussed model in modern design practice.\n\nThat horizontal bar isn't just about skills. Brown emphasized that it's fundamentally about empathy: the capacity to understand and genuinely engage with other people's disciplines, enough to collaborate productively across functions.\n\nA T-shaped designer doesn't need to be the best researcher, writer, or engineer in the room—but they need to understand what those people are doing well enough so they're better able to build with them.",
     roles: ["Senior UX Designer", "Product Designer", "Design Lead"],
     strengths: [
       "Collaborative range: speaks authoritatively on their discipline while engaging meaningfully with others",
@@ -49,7 +49,7 @@ const SHAPE_GUIDE = {
   },
   Pi: {
     meaning:
-      "The Pi-shape is an evolution of the T with a second vertical leg. Whereas a T-shaped designer has one area of deep expertise, a Pi-shaped designer has two. The term has been used in organizational theory to describe professionals with a broad mastery of general skills atop a few spikes of deep functional expertise, and in design it typically describes someone who has built genuine mastery in two complementary disciplines—say, UX research and interaction design, or visual design and front-end development, or brand strategy and content design. The two legs don't have to be in the same sub-field, but they do need to be real. Pi isn't a claim of superficial familiarity—it represents two distinct areas where the designer can produce at a high level.",
+      "The Pi-shape is an evolution of the T with a second vertical leg. Whereas a T-shaped designer has one area of deep expertise, a Pi-shaped designer has two.\n\nThe term has been used in organizational theory to describe professionals with \"a broad mastery of general skills atop a few spikes of deep functional expertise,\" and in design it typically describes someone who has built genuine mastery in two complementary disciplines—say, UX research and interaction design, or visual design and front-end development, or brand strategy and content design.\n\nThe two legs don't have to be in the same sub-field, but they do need to be real. Pi isn't a claim of superficial familiarity—it represents two distinct areas where the designer can produce at a high level.",
     roles: [
       "Senior Product Designer",
       "Brand Designer",
@@ -71,7 +71,7 @@ const SHAPE_GUIDE = {
   },
   M: {
     meaning:
-      "The M-shape—sometimes called comb-shaped—describes a designer who has developed meaningful depth across three or more distinct disciplines, all sitting on a shared base of broad professional knowledge. Think of it as a Pi that has kept growing: each additional vertical represents another area where the designer has genuine expertise, not just passing familiarity. The metaphor of a comb is particularly apt with more than three legs—more teeth, each with real depth. Research from Cambridge's Design Society found that in practice, when studying real design engineers across career stages, the M or comb shape was more common than the traditional T—suggesting that experienced designers naturally accumulate multiple areas of depth over a career, even if they don't label it that way. The M-shaped designer is a high-adaptability profile, capable of filling gaps, straddling disciplines, and contributing meaningfully across a wide surface area.",
+      "The M-shape—sometimes called comb-shaped—describes a designer who has developed meaningful depth across three or more distinct disciplines, all sitting on a shared base of broad professional knowledge. Think of it as a Pi that has kept growing: each additional vertical represents another area where the designer has genuine expertise, not just passing familiarity.\n\nThe metaphor of a comb is particularly apt with more than three legs—more teeth, each with real depth. Research from Cambridge's Design Society found that in practice, when studying real design engineers across career stages, the M or comb shape was more common than the traditional T—suggesting that experienced designers naturally accumulate multiple areas of depth over a career, even if they don't label it that way.\n\nThe M-shaped designer is a high-adaptability profile, capable of filling gaps, straddling disciplines, and contributing meaningfully across a wide surface area.",
     roles: [
       "Senior Individual Contributor",
       "Staff-Level Designer",
@@ -94,7 +94,7 @@ const SHAPE_GUIDE = {
   },
   X: {
     meaning:
-      "The X-shape is the most distinctive—and most misunderstood—archetype in the framework. It doesn't represent the most skills, the most depth, or the broadest knowledge. It represents a different kind of value entirely: the ability to connect disciplines, lead people, and create conditions where others do their best work. The X-shape emerged as an evolution of the T in leadership contexts. Where a T-shaped designer contributes across disciplines, an X-shaped designer orchestrates across them—synthesizing insights, setting strategy, aligning teams, and driving toward shared goals. Heather McGowan, a future-of-work strategist, describes the X-shaped person as embodying interdisciplinarity with a participatory approach and a holistic focus on a common goal. Ed Catmull and John Lasseter of Pixar are frequently cited as archetypal examples: both started as deep technical practitioners and evolved into leaders whose primary value became building the conditions for creative excellence, rather than executing it themselves.",
+      "The X-shape is the most distinctive—and most misunderstood—archetype in the framework. It doesn't represent the most skills, the most depth, or the broadest knowledge. It represents a different kind of value entirely: the ability to connect disciplines, lead people, and create conditions where others do their best work.\n\nThe X-shape emerged as an evolution of the T in leadership contexts. Where a T-shaped designer contributes across disciplines, an X-shaped designer orchestrates across them—synthesizing insights, setting strategy, aligning teams, and driving toward shared goals.\n\nHeather McGowan, a future-of-work strategist, describes the X-shaped person as embodying \"interdisciplinarity with a participatory approach and a holistic focus on a common goal.\"\n\nEd Catmull and John Lasseter of Pixar are frequently cited as archetypal examples: both started as deep technical practitioners and evolved into leaders whose primary value became building the conditions for creative excellence, rather than executing it themselves.",
     roles: [
       "Motion Designer",
       "Brand Identity Designer",
@@ -121,6 +121,34 @@ const SHAPE_GUIDE = {
 function guideFieldPlain(field) {
   if (Array.isArray(field)) return field.join("; ");
   return String(field || "");
+}
+
+function guideMeaningParagraphs(meaning) {
+  return String(meaning || "")
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+function escapeHtmlBody(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildGuideMeaningHtmlBlocks(guide) {
+  const paras = guideMeaningParagraphs(guide.meaning);
+  if (!paras.length) {
+    return '<p style="margin:0 0 10px;line-height:1.55;"><strong>What is this shape?</strong></p>';
+  }
+  return paras
+    .map(
+      (p, i) =>
+        `<p style="margin:0 0 ${i < paras.length - 1 ? 10 : 8}px;line-height:1.55;">${i === 0 ? "<strong>What is this shape?</strong> " : ""}${escapeHtmlBody(p)}</p>`,
+    )
+    .join("");
 }
 
 function isLikelyEmail(value) {
@@ -180,7 +208,7 @@ function buildHtmlBody({ firstName, shapeKey, feedbackUrl, guide }) {
         <p style="margin:0 0 12px;">Thanks for testing T-Shaped, a tool I've recently begun building to give designers a high-level, big-picture view of their skills and competencies.</p>
         <p style="margin:0 0 12px;">Since you're a <strong>${shapeKey}-shaped designer</strong>, here's some info you may find interesting:</p>
         <div style="margin:16px 0;padding:14px;border-radius:12px;background:#0f1422;border:1px solid #26314d;">
-          <p style="margin:0 0 8px;"><strong>What is this shape?</strong> ${guide.meaning}</p>
+          ${buildGuideMeaningHtmlBlocks(guide)}
           <p style="margin:0 0 8px;"><strong>Where this shape thrives:</strong> ${guideFieldPlain(guide.roles)}</p>
           <p style="margin:0 0 8px;"><strong>Strengths:</strong> ${guideFieldPlain(guide.strengths)}</p>
           <p style="margin:0;"><strong>Blind spots:</strong> ${guideFieldPlain(guide.weaknesses)}</p>
@@ -248,7 +276,9 @@ exports.handler = async (event) => {
       "",
       `Since you're a ${shapeKey}-shaped designer, here's some info you may find interesting:`,
       "",
-      `What is this shape? ${guide.meaning}`,
+      "What is this shape?",
+      ...guideMeaningParagraphs(guide.meaning),
+      "",
       `Where this shape thrives: ${guideFieldPlain(guide.roles)}`,
       `Strengths: ${guideFieldPlain(guide.strengths)}`,
       `Blind spots: ${guideFieldPlain(guide.weaknesses)}`,

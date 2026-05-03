@@ -2457,12 +2457,11 @@ function renderVisualization() {
   state.detectedShape = detection;
   const article = articleForShapeLabel(detection.shape);
   const shapeHeadline = `You're ${article} ${detection.shape}-Shaped Designer`;
-  const guide = SHAPE_GUIDE[detection.shape] || SHAPE_GUIDE.T;
   if (titleEl) {
     titleEl.textContent = shapeHeadline;
   }
   if (subEl) {
-    subEl.textContent = guideMeaningParagraphs(guide.meaning).join("\n\n");
+    subEl.textContent = detection.label;
     const learnBtn = document.querySelector('.shape-result-sub-actions [data-action="learn-more-shape"]');
     if (learnBtn && learnBtn.dataset.bound !== "1") {
       learnBtn.dataset.bound = "1";

@@ -26,10 +26,34 @@ function syncBodyFromHash() {
   const isLight = h === "#light";
   document.body.classList.toggle("dark", !isLight);
   document.body.classList.toggle("light", isLight);
+  document.documentElement.style.colorScheme = isLight ? "light" : "dark";
   syncToggleVisualMode(isLight);
   try {
     localStorage.setItem(THEME_STORAGE_KEY, isLight ? "light" : "dark");
   } catch (e) {}
+  /** `replaceState` does not fire `hashchange` — listeners refresh step-5 chart label ink + SVG-dependent UI. */
+  document.dispatchEvent(
+    new CustomEvent("tshaped-theme-change", {
+      bubbles: true,
+      detail: { mode: isLight ? "light" : "dark" },
+    }),
+  );
+}
+
+/**
+ * Applies theme from `location.hash`; uses View Transitions when supported (after first paint).
+ */
+function flushBodyThemeWithOptionalCrossfade() {
+  const run = () => syncBodyFromHash();
+  try {
+    if (themeCrossfadeReady && typeof document.startViewTransition === "function") {
+      document.startViewTransition(run);
+      return;
+    }
+  } catch {
+    /* Some builds expose the API but reject; fall through to sync. */
+  }
+  run();
 }
 
 /**

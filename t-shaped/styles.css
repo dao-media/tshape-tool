@@ -154,8 +154,23 @@ body {
   }
 }
 
+/**
+ * Step 5 bar labels (`.shape-label-text`): ink + shadow follow `body.dark` / `body:not(.dark)` so toggling
+ * theme never leaves stale `--shape-label-text-color` from the last `renderVisualization()` pass.
+ */
+body.dark {
+  --shape-chart-bar-label-ink: #f4f7fd;
+  --shape-chart-bar-label-shadow:
+    0 1px 3px rgb(0 0 0 / 72%),
+    0 0 1px rgb(0 0 0 / 55%);
+}
+
 body:not(.dark) {
   color-scheme: light;
+  --shape-chart-bar-label-ink: theme(--color-atlas-neutral-1100);
+  --shape-chart-bar-label-shadow:
+    0 0 1px rgb(255 255 255 / 1),
+    0 1px 2px rgb(9 30 66 / 18%);
   --bg: theme(--color-atlas-neutral-100);
   --panel: theme(--color-atlas-neutral-0);
   --panel-elevated: theme(--color-atlas-neutral-200);
@@ -748,6 +763,15 @@ body:not(.dark) .shape-key-name {
 
 body:not(.dark) .shape-key-val {
   color: theme(--color-atlas-neutral-1100);
+}
+
+/* Key legend: slightly stronger than default `--text` on dark chart chrome */
+body.dark .shape-key-name {
+  color: color-mix(in srgb, var(--text-main) 94%, #ffffff 6%);
+}
+
+body.dark .shape-key-val {
+  color: #f7f8f9;
 }
 
 body:not(.dark) h2.shape-insights-heading {
@@ -2139,7 +2163,8 @@ body:not(.dark) .thermo {
   line-height: 1.08;
   font-weight: 620;
   letter-spacing: 0.01em;
-  color: var(--shape-label-text-color, currentColor);
+  color: var(--shape-chart-bar-label-ink, var(--text-main));
+  text-shadow: var(--shape-chart-bar-label-shadow, none);
   font-size: var(--shape-label-font-size, 13px);
   position: absolute;
   left: 50%;
@@ -2261,6 +2286,40 @@ body:not(.dark) .thermo {
   max-width: 100%;
 }
 
+/* Narrow viewports: clearer vertical rhythm between shell, steps, and stacked cards */
+@media (max-width: 720px) {
+  .app-shell {
+    padding-inline: clamp(0.85rem, 4.2vw, 1.35rem);
+    padding-top: clamp(1.1rem, 3.5vw, 1.5rem);
+  }
+
+  .app-layout {
+    gap: clamp(1rem, 4vw, 1.35rem);
+  }
+
+  .app-layout--shape-mode {
+    gap: 1.1rem;
+  }
+
+  .stepper {
+    margin-bottom: 1.15rem;
+    gap: 0.45rem 0.55rem;
+  }
+
+  .shape-results-stack {
+    gap: 1.35rem;
+  }
+
+  .shape-insights-grid {
+    gap: 1rem;
+  }
+
+  /** Large desktop offset reads as empty band on small screens */
+  .shape-results-stack .card > .chart-container {
+    margin-top: clamp(1.25rem, 6vw, 2.75rem);
+  }
+}
+
 /* Section head: must read above .guide-card-title (1.68rem) inside cards */
 h2.shape-insights-heading {
   margin: 0 0 0.45rem;
@@ -2361,6 +2420,8 @@ h2.shape-insights-heading {
 @media (max-width: 720px) {
   .shape-insights-tools-pair__columns {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    row-gap: 1.15rem;
   }
 }
 
@@ -2440,11 +2501,11 @@ h2.shape-insights-heading {
 
 .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):hover,
 .shape-insight-pill:not(.shape-insight-pill--tools-know):not(.shape-insight-pill--new-promising):focus-visible {
-  /** ~20% apparent brightness lift vs resting wash (scaled from prior 12% panel blend). */
+  /** Dark: same resting wash, lifted ~15% brightness (oklch blend toward white — not panel-elevated slab). */
   background: color-mix(
     in oklch,
-    color-mix(in srgb, var(--text-main) 9%, transparent) 76%,
-    var(--panel-elevated) 24%
+    color-mix(in srgb, var(--text-main) 9%, transparent) 85%,
+    #ffffff 15%
   );
 }
 

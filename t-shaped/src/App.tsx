@@ -23,6 +23,7 @@ export default function App() {
     const mode = fromHash || (stored === "light" ? "light" : "dark");
     document.body.classList.toggle("light", mode === "light");
     document.body.classList.toggle("dark", mode !== "light");
+    document.documentElement.style.colorScheme = mode === "light" ? "light" : "dark";
   };
 
   onMount(async () => {

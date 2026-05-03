@@ -2444,10 +2444,6 @@ function renderVisualization() {
     .filter((x) => x.value != null);
 
   const keyMode = state.shapeVizMode === "key";
-  /** Readable over saturated bar gradients: light ink + faint halo inside dark charts; dark ink + light halo inside light charts. */
-  const chartLabelInk = document.body.classList.contains("dark")
-    ? { fill: "#f3f7ff", stroke: "rgba(4, 8, 22, 0.5)", strokeWidth: "2.25" }
-    : { fill: "#0b1326", stroke: "rgba(255, 255, 255, 0.9)", strokeWidth: "2" };
   const isMobileViz =
     typeof window.matchMedia === "function" && window.matchMedia("(max-width: 720px)").matches;
   const isTouchViz =
@@ -2716,7 +2712,6 @@ function renderVisualization() {
       const row = document.createElement("div");
       row.className = "shape-label-row";
       row.style.setProperty("--shape-label-h", `${CHART_LABEL_SLOT_MIN_H_PX}px`);
-      row.style.setProperty("--shape-label-text-color", chartLabelInk.fill);
       row.style.setProperty("--shape-label-font-size", `${chartLabelFontSize}px`);
       mapped.forEach((item, i) => {
         const cell = document.createElement("div");
@@ -3020,13 +3015,12 @@ try {
 }
 
 export async function bootstrapTShapedApp() {
+  const refreshStep5AfterTheme = () => {
+    if (state.step === 5) renderVisualization();
+  };
+  /** Before `initThemeToggle` so early `syncBodyFromHash` dispatches still refresh chart label CSS vars. */
+  document.addEventListener("tshaped-theme-change", refreshStep5AfterTheme);
   await initThemeToggle();
-  window.addEventListener("hashchange", () => {
-    const h = (location.hash || "").toLowerCase();
-    if ((h === "#light" || h === "#dark") && state.step === 5) {
-      renderVisualization();
-    }
-  });
   if (window.TShapedTippy) TShapedTippy.initThemeToggle();
   document.documentElement.style.setProperty("--global-pulse-scale", "1");
   if (window.TShapedAnim) TShapedAnim.startGlobalPulse();

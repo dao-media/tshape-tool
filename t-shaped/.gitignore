@@ -1,3 +1,5 @@
+# Do NOT add package-lock.json (or yarn.lock / pnpm-lock.yaml) here — Vercel needs it.
+
 node_modules
 dist
 .DS_Store

@@ -149,6 +149,17 @@ The app calls `/.netlify/functions/send-shape-email`. Copy **`.env.example`** (r
 
 On Netlify: **Site settings → Environment variables**.
 
+## Lockfiles (Vercel / Netlify / `npm ci`)
+
+**Never** add `package-lock.json`, `yarn.lock`, or `pnpm-lock.yaml` to `.gitignore`. Install steps need the lockfile beside each `package.json`.
+
+This repo **tracks**:
+
+- **`package-lock.json`** at the repo root (Netlify Functions + root scripts).
+- **`t-shaped/package-lock.json`** next to the Vite app (what Vercel uses when **Root Directory** is `t-shaped`).
+
+Confirm on GitHub that both files appear in the file tree on `main`.
+
 ## Deploy (Netlify)
 
 From **`netlify.toml`** at repo root:

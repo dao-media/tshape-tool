@@ -4,6 +4,9 @@
 # Dependencies
 node_modules/
 
+# IMPORTANT: Do NOT ignore package-lock.json, yarn.lock, or pnpm-lock.yaml.
+# Vercel / Netlify / npm ci rely on the lockfile next to each package.json.
+
 # Environment (keep tracked examples)
 .env
 .env.*

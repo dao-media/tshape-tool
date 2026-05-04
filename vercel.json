@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "cd t-shaped && npm ci",
+  "buildCommand": "cd t-shaped && npm run build",
+  "outputDirectory": "t-shaped/dist"
+}

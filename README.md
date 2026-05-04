@@ -28,7 +28,7 @@ T-Shaped is a designer self-assessment web app for mapping skill depth, classify
    - Optional Name + Email inputs
    - Condensed demo T-chart preview (hover labels on desktop, tap-to-toggle labels on touch)
 2. **Profile**
-   - Choose `Generalist` (up to 12 items) or `Specialist` (up to 6 items)
+   - Choose `Generalist` (8–12 skills) or `Specialist` (5–6 skills)
 3. **Select**
    - Pick categories/specializations
    - Helpers: `Random`, reset (`⟲`)

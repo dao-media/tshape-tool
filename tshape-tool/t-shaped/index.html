@@ -78,7 +78,19 @@
           </section>
 
           <div class="actions side-actions">
-            <button data-action="start-over" class="secondary">Start Over</button>
+            <button data-action="start-over" class="secondary btn-with-icon" type="button">
+              <svg class="btn-with-icon__svg btn-startover-icon" viewBox="0 0 256 256" aria-hidden="true">
+                <g class="btn-startover-icon__layer">
+                  <path
+                    class="btn-startover-icon__arc"
+                    pathLength="100"
+                    d="M139.8,212.4c46.6,0,84.4-37.8,84.4-84.4s-37.8-84.4-84.4-84.4S58.3,78.6,55.6,122.8"
+                  />
+                  <polyline class="btn-startover-icon__head" pathLength="100" points="31.9 93.4 54.7 128.2 82.2 102.5" />
+                </g>
+              </svg>
+              Start Over
+            </button>
           </div>
         </aside>
 
@@ -89,7 +101,13 @@
       <div class="app-corner-badge app-corner-badge--left">Beta | v 0.15</div>
       <div class="app-corner-badge app-corner-badge--right">
         Made to 🤯 by
-        <a href="https://linkedin.com/in/daneoleary" target="_blank" rel="noopener noreferrer">Dane O'Leary</a>
+        <a
+          href="https://linkedin.com/in/daneoleary"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Visit my LinkedIn profile"
+          title="Visit my LinkedIn profile"
+          >Dane O'Leary</a>
       </div>
     </main>
 
@@ -136,14 +154,14 @@
             <input type="radio" name="profileType" value="generalist" />
             <span>
               <strong>Generalist</strong>
-              <small>Up to 12 selected items</small>
+              <small>Select 8–12 skills</small>
             </span>
           </label>
           <label class="selectable">
             <input type="radio" name="profileType" value="specialist" />
             <span>
               <strong>Specialist</strong>
-              <small>Up to 6 selected items</small>
+              <small>Select 5–6 skills</small>
             </span>
           </label>
         </div>
@@ -162,7 +180,8 @@
               type="button"
               class="secondary"
               data-action="selection-random"
-              title="Fill selection at random (up to your cap)"
+              title="Pick a random valid number of skills for your profile (within the min–max range)"
+              aria-label="Pick a random valid number of skills for your profile"
             >
               Random
             </button>
@@ -241,7 +260,9 @@
       <div class="shape-results-stack">
         <div class="card">
           <h2 id="shape-result-title">Your designer shape</h2>
-          <p class="muted" id="shape-result-sub">Bars use your ranking colors (top-aligned).</p>
+          <p class="body-small body-small--main muted" id="shape-result-sub">
+            One deep craft plus a broad horizontal bar of empathy and fluency across related roles.
+          </p>
           <div class="shape-toolbar">
             <label class="shape-toggle" for="shape-viz-toggle" aria-label="Show Labels or Key">
               <span class="shape-toggle__label">Labels</span>
@@ -258,14 +279,95 @@
             </div>
             <aside class="shape-key-card" id="shape-key-card" hidden></aside>
           </div>
-          <div class="actions">
-            <button data-action="start-over" class="secondary">Start Over</button>
-            <button type="button" data-action="email-files" class="secondary" disabled>
-              Email Files (ZIP)
-            </button>
-            <button data-action="download-png">Download PNG</button>
-            <button data-action="download-jpeg">Download JPEG</button>
-            <button data-action="download-svg">Download SVG</button>
+          <div class="shape-step5-actions">
+            <section class="shape-export-card" aria-labelledby="shape-export-heading">
+              <h3 id="shape-export-heading" class="shape-export-card__title">Export Options</h3>
+              <div class="shape-export-card__buttons">
+                <button
+                  type="button"
+                  data-action="download-png"
+                  class="secondary btn-with-icon"
+                  aria-label="Download PNG"
+                >
+                  <svg class="btn-with-icon__svg btn-with-icon__svg--download btn-download-icon" viewBox="0 0 256 256" aria-hidden="true">
+                    <g class="btn-download-icon__layer">
+                      <polyline
+                        class="btn-download-icon__tray"
+                        pathLength="100"
+                        points="35 165.4 35 213.6 221 213.6 221 165.4"
+                      />
+                      <g class="btn-download-icon__arrow">
+                        <line pathLength="100" x1="128" y1="26.6" x2="128" y2="165.4" />
+                        <polyline class="btn-download-icon__chev" pathLength="100" points="64.5 106.1 128 169.5 191.5 106" />
+                      </g>
+                    </g>
+                  </svg>
+                  <span aria-hidden="true">PNG</span>
+                </button>
+                <button
+                  type="button"
+                  data-action="download-jpeg"
+                  class="secondary btn-with-icon"
+                  aria-label="Download JPEG"
+                >
+                  <svg class="btn-with-icon__svg btn-with-icon__svg--download btn-download-icon" viewBox="0 0 256 256" aria-hidden="true">
+                    <g class="btn-download-icon__layer">
+                      <polyline
+                        class="btn-download-icon__tray"
+                        pathLength="100"
+                        points="35 165.4 35 213.6 221 213.6 221 165.4"
+                      />
+                      <g class="btn-download-icon__arrow">
+                        <line pathLength="100" x1="128" y1="26.6" x2="128" y2="165.4" />
+                        <polyline class="btn-download-icon__chev" pathLength="100" points="64.5 106.1 128 169.5 191.5 106" />
+                      </g>
+                    </g>
+                  </svg>
+                  <span aria-hidden="true">JPEG</span>
+                </button>
+                <button
+                  type="button"
+                  data-action="download-svg"
+                  class="secondary btn-with-icon"
+                  aria-label="Download SVG"
+                >
+                  <svg class="btn-with-icon__svg btn-with-icon__svg--download btn-download-icon" viewBox="0 0 256 256" aria-hidden="true">
+                    <g class="btn-download-icon__layer">
+                      <polyline
+                        class="btn-download-icon__tray"
+                        pathLength="100"
+                        points="35 165.4 35 213.6 221 213.6 221 165.4"
+                      />
+                      <g class="btn-download-icon__arrow">
+                        <line pathLength="100" x1="128" y1="26.6" x2="128" y2="165.4" />
+                        <polyline class="btn-download-icon__chev" pathLength="100" points="64.5 106.1 128 169.5 191.5 106" />
+                      </g>
+                    </g>
+                  </svg>
+                  <span aria-hidden="true">SVG</span>
+                </button>
+              </div>
+            </section>
+            <section class="shape-primary-card" aria-label="Start over and email files">
+              <div class="shape-primary-actions">
+                <button type="button" data-action="start-over" class="secondary btn-with-icon">
+                  <svg class="btn-with-icon__svg btn-startover-icon" viewBox="0 0 256 256" aria-hidden="true">
+                    <g class="btn-startover-icon__layer">
+                      <path
+                        class="btn-startover-icon__arc"
+                        pathLength="100"
+                        d="M139.8,212.4c46.6,0,84.4-37.8,84.4-84.4s-37.8-84.4-84.4-84.4S58.3,78.6,55.6,122.8"
+                      />
+                      <polyline class="btn-startover-icon__head" pathLength="100" points="31.9 93.4 54.7 128.2 82.2 102.5" />
+                    </g>
+                  </svg>
+                  Start Over
+                </button>
+                <button type="button" data-action="email-files" class="secondary" disabled>
+                  Email Files (ZIP)
+                </button>
+              </div>
+            </section>
           </div>
           <div class="shape-email-wrap">
             <label for="shape-email" class="start-name-label">Email (Optional)</label>

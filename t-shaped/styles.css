@@ -73,6 +73,7 @@
 
   /** Motion (Atlas prefers standard / emphasized-out curves) */
   --ease-out-back: theme(--ease-atlas-emphasized-out);
+  --ease-in-back: cubic-bezier(0.36, 0, 0.66, -0.56);
   --ease-out: theme(--ease-atlas-standard);
 
   /** Full-document theme tint (paired with theme-toggle VT + prefers-reduced-motion) */
@@ -241,6 +242,10 @@ h6 {
   font: 500 13px / 1.4 var(--font-label);
   color: var(--muted);
   -webkit-font-smoothing: auto;
+}
+
+.body-small--main {
+  font-family: var(--font-main);
 }
 
 .app-shell {
@@ -473,6 +478,231 @@ h6 {
   flex-shrink: 0;
   width: 1.125em;
   height: 1.125em;
+}
+
+.btn-with-icon__svg--download {
+  width: calc(1.125em * 1.38);
+  height: calc(1.125em * 1.38);
+}
+
+/* Export row: stroke glyph; hover = brief hide, then tray draws, then arrow (pathLength 100 + dash, like guide pills) */
+.btn-download-icon {
+  display: block;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
+.btn-download-icon line,
+.btn-download-icon polyline,
+.btn-startover-icon path,
+.btn-startover-icon polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: calc(14px * 1.175);
+}
+
+.btn-download-icon polyline {
+  stroke-linejoin: round;
+}
+
+.btn-download-icon line {
+  stroke-miterlimit: 10;
+}
+
+.btn-download-icon__tray,
+.btn-download-icon__arrow line,
+.btn-download-icon__chev {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
+.btn-download-icon__layer {
+  will-change: opacity;
+  backface-visibility: hidden;
+}
+
+@keyframes btn-download-layer-flash {
+  0% {
+    opacity: 1;
+  }
+  8% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 0;
+  }
+  30%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes btn-download-seg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Start Over: stroked arc + arrow; stroke shares rule with export row above; flash + dash draw like export row */
+.btn-startover-icon {
+  display: block;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+  width: calc(1.125em * 1.44);
+  height: calc(1.125em * 1.44);
+}
+
+.btn-startover-icon path,
+.btn-startover-icon polyline {
+  stroke-linejoin: round;
+}
+
+.btn-startover-icon__arc,
+.btn-startover-icon__head {
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+}
+
+.btn-startover-icon__layer {
+  will-change: opacity;
+  backface-visibility: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__layer {
+    animation: btn-download-layer-flash calc(1.25s / 1.3) ease forwards;
+  }
+
+  .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__tray {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: btn-download-seg-draw calc(0.52s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.3) forwards;
+  }
+
+  .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__arrow line {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: btn-download-seg-draw calc(0.4s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.94s / 1.3) forwards;
+  }
+
+  .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__chev {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: btn-download-seg-draw calc(0.44s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(1.24s / 1.3) forwards;
+  }
+
+  button[data-action="start-over"].secondary.btn-with-icon:hover:not(:disabled) .btn-startover-icon__layer {
+    animation: btn-download-layer-flash calc(1.25s / 1.3) ease forwards;
+  }
+
+  button[data-action="start-over"].secondary.btn-with-icon:hover:not(:disabled) .btn-startover-icon__arc {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: btn-download-seg-draw calc(0.52s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.3) forwards;
+  }
+
+  button[data-action="start-over"].secondary.btn-with-icon:hover:not(:disabled) .btn-startover-icon__head {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: btn-download-seg-draw calc(0.44s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.92s / 1.3) forwards;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-download-icon__layer {
+    animation: none !important;
+  }
+
+  .btn-download-icon__tray,
+  .btn-download-icon__arrow line,
+  .btn-download-icon__chev {
+    animation: none !important;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+
+  .btn-startover-icon__layer {
+    animation: none !important;
+  }
+
+  .btn-startover-icon__arc,
+  .btn-startover-icon__head {
+    animation: none !important;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-download-icon__layer {
+      animation: none;
+    }
+
+    .btn-download-icon__tray,
+    .btn-download-icon__arrow line,
+    .btn-download-icon__chev {
+      animation: none;
+      stroke-dasharray: none;
+      stroke-dashoffset: 0;
+    }
+
+    .btn-startover-icon__layer {
+      animation: none;
+    }
+
+    .btn-startover-icon__arc,
+    .btn-startover-icon__head {
+      animation: none;
+      stroke-dasharray: none;
+      stroke-dashoffset: 0;
+    }
+
+    /* Tap replay (JS adds `.btn-with-icon--motion-play`): same timelines as desktop :hover */
+    .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__layer {
+      animation: btn-download-layer-flash calc(1.25s / 1.3) ease forwards;
+    }
+
+    .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__tray {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: btn-download-seg-draw calc(0.52s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.3) forwards;
+    }
+
+    .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__arrow line {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: btn-download-seg-draw calc(0.4s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.94s / 1.3) forwards;
+    }
+
+    .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__chev {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: btn-download-seg-draw calc(0.44s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(1.24s / 1.3) forwards;
+    }
+
+    button[data-action="start-over"].secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled)
+      .btn-startover-icon__layer {
+      animation: btn-download-layer-flash calc(1.25s / 1.3) ease forwards;
+    }
+
+    button[data-action="start-over"].secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled)
+      .btn-startover-icon__arc {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: btn-download-seg-draw calc(0.52s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.3)
+        forwards;
+    }
+
+    button[data-action="start-over"].secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled)
+      .btn-startover-icon__head {
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: btn-download-seg-draw calc(0.44s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.92s / 1.3)
+        forwards;
+    }
+  }
 }
 
 .app-header h1 {
@@ -732,10 +962,6 @@ body:not(.dark) .shape-results-stack .shape-email-wrap .start-name-input {
   color: theme(--color-atlas-neutral-1100);
 }
 
-body:not(.dark) .shape-insights-card .shape-insights-subtitle {
-  color: theme(--color-atlas-neutral-800);
-}
-
 body:not(.dark) .chart-container__head .title {
   color: theme(--color-atlas-neutral-1100);
 }
@@ -792,6 +1018,22 @@ body:not(.dark) .shape-insight-card__inner .guide-card-title {
 
 body:not(.dark) .shape-insight-card__inner .body-normal {
   color: theme(--color-atlas-neutral-1100);
+}
+
+body:not(.dark) .shape-insight-meaning__toggle {
+  color: theme(--color-atlas-neutral-800);
+  background: color-mix(in srgb, theme(--color-atlas-neutral-100) 65%, transparent);
+  border-color: theme(--color-atlas-neutral-300);
+}
+
+body:not(.dark) .shape-insight-meaning__toggle:hover {
+  color: theme(--color-atlas-neutral-1100);
+  background: color-mix(in srgb, theme(--color-atlas-neutral-200) 75%, transparent);
+  border-color: theme(--color-atlas-neutral-500);
+}
+
+body:not(.dark) .shape-insight-meaning__toggle:focus-visible {
+  outline-color: theme(--color-atlas-neutral-500);
 }
 
 /* Non-tool pills (roles/strengths): light = grey chip; hover darkens vs page wash. Tools vary below. */
@@ -1112,6 +1354,7 @@ h3 {
 
 #shape-result-sub {
   max-width: 540px;
+  white-space: pre-line;
 }
 
 .shape-insight-meaning {
@@ -1120,41 +1363,132 @@ h3 {
   gap: 0.85rem;
 }
 
+/* Collapsible “Show more”: flex column gap would leave two full gaps around a 0-height middle
+   item (paragraph | rest | button), then one gap once [hidden] — that last step reads as a jerk.
+   Use explicit margins instead and animate rest’s top margin with the grid close. */
+.shape-insight-meaning[data-shape-meaning-collapsible] {
+  gap: 0;
+  --shape-meaning-stack-gap: 0.85rem;
+}
+
+.shape-insight-meaning[data-shape-meaning-collapsible] > .shape-insight-meaning__toggle {
+  margin-top: var(--shape-meaning-stack-gap);
+}
+
 .shape-insight-meaning .body-normal {
   margin: 0;
 }
 
-.shape-insight-meaning__rest {
+.shape-insight-meaning__rest:not([hidden]) {
+  display: grid;
+  grid-template-rows: 0fr;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  transition:
+    grid-template-rows 0.46s cubic-bezier(0.25, 0.9, 0.25, 1),
+    margin-top 0.46s cubic-bezier(0.25, 0.9, 0.25, 1);
+}
+
+.shape-insight-meaning__rest.shape-insight-meaning__rest--open:not([hidden]) {
+  grid-template-rows: 1fr;
+  margin-top: var(--shape-meaning-stack-gap);
+}
+
+.shape-insight-meaning__rest-inner {
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.38s var(--ease-out);
 }
 
+.shape-insight-meaning__rest.shape-insight-meaning__rest--open .shape-insight-meaning__rest-inner {
+  opacity: 1;
+}
+
+/* Low-emphasis control (Atlas default / subtle): muted label, neutral chrome — not link/accent weight */
 .shape-insight-meaning__toggle {
   align-self: flex-start;
   margin: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Fixed width so “Show more” / “Show less” don’t shift layout (Atlas ~36px grid step) */
+  width: 8.5rem;
+  min-height: 2.25rem;
   /* Atlassian spacing: space.075 vertical, space.100 horizontal (6px / 8px) */
   padding: 0.375rem 0.5rem;
   font: inherit;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.35;
-  color: var(--accent);
-  background: transparent;
-  border: none;
-  border-radius: 6px;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel-elevated) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  border-radius: var(--btn-radius);
   cursor: pointer;
   text-decoration: none;
+  text-align: center;
+  transition:
+    background-color 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out),
+    color 0.2s var(--ease-out);
 }
 
 .shape-insight-meaning__toggle:hover {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: color-mix(in srgb, var(--text-main) 92%, var(--muted) 8%);
+  background: color-mix(in srgb, var(--panel-elevated) 48%, transparent);
+  border-color: color-mix(in srgb, var(--border) 72%, transparent);
 }
 
 .shape-insight-meaning__toggle:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid theme(--color-atlas-neutral-500);
   outline-offset: 2px;
+}
+
+.shape-insight-meaning__toggle-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35em;
+}
+
+.shape-insight-meaning__chev {
+  display: block;
+  flex-shrink: 0;
+  width: calc(0.72em * 1.3);
+  height: calc(0.72em * 1.3);
+  transform-origin: 50% 50%;
+  transition: transform 0.22s var(--ease-out);
+}
+
+.shape-insight-meaning__toggle[aria-expanded="true"] .shape-insight-meaning__chev {
+  transform: rotate(180deg);
+}
+
+.shape-insight-meaning__chev polyline {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shape-insight-meaning__chev {
+    transition: none;
+  }
+
+  .shape-insight-meaning__rest:not([hidden]),
+  .shape-insight-meaning__rest-inner {
+    transition: none;
+  }
 }
 
 /* Learn More on its own line below step 5 subtitle copy */
@@ -1736,7 +2070,11 @@ body:not(.dark) .thermo {
   position: fixed !important;
   left: 0;
   top: 0;
-  transform: none;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: scale(0.92);
+  transform-origin: left bottom;
+  visibility: hidden;
   padding: 0.35rem 0.55rem;
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
@@ -1754,6 +2092,41 @@ body:not(.dark) .thermo {
     border-color 0.24s var(--ease-out-back),
     background 0.24s var(--ease-out-back),
     box-shadow 0.26s var(--ease-out-back);
+}
+
+/* Chart tooltip: global `.hidden` is display:none — keep pill in layout for transitions */
+.viz-pill.hidden {
+  display: block !important;
+}
+
+.viz-pill:not(.hidden) {
+  visibility: visible;
+}
+
+.viz-pill.viz-pill--open {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.viz-pill.viz-pill--exit {
+  opacity: 0;
+  transform: scale(0.94);
+  transition:
+    opacity 0.2s var(--ease-in-back),
+    transform 0.2s var(--ease-in-back),
+    border-color 0.2s var(--ease-in-back),
+    background 0.2s var(--ease-in-back),
+    box-shadow 0.22s var(--ease-in-back);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viz-pill,
+  .viz-pill.viz-pill--open,
+  .viz-pill.viz-pill--exit {
+    transition-duration: 0.01ms !important;
+    transition-property: opacity, border-color, background, box-shadow !important;
+    transform: scale(1) !important;
+  }
 }
 
 .ranking-key-host {
@@ -2173,8 +2546,78 @@ body:not(.dark) .thermo {
 }
 
 /* Labels mode: wider gap between plot area and the action/export row below it. */
-.shape-results-stack .card:has(.shape-chart-plot-wrap.has-html-label-row) .actions {
+.shape-results-stack .card:has(.shape-chart-plot-wrap.has-html-label-row) .shape-step5-actions {
   margin-top: 48px;
+}
+
+/* Step 5: export card + primary actions — row on wide screens, stacked (export first) on narrow */
+.shape-step5-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 1rem 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.shape-export-card {
+  position: relative;
+  z-index: 0;
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1 1 260px;
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card-rest-bg) 92%, transparent);
+}
+
+.shape-export-card__title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.shape-export-card__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.95rem;
+}
+
+/* Same flex proportions and padding as .shape-export-card; no surface/border (invisible shell) */
+.shape-primary-card {
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1 1 260px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.shape-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.95rem;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .shape-step5-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shape-export-card,
+  .shape-primary-card {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .shape-label-row {
@@ -2365,19 +2808,13 @@ body:not(.dark) .thermo {
 
 /* Section head: must read above .guide-card-title (1.68rem) inside cards */
 h2.shape-insights-heading {
-  margin: 0 0 0.45rem;
+  margin: 0 0 1.1rem;
   font-family: var(--font-main);
   font-weight: 600;
   font-size: clamp(1.95rem, 0.75rem + 2.6vw, 2.5rem);
   line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--text-main);
-}
-
-.shape-insights-subtitle {
-  margin: 0 0 1.1rem;
-  color: var(--muted);
-  max-width: 42ch;
 }
 
 .shape-insights-grid {

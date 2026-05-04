@@ -90,10 +90,14 @@ const state = {
   shapeVizMode: "labels",
 };
 
-const MAX_BY_TYPE = {
-  generalist: 12,
-  specialist: 6,
+const SELECTION_LIMITS_BY_TYPE = {
+  generalist: { min: 8, max: 12 },
+  specialist: { min: 5, max: 6 },
 };
+
+function getSelectionLimits(profileType) {
+  return SELECTION_LIMITS_BY_TYPE[profileType] ?? { min: 1, max: 99 };
+}
 
 const categorySet = new Set(DATA.categories);
 
@@ -109,6 +113,8 @@ const SHAPE_GUIDE = {
   I: {
     meaning:
       "The I-shape is the foundational archetype—a designer defined by exceptional depth in a single discipline, with limited breadth across adjacent fields. The vertical bar of the \"I\" represents mastery: years of focused investment in one craft, whether that's motion design, UX research, typography, front-end development, or illustration.\n\nMorten T. Hansen, co-author of Great by Choice, famously called this the \"lone star\" profile—someone who performs at the highest level within their lane, largely under their own power.\n\nThe I-shaped designer is a true specialist, and in the right environment, that specialization is enormously valuable.",
+    summary:
+      "Exceptional depth in one discipline with narrow breadth—the specialist profile.\nStrongest when that craft must ship at the highest level.",
     roles: [
       "Motion Designer",
       "Brand Identity Designer",
@@ -133,6 +139,8 @@ const SHAPE_GUIDE = {
   T: {
     meaning:
       "Popularized by IDEO CEO Tim Brown and traceable to McKinsey & Company's internal hiring frameworks in the 1980s, the T-shaped designer combines one deep area of expertise—the vertical stroke—with a broad working fluency across related disciplines—the horizontal bar. The T-shape is arguably the most widely recognized and discussed model in modern design practice.\n\nThat horizontal bar isn't just about skills. Brown emphasized that it's fundamentally about empathy: the capacity to understand and genuinely engage with other people's disciplines, enough to collaborate productively across functions.\n\nA T-shaped designer doesn't need to be the best researcher, writer, or engineer in the room—but they need to understand what those people are doing well enough so they're better able to build with them.",
+    summary:
+      "One deep craft plus a broad horizontal bar of empathy and fluency across related roles.\nYou collaborate across functions without needing to be the best at every adjacent skill.",
     roles: ["Senior UX Designer", "Product Designer", "Design Lead"],
     strengths: [
       "Collaborative range: speaks authoritatively on their discipline while engaging meaningfully with others",
@@ -150,6 +158,8 @@ const SHAPE_GUIDE = {
   Pi: {
     meaning:
       "The Pi-shape is an evolution of the T with a second vertical leg. Whereas a T-shaped designer has one area of deep expertise, a Pi-shaped designer has two.\n\nThe term has been used in organizational theory to describe professionals with \"a broad mastery of general skills atop a few spikes of deep functional expertise,\" and in design it typically describes someone who has built genuine mastery in two complementary disciplines—say, UX research and interaction design, or visual design and front-end development, or brand strategy and content design.\n\nThe two legs don't have to be in the same sub-field, but they do need to be real. Pi isn't a claim of superficial familiarity—it represents two distinct areas where the designer can produce at a high level.",
+    summary:
+      "Two distinct areas of real mastery on a shared professional base—not surface familiarity.\nLets you own more of the flow with fewer handoffs between complementary crafts.",
     roles: [
       "Senior Product Designer",
       "Brand Designer",
@@ -172,6 +182,8 @@ const SHAPE_GUIDE = {
   M: {
     meaning:
       "The M-shape—sometimes called comb-shaped—describes a designer who has developed meaningful depth across three or more distinct disciplines, all sitting on a shared base of broad professional knowledge. Think of it as a Pi that has kept growing: each additional vertical represents another area where the designer has genuine expertise, not just passing familiarity.\n\nThe metaphor of a comb is particularly apt with more than three legs—more teeth, each with real depth. Research from Cambridge's Design Society found that in practice, when studying real design engineers across career stages, the M or comb shape was more common than the traditional T—suggesting that experienced designers naturally accumulate multiple areas of depth over a career, even if they don't label it that way.\n\nThe M-shaped designer is a high-adaptability profile, capable of filling gaps, straddling disciplines, and contributing meaningfully across a wide surface area.",
+    summary:
+      "Three or more meaningful peaks of depth on a broad foundation—the comb archetype.\nHigh adaptability: fill gaps, lead cross-functional work, and flex as priorities shift.",
     roles: [
       "Senior Individual Contributor",
       "Staff-Level Designer",
@@ -195,6 +207,8 @@ const SHAPE_GUIDE = {
   X: {
     meaning:
       "The X-shape is the most distinctive—and most misunderstood—archetype in the framework. It doesn't represent the most skills, the most depth, or the broadest knowledge. It represents a different kind of value entirely: the ability to connect disciplines, lead people, and create conditions where others do their best work.\n\nThe X-shape emerged as an evolution of the T in leadership contexts. Where a T-shaped designer contributes across disciplines, an X-shaped designer orchestrates across them—synthesizing insights, setting strategy, aligning teams, and driving toward shared goals.\n\nHeather McGowan, a future-of-work strategist, describes the X-shaped person as embodying \"interdisciplinarity with a participatory approach and a holistic focus on a common goal.\"\n\nEd Catmull and John Lasseter of Pixar are frequently cited as archetypal examples: both started as deep technical practitioners and evolved into leaders whose primary value became building the conditions for creative excellence, rather than executing it themselves.",
+    summary:
+      "Primary value is connecting disciplines and lifting teams—not maxing every individual skill bar.\nOrchestration, synthesis, and enabling others toward a shared goal.",
     roles: [
       "Motion Designer",
       "Brand Identity Designer",
@@ -524,6 +538,56 @@ function bindCardInteractionEffects() {
   });
 }
 
+/** Download / Start-over icon draw replay on tap when device is touch-first (see `.btn-with-icon--motion-play` in CSS). */
+const ICON_BTN_TAP_MOTION_CLEAR_MS = 1650;
+
+function iconButtonTapMotionEligible() {
+  if (!window.matchMedia) return false;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+  return (
+    window.matchMedia("(hover: none)").matches ||
+    window.matchMedia("(pointer: coarse)").matches
+  );
+}
+
+function initIconButtonTapMotion() {
+  if (document.documentElement.dataset.iconTapMotionBound === "1") return;
+  document.documentElement.dataset.iconTapMotionBound = "1";
+
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!iconButtonTapMotionEligible()) return;
+      const el =
+        e.target instanceof Element ? e.target.closest("button") : null;
+      if (!(el instanceof HTMLButtonElement) || el.disabled) return;
+
+      const downloadHost = el.closest(".shape-export-card__buttons");
+      const action = el.dataset.action ?? "";
+      const isDownloadIcon =
+        el.classList.contains("btn-with-icon") &&
+        downloadHost &&
+        /^download-/u.test(action);
+      const isStartOver =
+        action === "start-over" && el.classList.contains("btn-with-icon");
+
+      if (!isDownloadIcon && !isStartOver) return;
+
+      el.classList.remove("btn-with-icon--motion-play");
+      void el.offsetWidth;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          el.classList.add("btn-with-icon--motion-play");
+          window.setTimeout(() => {
+            el.classList.remove("btn-with-icon--motion-play");
+          }, ICON_BTN_TAP_MOTION_CLEAR_MS);
+        });
+      });
+    },
+    true,
+  );
+}
+
 function wireStaticPanelHandlers() {
   const root = document.querySelector("#side-info-card");
   if (!root) return;
@@ -833,13 +897,14 @@ function handleAction(action) {
         alert("Profile type is missing. Go back and choose generalist or specialist.");
         return;
       }
-      const capR = MAX_BY_TYPE[state.profileType];
+      const { min, max } = getSelectionLimits(state.profileType);
+      const pickN = min + Math.floor(Math.random() * (max - min + 1));
       const pool = [...DATA.categories, ...DATA.specializations];
       for (let i = pool.length - 1; i > 0; i -= 1) {
         const j = Math.floor(Math.random() * (i + 1));
         [pool[i], pool[j]] = [pool[j], pool[i]];
       }
-      state.selectedItems = pool.slice(0, capR);
+      state.selectedItems = pool.slice(0, pickN);
       syncSelectionInputsFromState();
       renderSelectedSummary();
       break;
@@ -857,13 +922,20 @@ function handleAction(action) {
       break;
     }
     case "to-step-4": {
-      const cap = MAX_BY_TYPE[state.profileType];
-      if (!state.selectedItems.length) {
-        alert("Select at least one skill/specialty.");
+      const { min, max } = getSelectionLimits(state.profileType);
+      const n = state.selectedItems.length;
+      if (!n) {
+        alert(`Select ${min}–${max} skills as a ${state.profileType}.`);
         return;
       }
-      if (state.selectedItems.length > cap) {
-        alert(`You can select up to ${cap} items for ${state.profileType}.`);
+      if (n < min) {
+        alert(
+          `${state.profileType === "generalist" ? "Generalists" : "Specialists"} need at least ${min} selections (currently ${n}); you can choose up to ${max}.`,
+        );
+        return;
+      }
+      if (n > max) {
+        alert(`You can select at most ${max} items as a ${state.profileType}.`);
         return;
       }
       const next = {};
@@ -936,9 +1008,9 @@ function handleAction(action) {
 function renderSelectionLists() {
   const categoriesList = document.querySelector("#categories-list");
   const specsList = document.querySelector("#specializations-list");
-  const cap = MAX_BY_TYPE[state.profileType];
+  const { min, max } = getSelectionLimits(state.profileType);
   const capEl = document.querySelector("#selection-cap");
-  capEl.textContent = `You can select up to ${cap} items as a ${state.profileType}.`;
+  capEl.textContent = `As a ${state.profileType}, select between ${min} and ${max} skills.`;
 
   const addOptions = (container, source, prefix) => {
     source.forEach((name, idx) => {
@@ -950,9 +1022,9 @@ function renderSelectionLists() {
       input.checked = state.selectedItems.includes(name);
       input.addEventListener("change", () => {
         if (input.checked) {
-          if (state.selectedItems.length >= cap) {
+          if (state.selectedItems.length >= max) {
             input.checked = false;
-            alert(`Selection cap reached (${cap}).`);
+            alert(`You can select at most ${max} items as a ${state.profileType}.`);
             return;
           }
           state.selectedItems.push(name);
@@ -972,12 +1044,13 @@ function renderSelectionLists() {
 
 function renderSelectedSummary() {
   const summary = document.querySelector("#selected-summary");
-  const cap = MAX_BY_TYPE[state.profileType];
+  const { min, max } = getSelectionLimits(state.profileType);
   const selected = state.selectedItems.length;
-  summary.textContent =
-    selected === 0
-      ? "No items selected yet."
-      : `${selected}/${cap} selected: ${state.selectedItems.join(", ")}`;
+  if (selected === 0) {
+    summary.textContent = "No items selected yet.";
+    return;
+  }
+  summary.textContent = `${selected} selected (${min}–${max} required): ${state.selectedItems.join(", ")}`;
 }
 
 function renderQuotaKeyEl(maxPer, assignments) {
@@ -1419,32 +1492,105 @@ function renderGuideMeaningBodyHtml(meaning) {
     return `<div class="shape-insight-meaning"><p class="body-normal">${escapeHtml(paras[0])}</p></div>`;
   }
   const [first, ...rest] = paras;
-  const restHtml = rest.map((p) => `<p class="body-normal">${escapeHtml(p)}</p>`).join("");
+  const restParasHtml = rest.map((p) => `<p class="body-normal">${escapeHtml(p)}</p>`).join("");
+  const restHtml = `<div class="shape-insight-meaning__rest-inner">${restParasHtml}</div>`;
   return `<div class="shape-insight-meaning" data-shape-meaning-collapsible="1">
     <p class="body-normal">${escapeHtml(first)}</p>
     <div class="shape-insight-meaning__rest" id="shape-insight-meaning-rest" hidden>${restHtml}</div>
-    <button type="button" class="shape-insight-meaning__toggle" aria-expanded="false" aria-controls="shape-insight-meaning-rest">Show more</button>
+    <button type="button" class="shape-insight-meaning__toggle" aria-expanded="false" aria-controls="shape-insight-meaning-rest">
+      <span class="shape-insight-meaning__toggle-inner">
+        <span class="shape-insight-meaning__toggle-label">Show more</span>
+        <svg class="shape-insight-meaning__chev" viewBox="0 0 256 256" aria-hidden="true">
+          <polyline points="59.59811 89.05201 127.94822 167.06619 196.40189 88.93381" />
+        </svg>
+      </span>
+    </button>
   </div>`;
 }
 
-function installShapeMeaningToggleDelegation() {
-  if (typeof document === "undefined") return;
-  if (document.documentElement.dataset.shapeMeaningToggleDelegation === "1") return;
-  document.documentElement.dataset.shapeMeaningToggleDelegation = "1";
-  document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".shape-insight-meaning__toggle");
-    if (!(btn instanceof HTMLButtonElement)) return;
-    const wrap = btn.closest(".shape-insight-meaning[data-shape-meaning-collapsible]");
-    if (!wrap) return;
-    const rest = wrap.querySelector(".shape-insight-meaning__rest");
-    if (!rest) return;
-    e.preventDefault();
-    const expanded = btn.getAttribute("aria-expanded") === "true";
-    const nextOpen = !expanded;
-    btn.setAttribute("aria-expanded", nextOpen ? "true" : "false");
-    rest.hidden = !nextOpen;
-    btn.textContent = nextOpen ? "Show less" : "Show more";
-  });
+/** @param {HTMLElement | null} host `#shape-insights` */
+function bindShapeMeaningToggle(host) {
+  if (!host) return;
+  const wrap = host.querySelector(".shape-insight-meaning[data-shape-meaning-collapsible]");
+  if (!wrap) return;
+  const btn = wrap.querySelector("button.shape-insight-meaning__toggle");
+  const rest = wrap.querySelector(".shape-insight-meaning__rest");
+  if (!(btn instanceof HTMLButtonElement) || !rest) return;
+  if (btn.dataset.shapeMeaningBound === "1") return;
+  btn.dataset.shapeMeaningBound = "1";
+
+  let collapseTimer = null;
+  /** @type {((ev: TransitionEvent) => void) | null} */
+  let collapseEndHandler = null;
+
+  function clearShapeMeaningCollapse() {
+    if (collapseTimer !== null) {
+      clearTimeout(collapseTimer);
+      collapseTimer = null;
+    }
+    if (collapseEndHandler) {
+      rest.removeEventListener("transitionend", collapseEndHandler);
+      collapseEndHandler = null;
+    }
+  }
+
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const COLLAPSE_DONE_MS = 520;
+
+  function finalizeMeaningCollapsed() {
+    rest.setAttribute("hidden", "");
+    clearShapeMeaningCollapse();
+  }
+
+  btn.addEventListener(
+    "click",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      const nextOpen = !expanded;
+      const label = btn.querySelector(".shape-insight-meaning__toggle-label");
+      if (label) label.textContent = nextOpen ? "Show less" : "Show more";
+
+      if (nextOpen) {
+        clearShapeMeaningCollapse();
+        btn.setAttribute("aria-expanded", "true");
+        rest.removeAttribute("hidden");
+        if (reduceMotion) {
+          rest.classList.add("shape-insight-meaning__rest--open");
+        } else {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              rest.classList.add("shape-insight-meaning__rest--open");
+            });
+          });
+        }
+      } else {
+        clearShapeMeaningCollapse();
+        btn.setAttribute("aria-expanded", "false");
+        rest.classList.remove("shape-insight-meaning__rest--open");
+        if (reduceMotion) {
+          rest.setAttribute("hidden", "");
+        } else {
+          const finishCollapse = () => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(finalizeMeaningCollapsed);
+            });
+          };
+          collapseEndHandler = (ev) => {
+            if (ev.target !== rest || ev.propertyName !== "grid-template-rows") return;
+            finishCollapse();
+          };
+          rest.addEventListener("transitionend", collapseEndHandler);
+          collapseTimer = window.setTimeout(finishCollapse, COLLAPSE_DONE_MS);
+        }
+      }
+    },
+    false,
+  );
 }
 
 /**
@@ -1464,8 +1610,7 @@ function renderShapeInsights(shape) {
   if (!host) return;
   const guide = SHAPE_GUIDE[shape] || SHAPE_GUIDE.T;
   host.innerHTML = `
-    <h2 class="shape-insights-heading">What does being ${shape}-shaped mean?</h2>
-    <p class="body-normal shape-insights-subtitle">Insight into what the shape of your skills means.</p>
+    <h2 class="shape-insights-heading">Learn About Your Shape</h2>
     <div class="shape-insights-grid stagger-group">
       <article class="shape-insight-card">
         <div class="shape-insight-card__inner">
@@ -1493,6 +1638,7 @@ function renderShapeInsights(shape) {
       </article>
     </div>
   `;
+  bindShapeMeaningToggle(host);
 }
 
 function fillShapeKeyCard(mapped, keyMode) {
@@ -1553,8 +1699,9 @@ function renderVisualization() {
   if (titleEl) {
     titleEl.textContent = headline;
   }
+  const guideForSub = SHAPE_GUIDE[detection.shape] || SHAPE_GUIDE.T;
   if (subEl) {
-    subEl.textContent = detection.label;
+    subEl.textContent = guideForSub.summary || detection.label;
   }
   if (step5EmailInput && "value" in step5EmailInput) {
     step5EmailInput.value = state.userEmail || "";
@@ -1733,38 +1880,85 @@ function renderVisualization() {
 
   const isCoarse = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
   let mobileOn = false;
-  const setTip = (text, clientX, clientY) => {
+  let tipHideTimer = 0;
+  let tipGen = 0;
+  const finishTipHide = () => {
+    tip.classList.add("hidden");
+    tip.classList.remove("viz-pill--exit");
+    tipHideTimer = 0;
+  };
+  const onTipExitEnd = (e) => {
+    if (e.target !== tip || e.propertyName !== "opacity") return;
+    tip.removeEventListener("transitionend", onTipExitEnd);
+    finishTipHide();
+  };
+  const hideTip = () => {
+    tipGen++;
+    clearTimeout(tipHideTimer);
+    tip.removeEventListener("transitionend", onTipExitEnd);
+    if (tip.classList.contains("hidden")) return;
+    if (!tip.classList.contains("viz-pill--open")) {
+      finishTipHide();
+      return;
+    }
+    tip.classList.remove("viz-pill--open");
+    tip.classList.add("viz-pill--exit");
+    tip.addEventListener("transitionend", onTipExitEnd);
+    tipHideTimer = window.setTimeout(() => {
+      tip.removeEventListener("transitionend", onTipExitEnd);
+      finishTipHide();
+    }, 320);
+  };
+  const showTip = (text, clientX, clientY) => {
+    clearTimeout(tipHideTimer);
+    tip.removeEventListener("transitionend", onTipExitEnd);
+    tip.classList.remove("hidden", "viz-pill--exit");
+
+    const wasOpen = tip.classList.contains("viz-pill--open");
     tip.textContent = text;
-    tip.classList.remove("hidden");
+    tip.style.position = "fixed";
     tip.style.left = `${clientX}px`;
     tip.style.top = `${clientY}px`;
+
+    if (wasOpen) return;
+
+    tipGen++;
+    const gen = tipGen;
+    tip.classList.remove("viz-pill--open");
+    void tip.offsetWidth;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (gen !== tipGen) return;
+        tip.classList.add("viz-pill--open");
+      });
+    });
   };
 
   svg.onpointermove = (e) => {
     if (isCoarse) return;
     const t = e.target;
     if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) {
-      tip.classList.add("hidden");
+      hideTip();
       return;
     }
-    setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
+    showTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
   };
   svg.onpointerleave = () => {
     if (isCoarse) return;
     mobileOn = false;
-    tip.classList.add("hidden");
+    hideTip();
   };
   svg.onclick = (e) => {
     if (!isCoarse) return;
     const t = e.target;
     if (!(t instanceof SVGRectElement) || !t.classList.contains("tbar")) {
       mobileOn = false;
-      tip.classList.add("hidden");
+      hideTip();
       return;
     }
     mobileOn = !mobileOn;
-    if (mobileOn) setTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
-    else tip.classList.add("hidden");
+    if (mobileOn) showTip(`${t.dataset.name} · ${t.dataset.value}/10`, e.clientX, e.clientY);
+    else hideTip();
   };
   syncEmailFilesButtonState();
 }
@@ -2194,9 +2388,9 @@ void (async function bootApp() {
   await loadThemeToggleFragment();
   document.documentElement.style.setProperty("--global-pulse-scale", "1");
   ensureGlobalPulseLoop();
-  installShapeMeaningToggleDelegation();
   initThemeToggle();
   wireStaticPanelHandlers();
+  initIconButtonTapMotion();
   renderMiniDemoGraphs();
 
   for (let r = 1; r <= 10; r += 1) {

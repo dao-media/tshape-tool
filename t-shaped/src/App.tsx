@@ -145,12 +145,15 @@ export default function App() {
 
             <div class="actions side-actions">
               <button data-action="start-over" class="secondary btn-with-icon" type="button">
-                <svg class="btn-with-icon__svg" viewBox="0 0 256 256" aria-hidden="true">
-                  <path
-                    fill="currentColor"
-                    fill-rule="evenodd"
-                    d="M135.1 31c3.9 3.9 3.8 10.3 0 14.1l-14.8 14.7h7.8c46.8 0 85 37.5 85 84.1s-38.2 84.1-85 84.1-85-37.5-85-84.1 4.5-10 10-10 10 4.5 10 10c0 35.3 29 64.1 65 64.1s65-28.8 65-64.1-29-64.1-65-64.1h-7.8l14.8 14.7c3.9 3.9 4 10.2 0 14.1-3.9 3.9-10.2 4-14.1 0l-32.1-31.8c-1.9-1.9-3-4.4-3-7.1s1.1-5.2 3-7.1l32.1-31.8c3.9-3.9 10.3-3.8 14.1 0Z"
-                  />
+                <svg class="btn-with-icon__svg btn-startover-icon" viewBox="0 0 256 256" aria-hidden="true">
+                  <g class="btn-startover-icon__layer">
+                    <path
+                      class="btn-startover-icon__arc"
+                      pathLength="100"
+                      d="M139.8,212.4c46.6,0,84.4-37.8,84.4-84.4s-37.8-84.4-84.4-84.4S58.3,78.6,55.6,122.8"
+                    />
+                    <polyline class="btn-startover-icon__head" pathLength="100" points="31.9 93.4 54.7 128.2 82.2 102.5" />
+                  </g>
                 </svg>
                 Start Over
               </button>
@@ -169,7 +172,8 @@ export default function App() {
             class="app-corner-icon-btn"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="View source repository on GitHub"
+            aria-label="Check out the repo"
+            title="Check out the repo"
           >
             <svg class="app-corner-icon-btn__svg" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -185,6 +189,8 @@ export default function App() {
             href="https://linkedin.com/in/daneoleary"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Visit my LinkedIn profile"
+            title="Visit my LinkedIn profile"
           >
             Dane O'Leary
           </a>

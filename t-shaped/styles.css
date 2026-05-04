@@ -571,25 +571,25 @@ h6 {
 
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__layer {
-    animation: btn-download-layer-flash calc(1.25s / 1.3) ease forwards;
+    animation: btn-download-layer-flash calc(1.25s / 1.69) ease forwards;
   }
 
   .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__tray {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
-    animation: btn-download-seg-draw calc(0.52s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.3) forwards;
+    animation: btn-download-seg-draw calc(0.52s / 1.69) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.69) forwards;
   }
 
   .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__arrow line {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
-    animation: btn-download-seg-draw calc(0.4s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.94s / 1.3) forwards;
+    animation: btn-download-seg-draw calc(0.4s / 1.69) cubic-bezier(0.45, 0, 0.2, 1) calc(0.94s / 1.69) forwards;
   }
 
   .shape-export-card__buttons button.secondary.btn-with-icon:hover:not(:disabled) .btn-download-icon__chev {
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
-    animation: btn-download-seg-draw calc(0.44s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(1.24s / 1.3) forwards;
+    animation: btn-download-seg-draw calc(0.44s / 1.69) cubic-bezier(0.45, 0, 0.2, 1) calc(1.24s / 1.69) forwards;
   }
 
   button[data-action="start-over"].secondary.btn-with-icon:hover:not(:disabled) .btn-startover-icon__layer {
@@ -661,25 +661,25 @@ h6 {
 
     /* Tap replay (JS adds `.btn-with-icon--motion-play`): same timelines as desktop :hover */
     .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__layer {
-      animation: btn-download-layer-flash calc(1.25s / 1.3) ease forwards;
+      animation: btn-download-layer-flash calc(1.25s / 1.69) ease forwards;
     }
 
     .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__tray {
       stroke-dasharray: 100;
       stroke-dashoffset: 100;
-      animation: btn-download-seg-draw calc(0.52s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.3) forwards;
+      animation: btn-download-seg-draw calc(0.52s / 1.69) cubic-bezier(0.45, 0, 0.2, 1) calc(0.4s / 1.69) forwards;
     }
 
     .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__arrow line {
       stroke-dasharray: 100;
       stroke-dashoffset: 100;
-      animation: btn-download-seg-draw calc(0.4s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(0.94s / 1.3) forwards;
+      animation: btn-download-seg-draw calc(0.4s / 1.69) cubic-bezier(0.45, 0, 0.2, 1) calc(0.94s / 1.69) forwards;
     }
 
     .shape-export-card__buttons button.secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled) .btn-download-icon__chev {
       stroke-dasharray: 100;
       stroke-dashoffset: 100;
-      animation: btn-download-seg-draw calc(0.44s / 1.3) cubic-bezier(0.45, 0, 0.2, 1) calc(1.24s / 1.3) forwards;
+      animation: btn-download-seg-draw calc(0.44s / 1.69) cubic-bezier(0.45, 0, 0.2, 1) calc(1.24s / 1.69) forwards;
     }
 
     button[data-action="start-over"].secondary.btn-with-icon.btn-with-icon--motion-play:not(:disabled)

@@ -1354,7 +1354,16 @@ h3 {
 
 #shape-result-sub {
   max-width: 540px;
-  white-space: pre-line;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.shape-result-sub__p {
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
 }
 
 .shape-insight-meaning {

@@ -2532,6 +2532,25 @@ function syncShapeVizToggle() {
   toggle.setAttribute("aria-checked", keyMode ? "true" : "false");
 }
 
+/** Fill #shape-result-sub: guide summaries use \\n between short paragraphs; space them as real <p>. */
+function renderShapeResultSub(el, summaryOrFallback) {
+  if (!(el instanceof HTMLElement)) return;
+  const raw = String(summaryOrFallback ?? "").trim();
+  if (!raw) {
+    el.replaceChildren();
+    return;
+  }
+  const parts = raw.split(/\n+/).map((t) => t.trim()).filter(Boolean);
+  el.replaceChildren(
+    ...parts.map((text) => {
+      const p = document.createElement("p");
+      p.className = "shape-result-sub__p";
+      p.textContent = text;
+      return p;
+    }),
+  );
+}
+
 function renderVisualization() {
   const svg = document.querySelector("#t-shape-svg");
   const titleEl = document.querySelector("#shape-result-title");
@@ -2560,7 +2579,7 @@ function renderVisualization() {
     titleEl.textContent = shapeHeadline;
   }
   if (subEl) {
-    subEl.textContent = guideForSub.summary || detection.label;
+    renderShapeResultSub(subEl, guideForSub.summary || detection.label);
     const learnBtn = document.querySelector('.shape-result-sub-actions [data-action="learn-more-shape"]');
     if (learnBtn && learnBtn.dataset.bound !== "1") {
       learnBtn.dataset.bound = "1";

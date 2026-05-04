@@ -1674,6 +1674,24 @@ function syncShapeVizToggle() {
   toggle.setAttribute("aria-checked", keyMode ? "true" : "false");
 }
 
+function renderShapeResultSub(el, summaryOrFallback) {
+  if (!(el instanceof HTMLElement)) return;
+  const raw = String(summaryOrFallback ?? "").trim();
+  if (!raw) {
+    el.replaceChildren();
+    return;
+  }
+  const parts = raw.split(/\n+/).map((t) => t.trim()).filter(Boolean);
+  el.replaceChildren(
+    ...parts.map((text) => {
+      const p = document.createElement("p");
+      p.className = "shape-result-sub__p";
+      p.textContent = text;
+      return p;
+    }),
+  );
+}
+
 function renderVisualization() {
   const svg = document.querySelector("#t-shape-svg");
   const titleEl = document.querySelector("#shape-result-title");
@@ -1701,7 +1719,7 @@ function renderVisualization() {
   }
   const guideForSub = SHAPE_GUIDE[detection.shape] || SHAPE_GUIDE.T;
   if (subEl) {
-    subEl.textContent = guideForSub.summary || detection.label;
+    renderShapeResultSub(subEl, guideForSub.summary || detection.label);
   }
   if (step5EmailInput && "value" in step5EmailInput) {
     step5EmailInput.value = state.userEmail || "";

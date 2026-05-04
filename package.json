@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "netlify dev",
     "dev:shape": "cd t-shaped && npm run dev",
+    "build": "cd t-shaped && npm run build",
     "build:shape": "cd t-shaped && npm run build",
+    "postinstall": "npm ci --prefix ./t-shaped --no-audit --no-fund || npm install --prefix ./t-shaped --no-audit --no-fund",
     "serve": "npx serve t-shaped/dist",
     "build:css": "tailwindcss -i ./t-shaped/styles.css -o ./t-shaped/styles.out.css --minify",
     "watch:css": "tailwindcss -i ./t-shaped/styles.css -o ./t-shaped/styles.out.css --watch"

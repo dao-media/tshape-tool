@@ -2,16 +2,11 @@
 
 T-Shaped is a designer self-assessment web app for mapping skill depth, classifying profile shape (I / T / Pi / M / X), and exporting results.
 
-This repository ships **two** related frontends:
+The **canonical app** lives in **`t-shaped/`**: [SolidJS](https://www.solidjs.com/) shell + [Vite](https://vitejs.dev/), step flow in **`appRuntime.js`**, templates in **`index.html`**.
 
-| Path | What it is | How it runs |
-|------|------------|-------------|
-| **`t-shaped/`** | **Primary app:** [SolidJS](https://www.solidjs.com/) shell + [Vite](https://vitejs.dev/), step flow in `appRuntime.js`, templates in `index.html` | `npm run dev` inside `t-shaped/` (or `npm run dev:shape` from repo root) |
-| **`tshape-tool/t-shaped/`** | **Static build:** same UX in plain HTML/CSS/JS (`script.js`), no Vite | Static server after `npm run build:css` in `tshape-tool/` |
+Netlify configuration at the **repo root** builds and publishes **`t-shaped/dist`**.
 
-Netlify configuration at the **repo root** builds and publishes **`t-shaped/dist`**. The **`tshape-tool/`** folder has its **own** `netlify.toml` (publish `t-shaped` as static files) for a separate or legacy deploy.
-
-## Stack (primary `t-shaped/` app)
+## Stack
 
 - **UI shell:** SolidJS + Vite (`t-shaped/src/main.tsx`, `t-shaped/src/App.tsx`)
 - **Runtime logic:** DOM-driven steps in `t-shaped/src/appRuntime.js` with templates in `t-shaped/index.html`
@@ -39,11 +34,11 @@ Netlify configuration at the **repo root** builds and publishes **`t-shaped/dist
 
 ```text
 .
-├── netlify.toml              # Primary site: publish t-shaped/dist, functions netlify/functions
+├── netlify.toml              # Publish t-shaped/dist, functions netlify/functions
 ├── netlify/functions/
 │   └── send-shape-email.js
 ├── package.json              # Root: scripts (dev:shape, build:shape, build:css), function + Tailwind deps
-├── t-shaped/                 # Vite + Solid app (primary)
+├── t-shaped/                 # Vite + Solid app
 │   ├── public/
 │   ├── src/
 │   │   ├── main.tsx
@@ -58,11 +53,6 @@ Netlify configuration at the **repo root** builds and publishes **`t-shaped/dist
 │   ├── styles.out.css        # Built CSS (run build:css or npm run build)
 │   ├── package.json
 │   └── vite.config.ts
-├── tshape-tool/              # Static mirror + its own Netlify package
-│   ├── netlify.toml          # publish: t-shaped (static folder, not dist)
-│   ├── netlify/functions/send-shape-email.js
-│   ├── package.json
-│   └── t-shaped/             # index.html, script.js, styles.css / styles.out.css
 └── README.md
 ```
 
@@ -77,7 +67,7 @@ Commands below use **repository root** as `.` unless noted. Replace paths with y
 
 ---
 
-### A) Primary app (Solid + Vite) — recommended
+### Development (Solid + Vite)
 
 From **repository root**:
 
@@ -131,31 +121,7 @@ npm run test:e2e
 
 ---
 
-### B) Static `tshape-tool` tree (no Vite)
-
-Use this when you work only in `tshape-tool/t-shaped/` (`script.js`, static `index.html`).
-
-```bash
-cd tshape-tool
-npm install
-npm run build:css        # t-shaped/styles.css → t-shaped/styles.out.css
-npx serve t-shaped       # or: npm run serve  → serves that folder on a local port (e.g. 3000)
-```
-
-Email + functions from this package:
-
-```bash
-cd tshape-tool
-npm install
-npm run build:css
-npx netlify dev
-```
-
-Copy env from `tshape-tool/.env.example` when testing email. More detail: **`tshape-tool/README.md`**.
-
----
-
-### C) Full stack at repo root (Netlify dev + primary build)
+### Full stack (Netlify dev + functions)
 
 Install **root** dependencies (functions + Tailwind CLI used by root scripts), then install **t-shaped** and start Netlify dev (serves per root `netlify.toml`; build output is `t-shaped/dist`):
 
@@ -183,15 +149,13 @@ The app calls `/.netlify/functions/send-shape-email`. Copy **`.env.example`** (r
 
 On Netlify: **Site settings → Environment variables**.
 
-## Deploy (Netlify) — primary site
+## Deploy (Netlify)
 
 From **`netlify.toml`** at repo root:
 
 - **Build command:** `npm ci && cd t-shaped && npm ci && npm run build`
 - **Publish directory:** `t-shaped/dist`
 - **Functions directory:** `netlify/functions`
-
-For the **tshape-tool** package alone, see **`tshape-tool/netlify.toml`** (`publish = "t-shaped"`).
 
 ## Notes
 
